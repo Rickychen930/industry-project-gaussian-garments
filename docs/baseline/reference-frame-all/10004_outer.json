@@ -1,0 +1,439 @@
+{
+ "checkpoint": "~/Downloads/gaugar_models/10004_outer",
+ "video": "~/Downloads/drive-download-20260829T090506Z-1-001/10004_outer.mp4",
+ "video_frame": 0,
+ "video_size": [
+  2434,
+  1836
+ ],
+ "gt_panel_box_yyxx": [
+  22,
+  1695,
+  20,
+  1187
+ ],
+ "panel_size": [
+  1167,
+  1673
+ ],
+ "trajectory": "~/Downloads/gaugar_trajectories/individual-garments/10004_outer_Take1.pkl",
+ "trajectory_frame": 0,
+ "camera": "0052",
+ "camera_candidates": {
+  "0004": {
+   "similarity": [
+    0.6943449199812507,
+    -554.4262111536262,
+    -503.0563681714734
+   ],
+   "iou_body_and_cloth": 0.8569457898427365,
+   "iou_body_full": 0.7269587794411834,
+   "iou_body_head_legs": 0.8153458958915601
+  },
+  "0028": {
+   "similarity": [
+    1.1436559947484228,
+    -1240.2603240649382,
+    -1314.7576933679738
+   ],
+   "iou_body_and_cloth": 0.5732913772075817,
+   "iou_body_full": 0.5575760111857759,
+   "iou_body_head_legs": 0.5147251580806768
+  },
+  "0052": {
+   "similarity": [
+    0.6850634344871743,
+    -477.88715159343724,
+    -500.78257060678175
+   ],
+   "iou_body_and_cloth": 0.8601269453194791,
+   "iou_body_full": 0.7371804088236591,
+   "iou_body_head_legs": 0.7925332796893313
+  },
+  "0076": {
+   "similarity": [
+    1.2284530572936856,
+    -1473.0386001260526,
+    -1220.3113126836015
+   ],
+   "iou_body_and_cloth": 0.5602902959926747,
+   "iou_body_full": 0.5329723042573432,
+   "iou_body_head_legs": 0.47053918779250037
+  }
+ },
+ "panel_similarity": {
+  "s": 0.6850634344871743,
+  "ox": -477.88715159343724,
+  "oy": -500.78257060678175
+ },
+ "frame_alignment": [
+  {
+   "trajectory_frame": 0,
+   "iou_body_and_cloth": 0.8601269453194791,
+   "iou_body_head_legs": 0.7925332796893313
+  },
+  {
+   "trajectory_frame": 1,
+   "iou_body_and_cloth": 0.8594457624476164,
+   "iou_body_head_legs": 0.7908984514878119
+  },
+  {
+   "trajectory_frame": 2,
+   "iou_body_and_cloth": 0.8498738659331642,
+   "iou_body_head_legs": 0.7897529279220269
+  },
+  {
+   "trajectory_frame": 3,
+   "iou_body_and_cloth": 0.8464808673590589,
+   "iou_body_head_legs": 0.788733439877038
+  },
+  {
+   "trajectory_frame": 4,
+   "iou_body_and_cloth": 0.8419291692278594,
+   "iou_body_head_legs": 0.7876033959711037
+  },
+  {
+   "trajectory_frame": 5,
+   "iou_body_and_cloth": 0.8379172501399393,
+   "iou_body_head_legs": 0.786907135968721
+  },
+  {
+   "trajectory_frame": 6,
+   "iou_body_and_cloth": 0.83424107688403,
+   "iou_body_head_legs": 0.785711166617177
+  },
+  {
+   "trajectory_frame": 7,
+   "iou_body_and_cloth": 0.8318187111874161,
+   "iou_body_head_legs": 0.7850676165282907
+  },
+  {
+   "trajectory_frame": 8,
+   "iou_body_and_cloth": 0.8279595097362658,
+   "iou_body_head_legs": 0.7831307415557651
+  },
+  {
+   "trajectory_frame": 9,
+   "iou_body_and_cloth": 0.8239021013041933,
+   "iou_body_head_legs": 0.7805557983046404
+  },
+  {
+   "trajectory_frame": 10,
+   "iou_body_and_cloth": 0.8188825562054179,
+   "iou_body_head_legs": 0.7773374623836518
+  },
+  {
+   "trajectory_frame": 11,
+   "iou_body_and_cloth": 0.8126205663666111,
+   "iou_body_head_legs": 0.7746430626128125
+  },
+  {
+   "trajectory_frame": 12,
+   "iou_body_and_cloth": 0.80600452456751,
+   "iou_body_head_legs": 0.7740115737573219
+  }
+ ],
+ "best_trajectory_frame": 0,
+ "clothing_removal_fill": "lama",
+ "body_silhouette_iou": {
+  "L1_their_body": {
+   "full": 0.7371804088236591,
+   "head_legs": 0.7925332796893313
+  },
+  "L2_fitted_body": {
+   "full": 0.7360388010042975,
+   "head_legs": 0.7950727587528581,
+   "fit_residual_cm": 0.45792746186418437
+  },
+  "L3_tracked_body": {
+   "full": 0.741054853993991,
+   "head_legs": 0.7302760883685228,
+   "reprojection_px": 19.898054301028747,
+   "fit_height": 870,
+   "fit_by_height": {
+    "1673": {
+     "reprojection_px": 19.657079348071225,
+     "reprojection_px_at_panel_scale": 19.657079348071225,
+     "scale": 873.7025756835938,
+     "betas_abs_max": 0.04524491727352142,
+     "seconds": 4.1039552919974085
+    },
+    "870": {
+     "reprojection_px": 10.347463982005387,
+     "reprojection_px_at_panel_scale": 19.898054301028747,
+     "scale": 454.1113586425781,
+     "betas_abs_max": 0.048788975924253464,
+     "seconds": 3.672637042007409
+    },
+    "640": {
+     "reprojection_px": 7.517787087990799,
+     "reprojection_px_at_panel_scale": 19.651965309700948,
+     "scale": 334.1142272949219,
+     "betas_abs_max": 0.04641010984778404,
+     "seconds": 3.6426832499855664
+    },
+    "480": {
+     "reprojection_px": 5.483725015900858,
+     "reprojection_px_at_panel_scale": 19.113066565837784,
+     "scale": 251.77964782714844,
+     "betas_abs_max": 0.04554802179336548,
+     "seconds": 3.7473676660156343
+    }
+   }
+  }
+ },
+ "L2": {
+  "lbs": {
+   "vertex_distance_to_pred_cm": 11.875385191851795
+  },
+  "dynamics": {
+   "vertex_distance_to_pred_cm": 11.84394465689831
+  }
+ },
+ "L3": {
+  "lbs": {
+   "height_ratio": 1.0024124691526581,
+   "width_ratio": 1.0
+  },
+  "dynamics": {
+   "height_ratio": 1.0024124691526581,
+   "width_ratio": 1.0
+  }
+ },
+ "settle_steps": 5,
+ "metrics": {
+  "L1_static": {
+   "over_photo": {
+    "psnr_db": 15.251073154774879,
+    "ssim": 0.7882730548256369,
+    "dists": null,
+    "silhouette_iou": 0.7731675012761017,
+    "drawn_pixels": 270165,
+    "shirt_pixels": 261326,
+    "region_pixels": 299741
+   },
+   "over_erased": {
+    "psnr_db": 13.30846916968092,
+    "ssim": 0.7514508042165404,
+    "dists": null,
+    "silhouette_iou": 0.7731675012761017,
+    "drawn_pixels": 270165,
+    "shirt_pixels": 261326,
+    "region_pixels": 299741
+   }
+  },
+  "L1_appearance": {
+   "over_photo": {
+    "psnr_db": 15.139764707539388,
+    "ssim": 0.828382583159507,
+    "dists": null,
+    "silhouette_iou": 0.7923671573968728,
+    "drawn_pixels": 260122,
+    "shirt_pixels": 261326,
+    "region_pixels": 290927
+   },
+   "over_erased": {
+    "psnr_db": 13.235669007168651,
+    "ssim": 0.7875048279078772,
+    "dists": null,
+    "silhouette_iou": 0.7923671573968728,
+    "drawn_pixels": 260122,
+    "shirt_pixels": 261326,
+    "region_pixels": 290927
+   }
+  },
+  "L2_lbs_static": {
+   "over_photo": {
+    "psnr_db": 16.43566408476105,
+    "ssim": 0.7859091369239505,
+    "dists": null,
+    "silhouette_iou": 0.4477396400702377,
+    "drawn_pixels": 305092,
+    "shirt_pixels": 261326,
+    "region_pixels": 391243
+   },
+   "over_erased": {
+    "psnr_db": 13.54443036423875,
+    "ssim": 0.6928431935635928,
+    "dists": null,
+    "silhouette_iou": 0.4477396400702377,
+    "drawn_pixels": 305092,
+    "shirt_pixels": 261326,
+    "region_pixels": 391243
+   }
+  },
+  "L2_lbs_appearance": {
+   "over_photo": {
+    "psnr_db": 14.22922439475208,
+    "ssim": 0.7957333876493635,
+    "dists": null,
+    "silhouette_iou": 0.4523550231418459,
+    "drawn_pixels": 293462,
+    "shirt_pixels": 261326,
+    "region_pixels": 381992
+   },
+   "over_erased": {
+    "psnr_db": 12.234975377776824,
+    "ssim": 0.6923903254883985,
+    "dists": null,
+    "silhouette_iou": 0.4523550231418459,
+    "drawn_pixels": 293462,
+    "shirt_pixels": 261326,
+    "region_pixels": 381992
+   }
+  },
+  "L2_dynamics_static": {
+   "over_photo": {
+    "psnr_db": 16.430006889572443,
+    "ssim": 0.7804327106512485,
+    "dists": null,
+    "silhouette_iou": 0.4502465067565842,
+    "drawn_pixels": 306402,
+    "shirt_pixels": 261326,
+    "region_pixels": 391470
+   },
+   "over_erased": {
+    "psnr_db": 13.55824332878814,
+    "ssim": 0.6894763980588221,
+    "dists": null,
+    "silhouette_iou": 0.4502465067565842,
+    "drawn_pixels": 306402,
+    "shirt_pixels": 261326,
+    "region_pixels": 391470
+   }
+  },
+  "L2_dynamics_appearance": {
+   "over_photo": {
+    "psnr_db": 14.124316692627934,
+    "ssim": 0.7903533626484793,
+    "dists": null,
+    "silhouette_iou": 0.45459606242208345,
+    "drawn_pixels": 295233,
+    "shirt_pixels": 261326,
+    "region_pixels": 382621
+   },
+   "over_erased": {
+    "psnr_db": 12.187042637537143,
+    "ssim": 0.6882176870585895,
+    "dists": null,
+    "silhouette_iou": 0.45459606242208345,
+    "drawn_pixels": 295233,
+    "shirt_pixels": 261326,
+    "region_pixels": 382621
+   }
+  },
+  "L3_lbs_static": {
+   "over_photo": {
+    "psnr_db": 19.188426610510934,
+    "ssim": 0.8356989322287818,
+    "dists": null,
+    "silhouette_iou": 0.21785182267140782,
+    "drawn_pixels": 205490,
+    "shirt_pixels": 261326,
+    "region_pixels": 383311
+   },
+   "over_erased": {
+    "psnr_db": 13.226430370814679,
+    "ssim": 0.6727732029115394,
+    "dists": null,
+    "silhouette_iou": 0.21785182267140782,
+    "drawn_pixels": 205490,
+    "shirt_pixels": 261326,
+    "region_pixels": 383311
+   }
+  },
+  "L3_lbs_appearance": {
+   "over_photo": {
+    "psnr_db": 16.817417324164854,
+    "ssim": 0.852494250813185,
+    "dists": null,
+    "silhouette_iou": 0.21494459748348385,
+    "drawn_pixels": 191626,
+    "shirt_pixels": 261326,
+    "region_pixels": 372817
+   },
+   "over_erased": {
+    "psnr_db": 12.408305688836679,
+    "ssim": 0.6673240205468092,
+    "dists": null,
+    "silhouette_iou": 0.21494459748348385,
+    "drawn_pixels": 191626,
+    "shirt_pixels": 261326,
+    "region_pixels": 372817
+   }
+  },
+  "L3_dynamics_static": {
+   "over_photo": {
+    "psnr_db": 18.977577028054927,
+    "ssim": 0.8326281009981624,
+    "dists": null,
+    "silhouette_iou": 0.2233070784267852,
+    "drawn_pixels": 209268,
+    "shirt_pixels": 261326,
+    "region_pixels": 384690
+   },
+   "over_erased": {
+    "psnr_db": 13.238703139176394,
+    "ssim": 0.6724897719220524,
+    "dists": null,
+    "silhouette_iou": 0.2233070784267852,
+    "drawn_pixels": 209268,
+    "shirt_pixels": 261326,
+    "region_pixels": 384690
+   }
+  },
+  "L3_dynamics_appearance": {
+   "over_photo": {
+    "psnr_db": 16.7537795279342,
+    "ssim": 0.8402380395794645,
+    "dists": null,
+    "silhouette_iou": 0.22911903591803595,
+    "drawn_pixels": 198866,
+    "shirt_pixels": 261326,
+    "region_pixels": 374408
+   },
+   "over_erased": {
+    "psnr_db": 12.455575335918802,
+    "ssim": 0.6659035256524134,
+    "dists": null,
+    "silhouette_iou": 0.22911903591803595,
+    "drawn_pixels": 198866,
+    "shirt_pixels": 261326,
+    "region_pixels": 374408
+   }
+  },
+  "erased_only": {
+   "over_erased": {
+    "psnr_db": 11.751838628661762,
+    "ssim": 0.7443154238958911,
+    "dists": null,
+    "silhouette_iou": 0.0,
+    "drawn_pixels": 0,
+    "shirt_pixels": 261326,
+    "region_pixels": 261326
+   }
+  }
+ },
+ "metric_crop_yyxx": [
+  260,
+  914,
+  0,
+  1224
+ ],
+ "dists_available": false,
+ "dists_unavailable_reason": "torchvision VGG16 weights not cached (~/.cache/torch/hub/checkpoints/vgg16-397923af.pth); not downloaded by this tool",
+ "lpips": "not installed",
+ "timing_s": {
+  "L1_static": 2.7676914159965236,
+  "L1_appearance": 2.1950811249844264,
+  "L2_lbs_pose": 1.9746688340092078,
+  "L2_dynamics_pose": 3.0214244579838123,
+  "L3_fit": 3.672637042007409,
+  "L3_lbs_static": 2.414841833000537,
+  "L3_lbs_appearance": 6.23664308298612,
+  "L3_dynamics_static": 3.750461957999505,
+  "L3_dynamics_appearance": 7.373610667011235
+ },
+ "total_s": 102.16955387502094,
+ "figure": "10004_outer.png"
+}

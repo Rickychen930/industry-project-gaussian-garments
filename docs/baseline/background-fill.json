@@ -1,0 +1,169 @@
+{
+ "00170_upper": {
+  "frames": [
+   {
+    "frame": 50,
+    "pixels": 377,
+    "plate_coverage": 1.0,
+    "lama_mae": 3.780282974243164,
+    "plate_mae": 1.1489832401275635
+   },
+   {
+    "frame": 60,
+    "pixels": 2822,
+    "plate_coverage": 0.9681077250177179,
+    "lama_mae": 7.142688274383545,
+    "plate_mae": 1.9218049049377441
+   },
+   {
+    "frame": 70,
+    "pixels": 1643,
+    "plate_coverage": 1.0,
+    "lama_mae": 38.68269348144531,
+    "plate_mae": 0.9803205728530884
+   },
+   {
+    "frame": 80,
+    "pixels": 628,
+    "plate_coverage": 1.0,
+    "lama_mae": 46.48487091064453,
+    "plate_mae": 1.3415604829788208
+   }
+  ],
+  "summary": {
+   "plate_coverage": 0.9835466179159049,
+   "lama_mae": 20.901279216361875,
+   "plate_mae": 1.5191346997752704
+  }
+ },
+ "00148_upper": {
+  "frames": [
+   {
+    "frame": 30,
+    "pixels": 2173,
+    "plate_coverage": 0.8016566958122412,
+    "lama_mae": 10.014189720153809,
+    "plate_mae": 3.721813201904297
+   },
+   {
+    "frame": 40,
+    "pixels": 4747,
+    "plate_coverage": 0.9981040657257215,
+    "lama_mae": 6.949687480926514,
+    "plate_mae": 1.2356927394866943
+   },
+   {
+    "frame": 50,
+    "pixels": 4840,
+    "plate_coverage": 1.0,
+    "lama_mae": 49.8609504699707,
+    "plate_mae": 0.9011019468307495
+   },
+   {
+    "frame": 60,
+    "pixels": 3892,
+    "plate_coverage": 0.9907502569373073,
+    "lama_mae": 45.84510803222656,
+    "plate_mae": 2.2690560817718506
+   },
+   {
+    "frame": 70,
+    "pixels": 2944,
+    "plate_coverage": 1.0,
+    "lama_mae": 19.993093490600586,
+    "plate_mae": 0.9567481875419617
+   },
+   {
+    "frame": 80,
+    "pixels": 3893,
+    "plate_coverage": 1.0,
+    "lama_mae": 6.206781387329102,
+    "plate_mae": 1.1346005201339722
+   },
+   {
+    "frame": 90,
+    "pixels": 2589,
+    "plate_coverage": 0.9196601004248744,
+    "lama_mae": 10.720355033874512,
+    "plate_mae": 2.007596254348755
+   },
+   {
+    "frame": 100,
+    "pixels": 3510,
+    "plate_coverage": 1.0,
+    "lama_mae": 19.352563858032227,
+    "plate_mae": 1.343732237815857
+   },
+   {
+    "frame": 110,
+    "pixels": 2432,
+    "plate_coverage": 1.0,
+    "lama_mae": 13.653714179992676,
+    "plate_mae": 1.147546648979187
+   }
+  ],
+  "summary": {
+   "plate_coverage": 0.9779497098646035,
+   "lama_mae": 22.128244998622602,
+   "plate_mae": 1.517875564524929
+  }
+ },
+ "00176_outer": {
+  "frames": [
+   {
+    "frame": 30,
+    "pixels": 936,
+    "plate_coverage": 1.0,
+    "lama_mae": 7.267450332641602,
+    "plate_mae": 0.5445156693458557
+   },
+   {
+    "frame": 60,
+    "pixels": 661,
+    "plate_coverage": 1.0,
+    "lama_mae": 46.716590881347656,
+    "plate_mae": 0.998487114906311
+   },
+   {
+    "frame": 70,
+    "pixels": 7512,
+    "plate_coverage": 1.0,
+    "lama_mae": 26.994897842407227,
+    "plate_mae": 1.1527334451675415
+   },
+   {
+    "frame": 80,
+    "pixels": 5672,
+    "plate_coverage": 1.0,
+    "lama_mae": 28.443523406982422,
+    "plate_mae": 1.1985777616500854
+   },
+   {
+    "frame": 90,
+    "pixels": 4106,
+    "plate_coverage": 1.0,
+    "lama_mae": 21.553377151489258,
+    "plate_mae": 1.0808167457580566
+   },
+   {
+    "frame": 100,
+    "pixels": 1462,
+    "plate_coverage": 1.0,
+    "lama_mae": 16.947446823120117,
+    "plate_mae": 1.0858412981033325
+   },
+   {
+    "frame": 110,
+    "pixels": 8486,
+    "plate_coverage": 1.0,
+    "lama_mae": 34.23536682128906,
+    "plate_mae": 1.0144551992416382
+   }
+  ],
+  "summary": {
+   "plate_coverage": 1.0,
+   "lama_mae": 27.938130540154887,
+   "plate_mae": 1.0841454381936135
+  }
+ }
+}

@@ -1,0 +1,212 @@
+{
+ "00122_outer": {
+  "held_out": {
+   "static": 26.59,
+   "live": 33.4,
+   "ownmotion": 34.09,
+   "nomean": 29.45
+  },
+  "unseen_motions": {
+   "static": 24.17,
+   "live": 30.53,
+   "ownmotion": 29.72,
+   "nomean": 26.96
+  }
+ },
+ "00134_upper": {
+  "held_out": {
+   "static": 24.44,
+   "live": 39.07,
+   "ownmotion": 38.87,
+   "nomean": 21.45
+  },
+  "unseen_motions": {
+   "static": 24.33,
+   "live": 37.63,
+   "ownmotion": 36.28,
+   "nomean": 21.08
+  }
+ },
+ "00136_outer": {
+  "held_out": {
+   "static": 21.72,
+   "live": 32.32,
+   "ownmotion": 31.55,
+   "nomean": 29.53
+  },
+  "unseen_motions": {
+   "static": 20.0,
+   "live": 28.06,
+   "ownmotion": 25.86,
+   "nomean": 26.46
+  }
+ },
+ "00148_outer": {
+  "held_out": {
+   "static": 21.15,
+   "live": 31.7,
+   "ownmotion": 31.88,
+   "nomean": 27.92
+  },
+  "unseen_motions": {
+   "static": 21.1,
+   "live": 26.62,
+   "ownmotion": 25.17,
+   "nomean": 25.86
+  }
+ },
+ "00148_upper": {
+  "held_out": {
+   "static": 26.15,
+   "live": 38.27,
+   "ownmotion": 37.87,
+   "nomean": 33.77
+  },
+  "unseen_motions": {
+   "static": 27.37,
+   "live": 35.24,
+   "ownmotion": 31.43,
+   "nomean": 32.83
+  }
+ },
+ "00152_lower": {
+  "held_out": {
+   "static": 18.9,
+   "live": 28.32,
+   "ownmotion": 29.15,
+   "nomean": 24.11
+  },
+  "unseen_motions": {
+   "static": 18.68,
+   "live": 25.6,
+   "ownmotion": 22.8,
+   "nomean": 23.02
+  }
+ },
+ "00152_outer": {
+  "held_out": {
+   "static": 24.12,
+   "live": 34.03,
+   "ownmotion": 34.13,
+   "nomean": 30.01
+  },
+  "unseen_motions": {
+   "static": 24.19,
+   "live": 30.43,
+   "ownmotion": 27.63,
+   "nomean": 28.08
+  }
+ },
+ "00170_lower": {
+  "held_out": {
+   "static": 24.67,
+   "live": 34.18,
+   "ownmotion": 33.97,
+   "nomean": 31.47
+  },
+  "unseen_motions": {
+   "static": 26.62,
+   "live": 30.89,
+   "ownmotion": 25.9,
+   "nomean": 30.54
+  }
+ },
+ "00170_upper": {
+  "held_out": {
+   "static": 19.82,
+   "live": 31.45,
+   "ownmotion": 30.26,
+   "nomean": 27.24
+  },
+  "unseen_motions": {
+   "static": 18.77,
+   "live": 25.93,
+   "ownmotion": 23.84,
+   "nomean": 24.13
+  }
+ },
+ "00176_lower": {
+  "held_out": {
+   "static": 25.96,
+   "live": 37.74,
+   "ownmotion": 38.78,
+   "nomean": 35.63
+  },
+  "unseen_motions": {
+   "static": 25.64,
+   "live": 34.21,
+   "ownmotion": 33.91,
+   "nomean": 33.31
+  }
+ },
+ "00176_outer": {
+  "held_out": {
+   "static": 18.46,
+   "live": 30.14,
+   "ownmotion": 30.33,
+   "nomean": 24.8
+  },
+  "unseen_motions": {
+   "static": 17.51,
+   "live": 26.67,
+   "ownmotion": 24.58,
+   "nomean": 22.46
+  }
+ },
+ "00176_upper": {
+  "held_out": {
+   "static": 17.21,
+   "live": 27.37,
+   "ownmotion": 28.65,
+   "nomean": 27.03
+  },
+  "unseen_motions": {
+   "static": 16.84,
+   "live": 25.22,
+   "ownmotion": 25.17,
+   "nomean": 25.85
+  }
+ },
+ "00190_upper": {
+  "held_out": {
+   "static": 19.62,
+   "live": 30.91,
+   "ownmotion": 31.17,
+   "nomean": 30.87
+  },
+  "unseen_motions": {
+   "static": 18.3,
+   "live": 25.85,
+   "ownmotion": 23.39,
+   "nomean": 25.66
+  }
+ },
+ "10004_outer": {
+  "held_out": {
+   "static": 21.98,
+   "live": 33.13,
+   "ownmotion": 33.9,
+   "nomean": 31.5
+  },
+  "unseen_motions": {
+   "static": 18.61,
+   "live": 27.69,
+   "ownmotion": 23.88,
+   "nomean": 26.82
+  }
+ },
+ "10006_outer": {
+  "held_out": {
+   "static": 17.19,
+   "live": 30.89,
+   "ownmotion": 30.59,
+   "nomean": 25.42
+  },
+  "unseen_motions": {
+   "static": 17.18,
+   "live": 26.52,
+   "ownmotion": 24.18,
+   "nomean": 24.42
+  }
+ }
+}

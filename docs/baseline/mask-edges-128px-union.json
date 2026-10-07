@@ -1,0 +1,19 @@
+{
+  "checkpoint": "models/segmentation_unet.pt",
+  "extra": "models/segmentation_upper_128px.pt",
+  "refine": "none",
+  "sources": {
+    "lip_style": {
+      "test_images": 300,
+      "iou": 0.7648615809296793,
+      "bf@2px": 0.6055622142519104,
+      "bf@5px": 0.7222643758972593
+    },
+    "plus_neck": {
+      "test_images": 300,
+      "iou": 0.73104160431751,
+      "bf@2px": 0.533068372179622,
+      "bf@5px": 0.6708959192426892
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# The rebuild on a 3D body. Pinned to what is verified working on this
+# machine (Apple M1, Python 3.10); SMPL-X runs on CPU by choice - measured
+# 6.04 ms against 38.8 ms on MPS, which falls back on padding ops.
+numpy==1.26.4
+scipy==1.15.3
+torch==2.1.0
+opencv-python==4.11.0.86
+mediapipe==0.10.21
+smplx==0.1.28
+trimesh==4.12.2
+# JIT-compiled tile-compositing loop in tryon/rendering/splat_cpu.py's render_splats:
+# measured ~715-760ms/frame at 93k splats, 480x640 with the pure-numpy
+# Python-level tile loop (see GarmentRenderer's docstring) - too slow for
+# live video. numba removes the Python-loop overhead per tile.
+numba==0.67.0
+
+# Ray casting: which body parts the garment covers, at bind time
+# (tryon/garment/renderer.py::_body_covered_by_garment).
+open3d==0.19.0
+
+# OpenGL splat compositing (tryon/rendering/splat_gl.py, --gpu-render, on by
+# default in ./live-tryon run): the numba tile loop redone as instanced quads,
+# identical output to float32 rounding, 143 -> 37 ms a frame on the M1.
+moderngl==5.12.0
+
+# SCHP / FASHN human parsers (tryon/removal/parsing_schp.py, parsing_fashn.py) as
+# ONNX; the macOS wheel includes the CoreML execution provider, which runs
+# SCHP on the Neural Engine / GPU (304 ms vs 2.1 s on the CPU).
+onnxruntime==1.23.2

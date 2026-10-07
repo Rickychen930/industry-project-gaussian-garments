@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# The one entry point of the project: live 3D try-on, checks, comparisons.
+# `./live-tryon help` lists the commands; docs/USAGE.md explains the options.
+set -Eeuo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PY="$ROOT/.venv/bin/python"
+[[ -x "$PY" ]] || { echo "No virtualenv at $ROOT/.venv - run ./setup.sh" >&2; exit 1; }
+
+DEFAULT=00190_upper
+
+# every location comes from tryon/paths.py (TRYON_DATA moves the data root)
+garments_dir() { PYTHONPATH="$ROOT" "$PY" -c 'from tryon.paths import GARMENTS; print(GARMENTS)'; }
+list_garments() { find "$(garments_dir)" -mindepth 1 -maxdepth 1 -type d -exec test -d {}/stage1 \; -print 2>/dev/null | sort; }
+
+describe() {
+  case "$1" in
+    00122_outer) echo "dark plaid shirt (open front)" ;;
+    00134_upper) echo "brown short-sleeve shirt" ;;
+    00136_outer) echo "denim jacket (open front)" ;;
+    00148_outer) echo "beige blazer (open front)" ;;
+    00148_upper) echo "black short-sleeve dress" ;;
+    00152_lower) echo "denim shorts (bottom)" ;;
+    00152_outer) echo "long red plaid shirt (open front)" ;;
+    00170_lower) echo "black mini skirt (bottom)" ;;
+    00170_upper) echo "sweater vest + white shirt  * closed" ;;
+    00176_lower) echo "blue jeans (bottom)" ;;
+    00176_outer) echo "white jacket (open front)" ;;
+    00176_upper) echo "white T-shirt  * closed" ;;
+    00190_upper) echo "striped knit sweater  * closed" ;;
+    10004_outer) echo "green fur jacket (open front)" ;;
+    10006_outer) echo "pink fur jacket (open front)" ;;
+    *) echo "" ;;
+  esac
+}
+
+show_garments() {
+  local i=0 dir
+  while read -r dir; do
+    i=$((i + 1)); printf '  %2d  %-12s %s\n' "$i" "$(basename "$dir")" "$(describe "$(basename "$dir")")"
+  done < <(list_garments)
+  [[ $i -gt 0 ]] || { echo "No garments in $(garments_dir) - see docs/DATASETS.md" >&2; exit 1; }
+}
+
+pick() {  # number (as `garments` lists them) or name -> checkpoint dir
+  local want="$1" i=0 dir
+  while read -r dir; do
+    i=$((i + 1))
+    if [[ "$want" == "$i" || "$want" == "$(basename "$dir")" ]]; then echo "$dir"; return; fi
+  done < <(list_garments)
+  echo "No garment '$want' - see ./live-tryon garments" >&2; exit 2
+}
+
+menu() {  # choose a garment by number, print its number
+  local default_number=1 i=0 dir name choice
+  echo >&2; echo "  Available garments  (* closed = cleanest result)" >&2
+  echo "  ----------------------------------------------------" >&2
+  while read -r dir; do
+    i=$((i + 1)); name="$(basename "$dir")"
+    [[ "$name" == "$DEFAULT" ]] && default_number=$i
+    printf '  %2d  %-12s %s\n' "$i" "$name" "$(describe "$name")" >&2
+  done < <(list_garments)
+  [[ $i -gt 0 ]] || { echo "No garments in $(garments_dir) - see docs/DATASETS.md" >&2; exit 1; }
+  echo >&2; echo "  In the video window: n = next garment, p = previous, q = quit" >&2; echo >&2
+  read -r -p "  Choose a garment number [Enter = $default_number]: " choice
+  choice="${choice:-$default_number}"
+  if ! [[ "$choice" =~ ^[0-9]+$ ]] || (( choice < 1 || choice > i )); then echo "  Not a valid number: $choice" >&2; exit 2; fi
+  echo "$choice"
+}
+
+run_tryon() {  # run_tryon <garment number|name> [flags]
+  local garment display=() args=() a
+  garment="$(pick "$1")"; shift
+  cd "$ROOT"
+  for a in "$@"; do
+    case "$a" in
+      --sync) display=() ;;
+      --smooth) display=(--smooth-display) ;;
+      --delayed) display=(--smooth-display --delayed-sync) ;;
+      *) args+=("$a") ;;
+    esac
+  done
+  PYTHONPATH="$ROOT" exec "$PY" -m tryon.app --garment "$garment" --remove-clothing \
+    --orientation-regressor models/pose_regressor.pt --gpu-render --appearance --async-appearance --student-shading \
+    ${display[@]+"${display[@]}"} ${args[@]+"${args[@]}"}
+}
+
+case "${1:-menu}" in
+  menu)  # no arguments: pick a garment, then the live webcam try-on
+    choice="$(menu)"
+    echo "  Starting ... (the first start takes ~10 s)"
+    run_tryon "$choice" ;;
+  --*)   # flags only (./live-tryon --smooth): the menu, then those flags
+    choice="$(menu)"
+    echo "  Starting ... (the first start takes ~10 s)"
+    run_tryon "$choice" "$@" ;;
+  run)   # ./live-tryon run [N|name] [--smooth|--delayed|--source video.mp4|...]
+    shift; garment="${1:-$DEFAULT}"; [[ $# -gt 0 ]] && shift
+    run_tryon "$garment" "$@" ;;
+  garments)
+    show_garments
+    [[ -f "$ROOT/docs/figures/garments.jpg" ]] && { echo "pictures: docs/figures/garments.jpg"; command -v open >/dev/null && open "$ROOT/docs/figures/garments.jpg"; }
+    exit 0 ;;
+  pipeline) shift; exec env PYTHONPATH="$ROOT" "$PY" -m tryon.app "$@" ;;
+  test)     exec "$PY" -m unittest discover -s "$ROOT/tests" -v ;;
+  doctor)   shift; exec "$PY" "$ROOT/doctor.py" "$@" ;;
+  compare)
+    # the same measurement on any branch or tag, in a throwaway worktree
+    shift
+    [[ $# -ge 1 ]] || { echo "usage: ./live-tryon compare <branch|tag> [video=00170_upper] [frames=150]" >&2; exit 2; }
+    ref="$1"; video="${2:-00170_upper}"; frames="${3:-150}"
+    git -C "$ROOT" rev-parse --verify --quiet "$ref^{commit}" >/dev/null || { echo "No branch or tag '$ref' (see docs/BRANCHES.md)" >&2; exit 2; }
+    tmp="$(mktemp -d "${TMPDIR:-/tmp}/tryon-compare.XXXXXX")"
+    trap 'git -C "$ROOT" worktree remove --force "$tmp" >/dev/null 2>&1 || true' EXIT
+    git -C "$ROOT" worktree add --detach "$tmp" "$ref" >/dev/null
+    ln -s "$ROOT/.venv" "$tmp/.venv"
+    for link in models data; do [[ -e "$ROOT/$link" && ! -e "$tmp/$link" ]] && ln -s "$(cd "$ROOT/$link" && pwd -P)" "$tmp/$link"; done
+    out="$ROOT/docs/baseline/compare-$(echo "$ref" | tr '/' '-')-$video.json"
+    echo "Measuring $ref on $video ($frames frames): garment IoU vs the real shirt ..."
+    # the tool is tools/evaluate/vs_registration.py since 1 Oct 2026; tags from before that (the archive/ tags) have it as tools/evaluate_vs_registration.py
+    tool=tools/evaluate/vs_registration.py; [[ -f "$tmp/$tool" ]] || tool=tools/evaluate_vs_registration.py
+    (cd "$tmp" && PYTHONPATH="$tmp" "$PY" "$tool" "$video" --every 5 --frames "$frames" --out "$out" | tail -1)
+    echo "-> $out"
+    exit 0 ;;
+  help|-h|--help)
+    cat <<'USAGE'
+Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
+
+  ./live-tryon [flags]           pick a garment from a list, then the live webcam try-on
+  ./live-tryon run [N|name] ...  start directly with garment N or its name (default 00190_upper)
+                                 in the window: n / p next / previous garment, q quit
+                                 --sync (default): every shown frame carries its own garment, 4.4-4.8 fps on the M1
+                                 --smooth: camera at full rate, the garment carried between pipeline frames
+                                 --delayed: --smooth shown ~1 s late, garment from the nearest pipeline frame
+                                 other flags pass through: --harmonize, --source video.mp4, --max-width 720, ...
+  ./live-tryon garments          list the garments (numbered) and open their pictures
+  ./live-tryon pipeline ...      the pipeline (python -m tryon.app) with every flag spelled out
+
+  ./live-tryon doctor            check the environment, including which GPU each stage uses
+  ./live-tryon test              run the test suite
+  ./live-tryon compare <branch|tag> [video] [frames]
+                                 the same release-video measurement on any branch or tag
+                                 (garment IoU vs the real shirt) - see docs/BRANCHES.md
+USAGE
+    ;;
+  *) echo "Unknown command: $1 (see ./live-tryon help)" >&2; exit 2 ;;
+esac

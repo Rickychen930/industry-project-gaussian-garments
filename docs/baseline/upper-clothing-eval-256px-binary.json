@@ -1,0 +1,27 @@
+{
+  "checkpoint": "models/segmentation_upper_256px.pt",
+  "size": 256,
+  "target": "upper-clothing",
+  "sources": {
+    "lip_style": {
+      "test_images": 500,
+      "upper_clothing_iou": 0.4703208611710344,
+      "per_image_mean_iou": 0.46417905848985824
+    },
+    "plus_neck": {
+      "test_images": 500,
+      "upper_clothing_iou": 0.4898076012835022,
+      "per_image_mean_iou": 0.47811078575987415
+    },
+    "fashionpedia": {
+      "test_images": 500,
+      "upper_clothing_iou": 0.5067217842457581,
+      "per_image_mean_iou": 0.4007109943003684
+    },
+    "vitonhd": {
+      "test_images": 500,
+      "upper_clothing_iou": 0.8023708937396361,
+      "per_image_mean_iou": 0.8080176844416905
+    }
+  }
+}

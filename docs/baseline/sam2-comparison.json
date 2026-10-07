@@ -1,0 +1,7 @@
+{
+  "model": "sam2_hiera_tiny",
+  "class": "Upper-clothes",
+  "n_evaluated": 179,
+  "n_skipped": 21,
+  "mean_iou": 0.3981692704363435
+}

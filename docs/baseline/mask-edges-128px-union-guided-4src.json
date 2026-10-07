@@ -1,0 +1,31 @@
+{
+  "checkpoint": "models/segmentation_unet.pt",
+  "extra": "models/segmentation_upper_128px.pt",
+  "refine": "guided",
+  "sources": {
+    "lip_style": {
+      "test_images": 300,
+      "iou": 0.7749978300786142,
+      "bf@2px": 0.6175983881774307,
+      "bf@5px": 0.7290871547848513
+    },
+    "plus_neck": {
+      "test_images": 300,
+      "iou": 0.7384440506819707,
+      "bf@2px": 0.5513419411274479,
+      "bf@5px": 0.6753152438262098
+    },
+    "fashionpedia": {
+      "test_images": 300,
+      "iou": 0.5820644897080061,
+      "bf@2px": 0.46148954822487714,
+      "bf@5px": 0.5358995328072192
+    },
+    "vitonhd": {
+      "test_images": 300,
+      "iou": 0.8721938035963118,
+      "bf@2px": 0.6793934767899017,
+      "bf@5px": 0.8152553995492796
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# Weights and test data: large, downloaded or generated (./setup.sh fills models/)
+/models
+/models/
+/data/
+
+# The data root lives outside the repository (tryon/paths.py); these guard a copy made inside it
+/garments/
+/trajectories/
+/release_videos/
+/body_models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Scratch, logs, local overrides
+temp/
+*.log
+*_local*
+.DS_Store
+
+# Credentials: nothing resembling a key belongs in this repository
+.env
+.aws/
+aws_credentials
+credentials
+*.pem
+*_accessKeys.csv

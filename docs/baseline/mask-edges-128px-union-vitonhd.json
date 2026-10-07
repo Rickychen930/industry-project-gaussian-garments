@@ -1,0 +1,13 @@
+{
+  "checkpoint": "models/segmentation_unet.pt",
+  "extra": "models/segmentation_upper_128px.pt",
+  "refine": "none",
+  "sources": {
+    "vitonhd": {
+      "test_images": 300,
+      "iou": 0.8735847392624955,
+      "bf@2px": 0.7032036499004326,
+      "bf@5px": 0.8413090038113566
+    }
+  }
+}

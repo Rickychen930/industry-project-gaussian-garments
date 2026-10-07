@@ -1,0 +1,12 @@
+{
+  "checkpoint": "models/segmentation_upper_128px.pt",
+  "size": 128,
+  "target": "upper-clothing",
+  "sources": {
+    "vitonhd": {
+      "test_images": 2051,
+      "upper_clothing_iou": 0.8654921507010015,
+      "per_image_mean_iou": 0.8733672223731753
+    }
+  }
+}

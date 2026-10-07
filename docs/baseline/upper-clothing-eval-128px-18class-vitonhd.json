@@ -1,0 +1,12 @@
+{
+  "checkpoint": "models/segmentation_unet_128px.pt",
+  "size": 128,
+  "target": "full",
+  "sources": {
+    "vitonhd": {
+      "test_images": 2051,
+      "upper_clothing_iou": 0.8455484093216208,
+      "per_image_mean_iou": 0.8524085241199456
+    }
+  }
+}

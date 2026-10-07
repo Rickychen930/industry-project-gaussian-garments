@@ -1,0 +1,378 @@
+{
+ "o0100": {
+  "13_10": {
+   "garments": [
+    "00170_lower",
+    "00190_upper",
+    "10006_outer"
+   ],
+   "frames": 402,
+   "vertices": 23972
+  },
+  "13_15": {
+   "garments": [
+    "00170_lower",
+    "00190_upper",
+    "10006_outer"
+   ],
+   "frames": 402,
+   "vertices": 23972
+  },
+  "13_17": {
+   "garments": [
+    "00170_lower",
+    "00190_upper",
+    "10006_outer"
+   ],
+   "frames": 402,
+   "vertices": 23972
+  },
+  "13_27": {
+   "garments": [
+    "00170_lower",
+    "00190_upper",
+    "10006_outer"
+   ],
+   "frames": 402,
+   "vertices": 23972
+  }
+ },
+ "o0120": {
+  "13_10": {
+   "garments": [
+    "00148_upper",
+    "00176_outer"
+   ],
+   "frames": 402,
+   "vertices": 15967
+  },
+  "13_15": {
+   "garments": [
+    "00148_upper",
+    "00176_outer"
+   ],
+   "frames": 402,
+   "vertices": 15967
+  },
+  "13_17": {
+   "garments": [
+    "00148_upper",
+    "00176_outer"
+   ],
+   "frames": 402,
+   "vertices": 15967
+  },
+  "13_27": {
+   "garments": [
+    "00148_upper",
+    "00176_outer"
+   ],
+   "frames": 402,
+   "vertices": 15967
+  }
+ },
+ "o0130": {
+  "13_10": {
+   "garments": [
+    "00170_lower",
+    "00170_upper",
+    "00148_outer"
+   ],
+   "frames": 402,
+   "vertices": 23987
+  },
+  "13_15": {
+   "garments": [
+    "00170_lower",
+    "00170_upper",
+    "00148_outer"
+   ],
+   "frames": 402,
+   "vertices": 23987
+  },
+  "13_17": {
+   "garments": [
+    "00170_lower",
+    "00170_upper",
+    "00148_outer"
+   ],
+   "frames": 402,
+   "vertices": 23987
+  },
+  "13_27": {
+   "garments": [
+    "00170_lower",
+    "00170_upper",
+    "00148_outer"
+   ],
+   "frames": 402,
+   "vertices": 23987
+  }
+ },
+ "o0140": {
+  "13_10": {
+   "garments": [
+    "00148_upper",
+    "00190_upper"
+   ],
+   "frames": 402,
+   "vertices": 15973
+  },
+  "13_15": {
+   "garments": [
+    "00148_upper",
+    "00190_upper"
+   ],
+   "frames": 402,
+   "vertices": 15973
+  },
+  "13_17": {
+   "garments": [
+    "00148_upper",
+    "00190_upper"
+   ],
+   "frames": 402,
+   "vertices": 15973
+  },
+  "13_27": {
+   "garments": [
+    "00148_upper",
+    "00190_upper"
+   ],
+   "frames": 402,
+   "vertices": 15973
+  }
+ },
+ "o0170": {
+  "13_10": {
+   "garments": [
+    "00152_lower",
+    "00176_upper",
+    "00152_outer",
+    "10004_outer"
+   ],
+   "frames": 402,
+   "vertices": 31959
+  },
+  "13_15": {
+   "garments": [
+    "00152_lower",
+    "00176_upper",
+    "00152_outer",
+    "10004_outer"
+   ],
+   "frames": 402,
+   "vertices": 31959
+  },
+  "13_17": {
+   "garments": [
+    "00152_lower",
+    "00176_upper",
+    "00152_outer",
+    "10004_outer"
+   ],
+   "frames": 402,
+   "vertices": 31959
+  },
+  "13_27": {
+   "garments": [
+    "00152_lower",
+    "00176_upper",
+    "00152_outer",
+    "10004_outer"
+   ],
+   "frames": 402,
+   "vertices": 31959
+  }
+ },
+ "o0190": {
+  "13_10": {
+   "garments": [
+    "00148_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 15947
+  },
+  "13_15": {
+   "garments": [
+    "00148_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 15947
+  },
+  "13_17": {
+   "garments": [
+    "00148_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 15947
+  },
+  "13_27": {
+   "garments": [
+    "00148_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 15947
+  }
+ },
+ "o0200": {
+  "13_10": {
+   "garments": [
+    "00176_lower",
+    "00190_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 23970
+  },
+  "13_15": {
+   "garments": [
+    "00176_lower",
+    "00190_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 23970
+  },
+  "13_17": {
+   "garments": [
+    "00176_lower",
+    "00190_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 23970
+  },
+  "13_27": {
+   "garments": [
+    "00176_lower",
+    "00190_upper",
+    "00152_outer"
+   ],
+   "frames": 402,
+   "vertices": 23970
+  }
+ },
+ "o0210": {
+  "13_10": {
+   "garments": [
+    "00170_lower",
+    "00152_outer",
+    "00148_outer",
+    "00176_upper"
+   ],
+   "frames": 402,
+   "vertices": 31957
+  },
+  "13_15": {
+   "garments": [
+    "00170_lower",
+    "00152_outer",
+    "00148_outer",
+    "00176_upper"
+   ],
+   "frames": 402,
+   "vertices": 31957
+  },
+  "13_17": {
+   "garments": [
+    "00170_lower",
+    "00152_outer",
+    "00148_outer",
+    "00176_upper"
+   ],
+   "frames": 402,
+   "vertices": 31957
+  },
+  "13_27": {
+   "garments": [
+    "00170_lower",
+    "00152_outer",
+    "00148_outer",
+    "00176_upper"
+   ],
+   "frames": 402,
+   "vertices": 31957
+  }
+ },
+ "o0260": {
+  "13_10": {
+   "garments": [
+    "00176_lower",
+    "00134_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23918
+  },
+  "13_15": {
+   "garments": [
+    "00176_lower",
+    "00134_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23918
+  },
+  "13_17": {
+   "garments": [
+    "00176_lower",
+    "00134_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23918
+  },
+  "13_27": {
+   "garments": [
+    "00176_lower",
+    "00134_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23918
+  }
+ },
+ "o0280": {
+  "13_10": {
+   "garments": [
+    "00152_lower",
+    "00190_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23989
+  },
+  "13_15": {
+   "garments": [
+    "00152_lower",
+    "00190_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23989
+  },
+  "13_17": {
+   "garments": [
+    "00152_lower",
+    "00190_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23989
+  },
+  "13_27": {
+   "garments": [
+    "00152_lower",
+    "00190_upper",
+    "00122_outer"
+   ],
+   "frames": 402,
+   "vertices": 23989
+  }
+ }
+}

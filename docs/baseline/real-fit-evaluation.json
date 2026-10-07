@@ -1,0 +1,146 @@
+[
+  {
+    "take": "Take1",
+    "cam": "0004",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 4.216442614163381,
+    "detector_vs_real_camera_px": 13.666460848070558,
+    "mpjpe_pa_mm": 87.67052739858627
+  },
+  {
+    "take": "Take1",
+    "cam": "0004",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 4.302521138549446,
+    "detector_vs_real_camera_px": 12.474539326808321,
+    "mpjpe_pa_mm": 85.49851179122925
+  },
+  {
+    "take": "Take1",
+    "cam": "0028",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 3.253166656400196,
+    "detector_vs_real_camera_px": 28.02046881909246,
+    "mpjpe_pa_mm": 100.515715777874
+  },
+  {
+    "take": "Take1",
+    "cam": "0028",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 3.5401143261344776,
+    "detector_vs_real_camera_px": 29.36975497214476,
+    "mpjpe_pa_mm": 98.18687289953232
+  },
+  {
+    "take": "Take1",
+    "cam": "0052",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 6.392305499836026,
+    "detector_vs_real_camera_px": 15.354782932289497,
+    "mpjpe_pa_mm": 54.94299530982971
+  },
+  {
+    "take": "Take1",
+    "cam": "0052",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 6.202934029732872,
+    "detector_vs_real_camera_px": 16.462878764878,
+    "mpjpe_pa_mm": 56.78856000304222
+  },
+  {
+    "take": "Take1",
+    "cam": "0076",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 4.263226681966154,
+    "detector_vs_real_camera_px": 17.89502582120986,
+    "mpjpe_pa_mm": 89.65089172124863
+  },
+  {
+    "take": "Take1",
+    "cam": "0076",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 3.7544658014842116,
+    "detector_vs_real_camera_px": 22.041365637995437,
+    "mpjpe_pa_mm": 113.20260912179947
+  },
+  {
+    "take": "Take10",
+    "cam": "0004",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 5.269345191933928,
+    "detector_vs_real_camera_px": 13.356847310061218,
+    "mpjpe_pa_mm": 81.8822905421257
+  },
+  {
+    "take": "Take10",
+    "cam": "0004",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 5.381805509387328,
+    "detector_vs_real_camera_px": 15.05223676372792,
+    "mpjpe_pa_mm": 79.08029109239578
+  },
+  {
+    "take": "Take10",
+    "cam": "0028",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 3.5505736603733884,
+    "detector_vs_real_camera_px": 16.633663369042807,
+    "mpjpe_pa_mm": 95.72447091341019
+  },
+  {
+    "take": "Take10",
+    "cam": "0028",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 3.4818237112727766,
+    "detector_vs_real_camera_px": 27.54319282603913,
+    "mpjpe_pa_mm": 145.08627355098724
+  },
+  {
+    "take": "Take10",
+    "cam": "0052",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 6.688076447734217,
+    "detector_vs_real_camera_px": 13.472335642128956,
+    "mpjpe_pa_mm": 58.977723121643066
+  },
+  {
+    "take": "Take10",
+    "cam": "0052",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 5.733125487635121,
+    "detector_vs_real_camera_px": 15.789768232923654,
+    "mpjpe_pa_mm": 57.394955307245255
+  },
+  {
+    "take": "Take10",
+    "cam": "0076",
+    "frame": "00001",
+    "detected": true,
+    "own_reprojection_px": 5.002526856277723,
+    "detector_vs_real_camera_px": 24.923998688867,
+    "mpjpe_pa_mm": 97.92331606149673
+  },
+  {
+    "take": "Take10",
+    "cam": "0076",
+    "frame": "00002",
+    "detected": true,
+    "own_reprojection_px": 4.746133951733806,
+    "detector_vs_real_camera_px": 26.933567172187484,
+    "mpjpe_pa_mm": 91.45638346672058
+  }
+]

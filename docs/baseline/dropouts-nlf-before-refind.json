@@ -1,0 +1,147 @@
+{
+ "00122_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00134_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00136_outer": {
+  "frames": 60,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00148_outer": {
+  "frames": 70,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00148_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00152_lower": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00170_lower": {
+  "frames": 70,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00176_lower": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00176_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00176_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "00190_upper": {
+  "frames": 65,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "10004_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "10006_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "desk_waist:00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "closeup_chest:00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "half_out_side:00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "far_small:00152_outer": {
+  "frames": 75,
+  "dressed": 0.9333333333333333,
+  "longest_gap": 5
+ },
+ "dim_noisy:00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "motion_blur:00152_outer": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "bar_in_front:00152_outer": {
+  "frames": 75,
+  "dressed": 0.9066666666666666,
+  "longest_gap": 6
+ },
+ "desk_waist:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "closeup_chest:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "half_out_side:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "far_small:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "dim_noisy:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "motion_blur:00170_upper": {
+  "frames": 75,
+  "dressed": 1.0,
+  "longest_gap": 0
+ },
+ "bar_in_front:00170_upper": {
+  "frames": 75,
+  "dressed": 0.92,
+  "longest_gap": 5
+ }
+}

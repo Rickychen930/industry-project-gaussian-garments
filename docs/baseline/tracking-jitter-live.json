@@ -1,0 +1,191 @@
+{
+ "00122_outer": {
+  "frames": 120,
+  "screen_accel": 27.741965414486394,
+  "input_accel": 26.553840950760712,
+  "accel_3d_mm": 34.25082876775285,
+  "reprojection_pct": 2.6317388558559944,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 118,
+   "refit": 1
+  },
+  "seconds_per_frame": 0.11615166110835465
+ },
+ "00134_upper": {
+  "frames": 120,
+  "screen_accel": 10.876819425266813,
+  "input_accel": 10.92618820027641,
+  "accel_3d_mm": 12.620231326877276,
+  "reprojection_pct": 2.441216641770252,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07226497604157582
+ },
+ "00136_outer": {
+  "frames": 120,
+  "screen_accel": 39.21339084736808,
+  "input_accel": 38.53124975995575,
+  "accel_3d_mm": 26.68276827883516,
+  "reprojection_pct": 2.9588312914139436,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.0719420881915236
+ },
+ "00148_outer": {
+  "frames": 120,
+  "screen_accel": 28.206690287302386,
+  "input_accel": 27.17833874187307,
+  "accel_3d_mm": 55.21206206952346,
+  "reprojection_pct": 2.8298933726869526,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 114,
+   "refit": 5
+  },
+  "seconds_per_frame": 0.28721418263351856
+ },
+ "00148_upper": {
+  "frames": 120,
+  "screen_accel": 34.9315554226752,
+  "input_accel": 34.19397229631756,
+  "accel_3d_mm": 16.246227137888592,
+  "reprojection_pct": 2.9175373389549066,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.0724106100666783
+ },
+ "00152_lower": {
+  "frames": 120,
+  "screen_accel": 8.382950849897988,
+  "input_accel": 8.25515915749814,
+  "accel_3d_mm": 15.542863618754765,
+  "reprojection_pct": 2.063968642453697,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07234340868332462
+ },
+ "00152_outer": {
+  "frames": 120,
+  "screen_accel": 12.141607270528318,
+  "input_accel": 12.797487094201923,
+  "accel_3d_mm": 18.741432246787777,
+  "reprojection_pct": 2.242256296166844,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07271426735824207
+ },
+ "00170_lower": {
+  "frames": 120,
+  "screen_accel": 18.732101650336112,
+  "input_accel": 19.89684000919024,
+  "accel_3d_mm": 19.57049115015431,
+  "reprojection_pct": 2.0004430657367456,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07306473611655141
+ },
+ "00170_upper": {
+  "frames": 120,
+  "screen_accel": 18.1424780882915,
+  "input_accel": 18.234244288101497,
+  "accel_3d_mm": 21.77540754092382,
+  "reprojection_pct": 2.4029193669977573,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07254635833329909
+ },
+ "00176_lower": {
+  "frames": 120,
+  "screen_accel": 20.83158773196983,
+  "input_accel": 20.031043663939734,
+  "accel_3d_mm": 25.43583188107631,
+  "reprojection_pct": 2.4789381534482233,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07204066839985898
+ },
+ "00176_outer": {
+  "frames": 120,
+  "screen_accel": 21.829857976654576,
+  "input_accel": 20.30560631946378,
+  "accel_3d_mm": 26.287254473816624,
+  "reprojection_pct": 2.3952301461495376,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.0722061631999774
+ },
+ "00176_upper": {
+  "frames": 120,
+  "screen_accel": 23.16327288980148,
+  "input_accel": 23.70579071085892,
+  "accel_3d_mm": 32.160370175906486,
+  "reprojection_pct": 2.4841057128033692,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 118,
+   "refit": 1
+  },
+  "seconds_per_frame": 0.11663086319992241
+ },
+ "00190_upper": {
+  "frames": 120,
+  "screen_accel": 31.842880424837723,
+  "input_accel": 31.325188899040764,
+  "accel_3d_mm": 32.31759950441997,
+  "reprojection_pct": 2.425028350345935,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.0728149697917009
+ },
+ "10004_outer": {
+  "frames": 120,
+  "screen_accel": 10.477329795526046,
+  "input_accel": 9.938290123958677,
+  "accel_3d_mm": 17.70095056608224,
+  "reprojection_pct": 2.4616846833697554,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07217682257493531
+ },
+ "10006_outer": {
+  "frames": 120,
+  "screen_accel": 23.717012440201056,
+  "input_accel": 24.72176789379895,
+  "accel_3d_mm": 18.936202847150525,
+  "reprojection_pct": 2.1437786118013444,
+  "statuses": {
+   "fitted": 1,
+   "tracking": 119
+  },
+  "seconds_per_frame": 0.07251314895838731
+ },
+ "mean": {
+  "screen_accel": 22.015433367676234,
+  "input_accel": 21.773000540615737,
+  "accel_3d_mm": 24.89870143906335,
+  "reprojection_pct": 2.458504701997017
+ }
+}

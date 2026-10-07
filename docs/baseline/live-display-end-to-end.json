@@ -1,0 +1,38 @@
+{
+ "00152_outer": {
+  "warp": {
+   "iou": 0.5088890740297264,
+   "scored_frames": 150,
+   "startup_frames": 0
+  },
+  "reskin": {
+   "iou": 0.4927495065005702,
+   "scored_frames": 150,
+   "startup_frames": 0
+  }
+ },
+ "00170_upper": {
+  "warp": {
+   "iou": 0.6166150850340836,
+   "scored_frames": 150,
+   "startup_frames": 0
+  },
+  "reskin": {
+   "iou": 0.5977468579343199,
+   "scored_frames": 150,
+   "startup_frames": 0
+  }
+ },
+ "00134_upper": {
+  "warp": {
+   "iou": 0.6494076947280695,
+   "scored_frames": 150,
+   "startup_frames": 0
+  },
+  "reskin": {
+   "iou": 0.7016430794122317,
+   "scored_frames": 150,
+   "startup_frames": 0
+  }
+ }
+}
