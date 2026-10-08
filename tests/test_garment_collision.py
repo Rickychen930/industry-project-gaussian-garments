@@ -57,6 +57,26 @@ class PushOutOfBodyTest(unittest.TestCase):
         # points already well outside are left exactly where they were
         np.testing.assert_array_equal(pushed[outside_before], kept)
 
+    def test_the_compiled_push_equals_the_numpy_original_bit_for_bit(self):
+        from tryon.garment.collision import BodySurface, _push_out_of_body_numpy, push_out_of_body
+
+        vertices, faces = _sphere()
+        body = BodySurface(vertices, faces)
+        rng = np.random.default_rng(1)
+        for passes in (0, 1, 3):
+            directions = rng.normal(size=(800, 3))
+            directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+            points = directions * rng.uniform(0.5, 1.2, size=(800, 1))
+            np.testing.assert_array_equal(
+                push_out_of_body(points.copy(), body, 0.03, passes), _push_out_of_body_numpy(points.copy(), body, 0.03, passes)
+            )
+        # nothing inside: returned untouched; other dtypes take the numpy path
+        far = directions * 3.0
+        np.testing.assert_array_equal(push_out_of_body(far.copy(), body, 0.03), far)
+        np.testing.assert_array_equal(
+            push_out_of_body(points.astype(np.float32), body, 0.03), _push_out_of_body_numpy(points.astype(np.float32), body, 0.03)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

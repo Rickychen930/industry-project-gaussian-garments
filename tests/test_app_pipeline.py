@@ -129,3 +129,163 @@ class FramingHintTest(unittest.TestCase):
         self.assertIn("hips", framing_hint(points))
         points[[11, 12], 2] = 0.0  # shoulders out of view
         self.assertIn("shoulders", framing_hint(points))
+
+
+class EarlyMaskTest(unittest.TestCase):
+    """The clothing parse of frame t+1 starts in `prefetch`, while frame t is
+    still being erased and shown; each frame must get its own parse."""
+
+    SIZE = 16
+
+    class Remover:
+        """Its parse records which frame it was given and carries that frame's tag."""
+
+        ARM_TUBE_WIDTH = 0.22
+
+        def __init__(self):
+            self.parsed, self.removed, self.running, self.overlap = [], [], 0, []
+
+        def parse_clothing(self, frame, keypoints=None):
+            import time
+
+            from tryon.removal.remover import ClothingParse
+
+            self.running += 1
+            self.overlap.append(self.running)
+            time.sleep(0.01)
+            tag = int(frame[0, 0, 0])
+            self.parsed.append(tag)
+            self.running -= 1
+            labels = np.full(frame.shape[:2], tag, np.uint8)
+            return ClothingParse(labels == tag, labels, labels == tag)
+
+        def remove(self, frame, mask, arms=None, keep=None, plate=None, body=None, parse=None):
+            self.removed.append((int(frame[0, 0, 0]), int(parse.labels[0, 0])))
+            return frame.copy()
+
+    class Regression:
+        def __init__(self):
+            self.prefetched = []
+
+        def prefetch(self, frame, keypoints=None):
+            self.prefetched.append(int(frame[0, 0, 0]))
+
+    class Plate:
+        def __init__(self):
+            self.updates = []
+
+        def update(self, frame, person):
+            self.updates.append((int(frame[0, 0, 0]), bool(person.all())))
+
+    def _session(self):
+        from tryon.app.pipeline import LiveSession
+
+        session = LiveSession.__new__(LiveSession)
+        session.remover, session.regression, session.regressor_name = self.Remover(), self.Regression(), "nlf"
+        session.renderer, session.fitter, session.plate = object(), None, None
+        session._early, session._last_job, session.last_parse = __import__("collections").OrderedDict(), None, None
+        return session
+
+    def _frame(self, tag):
+        return np.full((self.SIZE, self.SIZE, 3), tag, np.uint8)
+
+    @staticmethod
+    def _points():
+        points = np.zeros((33, 4), np.float32)
+        points[:, 2] = 1.0
+        return points
+
+    def test_each_frame_takes_the_parse_of_exactly_that_frame(self):
+        session = self._session()
+        f1, f2, f3 = self._frame(1), self._frame(2), self._frame(3)
+        for frame in (f1, f2):  # the loop prefetches t+1 before it processes t
+            session.prefetch(frame, self._points())
+        job1 = session._take_early_mask(f1)
+        self.assertIs(job1.frame, f1)
+        session.prefetch(f3, self._points())
+        job2 = session._take_early_mask(f2)
+        job3 = session._take_early_mask(f3)
+        self.assertEqual(int(job1.result().labels[0, 0]), 1)
+        self.assertEqual(int(job2.result().labels[0, 0]), 2)
+        self.assertEqual(int(job3.result().labels[0, 0]), 3)
+        self.assertEqual(session.remover.parsed, [1, 2, 3], "one parse per frame, in frame order")
+        self.assertEqual(max(session.remover.overlap), 1, "never two parses at once")
+        self.assertEqual(session.regression.prefetched, [1, 2, 3], "the regressor is still prefetched")
+
+    def test_the_parse_reaches_remove_and_the_plate_from_the_job_not_from_shared_state(self):
+        import tryon.app.pipeline as pipeline
+
+        session = self._session()
+        session.plate = self.Plate()
+        f1, f2 = self._frame(1), self._frame(2)
+        session.prefetch(f1, self._points())
+        session.prefetch(f2, self._points())  # frame 2's parse is in flight while frame 1 is erased
+        old = pipeline.ERASE_NEAR_BODY
+        pipeline.ERASE_NEAR_BODY = 0
+        try:
+            parse1, erased1, original1 = session._start_erase(f1, None, session._take_early_mask(f1)).result()
+            parse2, erased2, original2 = session._start_erase(f2, None, session._take_early_mask(f2)).result()
+        finally:
+            pipeline.ERASE_NEAR_BODY = old
+        self.assertEqual(session.remover.removed, [(1, 1), (2, 2)], "remove saw its own frame's labels")
+        self.assertEqual(session.plate.updates, [(1, True), (2, True)])  # labels != 0 everywhere: all person
+        self.assertEqual((int(parse1.labels[0, 0]), int(parse2.labels[0, 0])), (1, 2))
+        self.assertEqual((int(original1[0, 0, 0]), int(original2[0, 0, 0])), (1, 2), "the frame as read comes back for the face restore")
+        self.assertEqual((int(erased1[0, 0, 0]), int(erased2[0, 0, 0])), (1, 2))
+
+    def test_the_erase_runs_beside_the_caller_and_reraises_its_errors(self):
+        import threading
+
+        from tryon.app.pipeline import Call
+
+        started, release = threading.Event(), threading.Event()
+
+        def work():
+            started.set()
+            release.wait(2)
+            return 7
+
+        call = Call(work)
+        call.start()
+        self.assertTrue(started.wait(2), "the function runs while the caller carries on")
+        release.set()
+        self.assertEqual(call.result(), 7)
+
+        def broken():
+            raise ValueError("boom")
+
+        failing = Call(broken)
+        failing.start()
+        with self.assertRaises(ValueError):
+            failing.result()
+
+    def test_a_frame_that_is_not_dressable_starts_no_parse(self):
+        session = self._session()
+        frame = self._frame(7)
+        session.prefetch(frame, None)  # no landmarks: no person
+        self.assertIsNone(session._take_early_mask(frame))
+        self.assertEqual(session.remover.parsed, [])
+
+    def test_a_frame_without_a_prefetch_has_no_early_job(self):
+        session = self._session()
+        session.prefetch(self._frame(1), self._points())
+        self.assertIsNone(session._take_early_mask(self._frame(1)), "a different frame object is not the prefetched one")
+
+    def test_frames_prefetched_but_never_processed_are_dropped_and_finish_waits(self):
+        session = self._session()
+        frames = [self._frame(i) for i in (1, 2, 3)]
+        for frame in frames:
+            session.prefetch(frame, self._points())
+        self.assertIsNotNone(session._take_early_mask(frames[2]))  # 1 and 2 were skipped (a cut, a lost person)
+        self.assertEqual(len(session._early), 0)
+        session.finish()  # the loop ended
+        self.assertEqual(session.remover.parsed, [1, 2, 3])
+        self.assertEqual(session.remover.running, 0, "no parse still running after finish")
+
+    def test_a_late_start_in_dress_still_waits_for_the_early_jobs(self):
+        session = self._session()
+        f1, f2 = self._frame(1), self._frame(2)
+        session.prefetch(f1, self._points())
+        late = session._start_mask(f2, self._points())  # what `_dress` does when `prefetch` did not
+        self.assertEqual(int(late.result().labels[0, 0]), 2)
+        self.assertEqual(session.remover.parsed, [1, 2])

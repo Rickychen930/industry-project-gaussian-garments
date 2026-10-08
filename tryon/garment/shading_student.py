@@ -179,6 +179,10 @@ class ShadingStudent:
         self.dtype = torch.float16 if self.device.type == "mps" else torch.float32
         self.model = self.model.to(self.device, self.dtype)
         self.per_vertex_distance = False
+        # Scale of the predicted shading (SH change) added to the static colours; 1.0 is the teacher's.
+        # tools/evaluate/colour_study.py: 0.75 lowers the nine-video mean dE76 only 11.93 -> 11.48 (needs >= 1.5),
+        # so it stays 1.0; a flag for measuring, not a fix.
+        self.shadow_strength = 1.0
 
     @torch.no_grad()
     def forward(self, vertices, view, body_vertices):
@@ -189,7 +193,7 @@ class ShadingStudent:
         if self.mean is not None:
             per_gaussian += self.mean
         offset, shadow = per_gaussian[:, :3], per_gaussian[:, 3:].reshape(-1, 16, 3)
-        shs = self.static.static_features() + shadow
+        shs = self.static.static_features() + self.shadow_strength * shadow
         local_xyz = self.static.xyz + offset
         return {"feature_dc": shs[:, :1], "feature_rest": shs[:, 1:],
                 "xyz": self.static.world_xyz(vertices, local_xyz), "local_xyz": local_xyz}

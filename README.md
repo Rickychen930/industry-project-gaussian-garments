@@ -43,7 +43,7 @@ measured number; what is planned and what was tried and dropped is in
     tools/
       evaluate/         one tool per measurement; results go to docs/baseline/
       train/            training the project's own networks (shading students, orientation)
-      data/             downloads, pose fits, the data-layout migration
+      data/             downloads, pose fits
     tests/              test_<folder>_<module>.py for each module
     docs/               the documents above; baseline/ (results), figures/
     models/, data/      weights and test data (git-ignored; ./setup.sh fills models/)
@@ -72,7 +72,7 @@ The loop that runs it is `tryon/app/pipeline.py::run`. **[docs/ARCHITECTURE.md](
 walks through one frame in the code and suggests a reading order.
 
 By default every shown frame carries the garment drawn for it, at the
-pipeline's rate (4.4-4.8 fps on the M1; the body regressor works on the
+pipeline's rate (7.3-7.5 fps on the M1 on a video file, 4.4-4.8 before the 8 Oct speed work; the body regressor works on the
 next frame while this one is drawn). `--smooth` shows
 every camera frame and carries the newest garment with the torso;
 `--delayed` shows that about a second late, with the garment from the
@@ -84,7 +84,7 @@ nearest pipeline frame.
 |---|---|---|
 | garment IoU vs the real shirt, 5 release videos | **0.730** (the authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
 | body accuracy, 8 annotated views (PA-MPJPE) | **24 mm** (keypoint fit 87-94 mm) | `docs/baseline/body-regressors.json` |
-| pipeline time a frame, M1 | 0.21-0.23 s (4.4-4.8 fps); smooth display at camera rate | `python -m tryon.app --profile` |
+| pipeline time a frame, M1 | 0.085-0.10 s of work (0.21-0.23 s before the 8 Oct speed work); smooth display at camera rate | `python -m tryon.app --profile` |
 
 ## Setup, step by step
 

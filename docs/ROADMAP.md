@@ -19,7 +19,7 @@ better than the alternative.
 | shading | per-garment student (1.55M parameters) with a stored per-Gaussian mean, trained on the garment's own motion and every other simulation the authors released: 29.1 dB on unseen motions (one-motion student: 26.9) | `tools/evaluate/shading_students.py` |
 | removal | SCHP (ATR + LIP) on CoreML, learned background plate, Telea fill | `tools/evaluate/background_fill.py` |
 | accuracy | garment IoU vs the real shirt **0.730** (5 release videos; the authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
-| speed (M1, sync) | 0.21-0.23 s a frame, 4.4-4.8 fps on a quiet machine; the body regressor works on the next frame while this one is drawn; smooth display at camera rate (~25 fps). The 8 Oct removal of repeated work cut a loaded-machine frame from 300-388 to 187-217 ms (clean-machine figure still to be taken) | `python -m tryon.app --profile` |
+| speed (M1, sync) | 0.085-0.10 s of work a frame (HUD 7.3-7.5 fps on a video file, whose decode adds ~40 ms a frame; a webcam figure is still to be taken); 0.21-0.23 s (4.4-4.8 fps) before 8 Oct; the body regressor works on the next frame while this one is drawn; smooth display at camera rate (~25 fps). The 8 Oct removal of repeated work cut a loaded-machine frame from 300-388 to 187-217 ms (clean-machine figure still to be taken) | `python -m tryon.app --profile` |
 
 ## Targets
 
@@ -28,9 +28,45 @@ better than the alternative.
 | garment on the real shirt (IoU, 5 release videos) | >= 0.80 | 0.730 | open |
 | body accuracy (PA-MPJPE, 8 annotated views) | <= 30 mm | 24 mm | done |
 | display frame rate | camera rate (>= 20 fps) | ~25 fps (smooth display) | done |
-| pipeline time a frame (M1) | <= 0.5 s | 0.21-0.23 s | done |
+| pipeline time a frame (M1) | <= 0.5 s | 0.085-0.10 s | done |
 | garment present while a person is in view | >= 95 % of frames | 100 % on 15 release videos, 99.5 % on 14 webcam scenarios | done |
 | smooth display vs exact (webcam-speed motion) | >= 90 % of the exact IoU | 93 % at 1/8 of dancer speed | done |
+
+## Where the IoU gap is (measured 8 Oct)
+
+Garment IoU against the real shirt is 0.728 over the 5 release videos; the
+authors' registration reaches 0.827. Four measurements say where the 0.10 is not:
+
+| not the cause | evidence |
+|---|---|
+| cloth stepping | with the cloth stepped at the clip's own dt the IoU is 0.7281, without it 0.7218, with `SmoothCloth` 0.7283; replaying 5 garments, `LightCloth` is 5.467 cm from the authors' simulation and plain skinning 5.454 (`tools/evaluate/cloth_smoothness.py`). The authors' cloth differs from skinning by 7.7 cm, of which 4.5 cm is a static template offset and the rest pose-dependent drape, not inertia (velocity regression explains < 0.2 % of the variance) |
+| placement / calibration | one constant (scale, shift, rotation) per video fitted on half the frames and scored on the other half: +0.005; even an oracle per-frame 2D alignment only reaches 0.767 (`tools/evaluate/placement_gap.py`) |
+| garment size scaling | 7 variants (no resize, shrink only, damped, frozen, height only, widen to the wearer, current): none passes +0.005 and none beats the current one, which is also the one that keeps the garment widening with a wider body; widening to the wearer costs 0.03 (`docs/baseline/size-ablation.json`) |
+| regressed shape jitter | freezing the garment's scale from the first 30 frames changes nothing (0.7278) |
+| splat footprint / opacity / floaters / alpha threshold | ~20 % of the extra pixels are fringe, ~80 % solid; every setting held out: -0.00025 (`tools/evaluate/silhouette_study.py`) |
+| distance to the authors' simulation as a guide | a relaxed rest shape learned from it is 17 % closer on unseen motions and 0.095 worse in IoU: the simulation is not the real garment |
+
+What is left is the garment's SHAPE: after the best alignment our silhouette
+still draws too much (extra pixels 0.178 of the real shirt area, missed 0.107),
+most on the loose outer shirts and the sleeves (00152_outer: torso 14 % too
+wide, hem 4.5 % of its height too low). The next leads are the garment geometry
+itself (the skinning of loose hems and sleeves from the scan pose, the splat
+footprint and opacity at the silhouette threshold), not the cloth, the size or
+the camera. Without registered multi-view data (4D-DRESS, archived) a fit to
+the real shirt cannot be validated further, so 0.80 stays open.
+
+## Does it fit? The audit (8 Oct)
+
+`tools/evaluate/fit_audit.py`, sheets in `docs/figures/fit-audit-*.jpg`, numbers in
+`docs/baseline/fit-audit.json` (details in `LOG.md`). Body **good** (24.6 mm; the
+profile camera is the weak one, 28-38 mm); motion **good** (no dropouts, no lag,
+as steady as the real shirt: centroid jitter 0.66x, area jitter 0.98x of the real
+shirt's); edges **good**; garment against the body **acceptable** (1.0 % of the
+vertices inside the body, 10.6 mm mean penetration, equal to the reference's);
+silhouette **acceptable** for closed garments (IoU 0.77-0.88) and **weak** for
+loose and open outer shirts (0.50-0.68); texture **acceptable** on plain garments
+and **weak** on 00136_outer (dark by 19-21 levels) and on plaid and knit patterns, which do not register pixel for pixel. What looks worst on the sheets is the
+erased clothing (grey patches, a flat pale skin fill on the arms), not the garment.
 
 ## Done
 
@@ -51,12 +87,13 @@ pose-dependent shading from a distilled student · code audit and refactor
    (`tools/evaluate/reference_frame.py` splits the loss level by level).
 2. **Scene lighting on the garment**: light estimated from the face; the
    garments carry studio light (`--harmonize` is the stop-gap).
-3. **Mask for the next frame from `prefetch`**: the clothing-mask thread idles while the previous frame is removed, composited and shown; starting it one frame early could save up to ~60 ms (needs the mask job to hand back its labels).
-4. **Shading refresh rate**: the student updates every 0.7 s on a worker
+3. **The erased clothing** (the weakest thing on the fit-audit sheets after the 8 Oct fill: arm tubes read as sausages, a flat torso skin, a pale halo on 00122_outer) and **loose shirts** (the long hem and wide torso of 00152_outer; closed-worn jackets against open templates). The open-front 'floating panel' was a sleeve on a wrong scan pose, fixed 8 Oct (`LOG.md`).
+4. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth + posed mesh ~54 ms of which `push_out_of_body` 22; `render_splats_gl` ~59 ms of which `_instances` 26; MediaPipe for the next frame could run beside the render): each needs to be bit-identical and >= 3 ms.
+5. **Shading refresh rate**: the student updates every 0.7 s on a worker
    thread; test 0.35 s with the GPU free and keep it only if fps holds.
-5. **AnyWear / Decart comparison**: possible only with the user's own API
+6. **AnyWear / Decart comparison**: possible only with the user's own API
    key and their approval to upload the release videos.
-6. **4D-DRESS**: its access request was archived (the data cannot be
+7. **4D-DRESS**: its access request was archived (the data cannot be
    redistributed, so no copies are used); see [`DATASETS.md`](DATASETS.md).
 
 ## Tried and dropped
@@ -78,4 +115,8 @@ Each row was measured; the entry in [`LOG.md`](LOG.md) has the numbers.
 | SAM 2 for the clothing mask, RTMPose, SMPLer-X, Multi-HMR 672_B | compared, not adopted (numbers in `LOG.md`) |
 | numba `parallel=True` kernel on the mask thread | aborts the process (numba's workqueue layer is not thread-safe) and serially is no faster than numpy |
 | diffusion try-on (ViViD, CatVTON, FASHN, VTON360, FitMe360) | tens of seconds to 30 minutes a frame on the M1 ([`REFERENCE_RUNS.md`](REFERENCE_RUNS.md)) |
+| neighbour coupling of the cloth, velocity inheritance, One Euro filter on the cloth target, long-range-attachment clamp, low-dimensional pose residual | each measured against the authors' simulation: no distance gain (the cloth is not what separates us from the registration); the One Euro filter lags (IoU 0.7277 vs 0.7282) |
+| garment size variants, per-video calibration of the placement | see "Where the IoU gap is" |
+| a relaxed rest shape learned from the authors' simulation (`GarmentRenderer.RELAXED_REST`) | 17 % closer to the simulation on unseen motions, but IoU against the real shirt 0.7283 -> 0.6328 (0.7198 even at a quarter of the offset): the simulation's garment is shorter and tighter than the real one |
+| splat footprint, opacity sharpening, floater removal, alpha threshold | the over-drawing is ~80 % solid geometry; held-out gain -0.00025 (`docs/baseline/silhouette-study.json`) |
 | ContourCraft cloth | 2.2-2.6 s a step on the M1; driven by our tracked bodies it billows (IoU 0.476 against 0.600) |

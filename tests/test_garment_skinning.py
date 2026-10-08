@@ -218,6 +218,28 @@ class SkinnedBindingTest(unittest.TestCase):
         turned = skin.apply(fitter)
         self.assertLess(np.ptp(turned[:, 0]), np.ptp(verts[:, 0]) * 0.8)
 
+    def test_leg_scale_moves_the_leg_weight_to_the_other_joints(self):
+        from tryon.garment.skinning import SkinnedGarment
+
+        fitter, verts, _faces, skin = self._fixture()
+        legs = list(SkinnedGarment.LEG_JOINTS)
+        self.assertGreater(float(skin.weights[:, legs].sum()), 0.0)  # the coat's hem does carry leg weight
+        SkinnedGarment.LEG_SCALE = 0.0
+        try:
+            hemmed = SkinnedGarment.build(verts, fitter)
+        finally:
+            SkinnedGarment.LEG_SCALE = 1.0
+        self.assertLess(float(hemmed.weights[:, legs].sum()), 0.02 * float(skin.weights[:, legs].sum()))
+        self.assertTrue(np.allclose(hemmed.weights.sum(axis=1), 1.0))
+        self.assertGreaterEqual(float(hemmed.weights.min()), 0.0)
+
+    def test_leg_scale_one_is_the_original_weights(self):
+        from tryon.garment.skinning import SkinnedGarment
+
+        fitter, verts, _faces, skin = self._fixture()
+        self.assertEqual(SkinnedGarment.LEG_SCALE, 1.0)
+        np.testing.assert_array_equal(SkinnedGarment.build(verts, fitter).weights, skin.weights)
+
 
 class TransferSparseTest(unittest.TestCase):
     """`SkinnedGarment._transfer` (sparse product) equals the dense gather."""

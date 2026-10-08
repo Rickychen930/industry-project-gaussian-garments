@@ -29,18 +29,22 @@ from __future__ import annotations
 import numpy as np
 from numba import njit
 
-from tryon.rendering.splat_cpu import _prepare
+from tryon.rendering.splat_cpu import _prepare, camera_coordinates
 
 
 @njit(cache=True)
-def _instances(order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, opacity):
-    """The per-instance attribute rows, in draw order, float32 - one pass
-    instead of a numpy gather per column (22 -> ~1 ms at 121k splats).
-    Serial: the loop is cheap, and a numba parallel region must not meet
-    another thread's."""
-    n = len(order)
-    out = np.zeros((n, 16), np.float32)
-    for i in range(n):
+def _instances(out, order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, opacity, xyz, rotation, translation, with_distance):
+    """Fill `out[:len(order)]` with the per-instance attribute rows, in draw
+    order, float32 - one pass instead of a numpy gather per column (22 -> ~1
+    ms at 121k splats). Column 14 is the camera -> splat distance the
+    body-occlusion test wants (0 without an occluder): computed here from the
+    centres, with `camera_coordinates` (the matmul's arithmetic) and
+    `sqrt(x x + y y + z z)` as `np.linalg.norm` adds it, so the
+    values are the numpy ones bit for bit, without a gather, a BLAS gemm
+    (10-19 ms when the cores are busy) and a float64 copy of the centres.
+    Column 15 is padding. Serial: the loop is cheap, and a numba parallel
+    region must not meet another thread's."""
+    for i in range(len(order)):
         k = order[i]
         out[i, 0], out[i, 1], out[i, 2], out[i, 3] = x0[k], y0[k], x1[k], y1[k]
         out[i, 4], out[i, 5] = pixels[k, 0], pixels[k, 1]
@@ -48,7 +52,25 @@ def _instances(order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, opaci
         out[i, 9] = determinant[k]
         out[i, 10], out[i, 11], out[i, 12] = colours[k, 2], colours[k, 1], colours[k, 0]  # BGR
         out[i, 13] = opacity[k]
-    return out
+        distance = 0.0
+        if with_distance:
+            cx, cy, cz = camera_coordinates(xyz[k, 0], xyz[k, 1], xyz[k, 2], rotation, translation)
+            distance = np.sqrt(cx * cx + cy * cy + cz * cz)
+        out[i, 14] = distance
+        out[i, 15] = 0.0
+
+
+_INSTANCE_ROWS = []  # one entry: the (capacity, 16) float32 array every frame fills a prefix of
+
+
+def _instance_rows(count):
+    """A (count, 16) float32 view of one array kept across frames: a fresh
+    5 MB `np.zeros` a frame cost page faults and a memset (the GL buffer
+    copies it on upload, so nothing keeps a reference)."""
+    if not _INSTANCE_ROWS or len(_INSTANCE_ROWS[0]) < count:
+        _INSTANCE_ROWS[:] = [np.empty((max(count, 1024) + count // 4, 16), np.float32)]
+    return _INSTANCE_ROWS[0][:count]
+
 
 _VERTEX = """
 #version 330 core
@@ -292,12 +314,12 @@ def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occl
     # farthest first; float64 depths practically never tie, so the unstable
     # sort gives the same order at half the cost (8.8 vs 16.6 ms, 121k)
     keep = keep[np.argsort(-depth[keep])]
-    instances = _instances(keep, x0, y0, x1, y1, np.ascontiguousarray(pixels, np.float64), np.ascontiguousarray(cov2d, np.float64),
-                           np.ascontiguousarray(determinant, np.float64), np.ascontiguousarray(colours, np.float64),
-                           np.ascontiguousarray(np.asarray(opacity, np.float64).ravel()))
-    if occluder is not None:
-        centres = np.asarray(splats["xyz"], np.float64)[keep]
-        instances[:, 14] = np.linalg.norm(centres @ np.asarray(view, np.float64)[:3, :3].T + np.asarray(view, np.float64)[:3, 3], axis=1)
+    view64 = np.asarray(view, np.float64)
+    instances = _instance_rows(len(keep))
+    _instances(instances, keep, x0, y0, x1, y1, np.ascontiguousarray(pixels, np.float64), np.ascontiguousarray(cov2d, np.float64),
+               np.ascontiguousarray(determinant, np.float64), np.ascontiguousarray(colours, np.float64),
+               np.ascontiguousarray(np.asarray(opacity, np.float64).ravel()), np.ascontiguousarray(splats["xyz"], np.float64),
+               np.ascontiguousarray(view64[:3, :3]), np.ascontiguousarray(view64[:3, 3]), occluder is not None)
     if _STATE is None:
         _STATE = _GL()
     gl = _STATE
@@ -306,7 +328,7 @@ def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occl
     if use_body:
         gl.body_distance(occluder[0], occluder[1], view, intrinsics, height, width)
     gl.body_texture.use(location=0)  # bound either way: an empty sampler unit logs a GL warning
-    buffer = gl.ctx.buffer(instances.tobytes())
+    buffer = gl.ctx.buffer(instances)
     vao = gl.ctx.vertex_array(
         gl.prog,
         [

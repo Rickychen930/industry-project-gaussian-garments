@@ -72,6 +72,8 @@ display (each shown frame carries the garment drawn for it).
 | `--dump-alpha out.npz` | With `--smooth-display`: record the garment shown on every frame (for `tools/evaluate/live_display.py`). |
 | `--appearance --async-appearance` | The garment's own shading network (folds, shadows), updated on a worker thread. |
 | `--harmonize` | Match the garment's colours to the scene. |
+| `--classic-cloth` | The first cloth model (`LightCloth`) instead of the default `SmoothCloth` (same distance to the authors' simulation and the same IoU, about a third of the jitter). |
+| `--garment-subsample F` | Draw only a fraction F of the garment's Gaussians. Measured: F = 0.75 or an importance subset at 0.5 lose < 0.003 IoU; the default stays 1.0 (the speed gain was not cleanly measured). |
 | `--max-width N` | Process frames at most N pixels wide (default 960; `0` = as captured). `720` is a speed mode: removal and compositing ~17 ms a frame cheaper, garment accuracy unchanged (0.7262 vs 0.7253 IoU on three release videos), a smaller picture. |
 | `--source 0 / 1 / file` | Camera index or a video file. |
 | `--headless --output-video out.mp4 --max-frames N` | Run without a window and save the result. |
@@ -136,16 +138,16 @@ and `tryon/body/regressor.py` (body), `tryon/garment/skinning.py` and
 | | value | source |
 |---|---|---|
 | Display frame rate (smooth mode) | 25 fps | `smooth_display`, dancer clip |
-| Pipeline time per frame | 0.21-0.23 s (4.4-4.8 fps), sync mode | `--profile`; the pipeline's HUD |
-| Stages (960-wide frame) | MediaPipe 17, body ~90 (runs during the previous frame), render 75-81, removal 30 (+ ~50 waiting for the parse) ms | `--profile` |
-| Garment IoU vs the real shirt, per frame (`--sync`) | 0.730 on 5 release videos (authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
+| Pipeline time per frame | 0.085-0.10 s of work, HUD 7.3-7.5 fps on a video file (decode adds ~40 ms), sync mode; 0.21-0.23 s before 8 Oct | `--profile`; the pipeline's HUD |
+| Stages (960-wide frame, medians) | MediaPipe 13, fit 8, render 56-66, erase beside the render (a worker thread; 0-23 ms of waiting), composite 5 ms; the body regressor and the clothing mask of the NEXT frame run during this frame | `--profile` |
+| Garment IoU vs the real shirt, per frame (`--sync`) | 0.728 on 5 release videos with the cloth stepped at the clip's own dt (0.722 without cloth; authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
 | Smooth mode, share of the per-frame accuracy | 77 % at the dancers' speed, 86-93 % at a quarter to an eighth of it | `tools/evaluate/async_display.py` (simulated) |
 | Smooth mode run in real time, garment IoU on every shown frame | 0.575 live (torso warp), **0.625 delayed ~1 s** (`--delayed-sync`) mean of 00152 / 00170 / 00134 | `tools/evaluate/live_display.py` |
 | Shading | the student against the 55M teacher, every garment | `tools/evaluate/shading_students.py`, `docs/baseline/shading-students.json` |
 
 **Sync (default) vs smooth vs delayed.** The default shows only finished
 pipeline frames: the garment always matches the frame it is on (nothing
-floats), at the pipeline's rate (4.4-4.8 fps on the M1). `--smooth` and
+floats), at the pipeline's rate (7.3-7.5 fps on the M1, video file). `--smooth` and
 `--delayed` trade that for a fluid video. With `--delayed` the video is shown about one
 pipeline period (~1 s) late: every shown frame then has a pipeline result
 both before and after it, and the garment comes from the nearer one, so it
@@ -199,8 +201,7 @@ garment trails a little on fast moves.
 External systems run for comparison (VTON360, FASHN, CatVTON, RTV, SAM2)
 keep their clones and venvs under `~/Downloads/tryon_refs/`, outside the
 data root (a virtualenv cannot be moved); see `docs/REFERENCE_RUNS.md`.
-`TRYON_DATA` moves the data root; `tools/data/migrate_layout.sh` moves a
-pre-October-2026 layout into it.
+`TRYON_DATA` moves the data root.
 
 ### GPU setup
 

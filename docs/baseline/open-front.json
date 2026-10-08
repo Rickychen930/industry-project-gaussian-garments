@@ -1,0 +1,592 @@
+{
+ "note": {
+  "what": "open-front study, tools/evaluate/open_front.py replay on recorded NLF bodies (every 5th frame); tags: base (class defaults before this work), refine (ScanPoseBinder.REFINE_ARMS='refined', now the default), wrap1/wrap2/wrap3/wrap2h (LightCloth.WRAP=(0.01,.5)/(0.02,.5)/(0.03,.5)/(0.02,.8)), combo (refine+wrap3), leg0 (SkinnedGarment.LEG_SCALE=0), rigid (no cloth), tight (SmoothCloth.LOOSE_RADIUS=0.02), ride08/ride15 (GarmentRenderer.RIDE_UP), final (the new defaults)",
+  "cloth_step_ms_note": "the cloth_step_ms fields were measured on a machine at load 20-30 and are not comparable; the interleaved SmoothCloth.step benchmark gave 6.36 ms default vs 9.61 ms with WRAP"
+ },
+ "results": {
+  "base": {
+   "00122_outer": {
+    "iou": 0.5261,
+    "split_extra": 7.3213,
+    "split_missed": 0.2326,
+    "split_torso_width_ratio": 6.8888,
+    "split_hem_offset": 0.0169,
+    "inside_share": 0.0212,
+    "cloth_step_ms": 22.9953
+   },
+   "00134_upper": {
+    "iou": 0.7843,
+    "split_extra": 0.1378,
+    "split_missed": 0.1127,
+    "split_torso_width_ratio": 1.068,
+    "split_hem_offset": -0.004,
+    "inside_share": 0.0066,
+    "cloth_step_ms": 35.9916
+   },
+   "00136_outer": {
+    "iou": 0.6457,
+    "split_extra": 0.3078,
+    "split_missed": 0.178,
+    "split_torso_width_ratio": 1.0783,
+    "split_hem_offset": -0.0546,
+    "inside_share": 0.0068,
+    "cloth_step_ms": 36.1436
+   },
+   "00148_outer": {
+    "iou": 0.5496,
+    "split_extra": 0.1369,
+    "split_missed": 0.3783,
+    "split_torso_width_ratio": 0.6475,
+    "split_hem_offset": -0.172,
+    "inside_share": 0.0018,
+    "cloth_step_ms": 25.3483
+   },
+   "00148_upper": {
+    "iou": 0.8016,
+    "split_extra": 0.1869,
+    "split_missed": 0.0718,
+    "split_torso_width_ratio": 1.0755,
+    "split_hem_offset": 0.0678,
+    "inside_share": 0.0134,
+    "cloth_step_ms": 36.8965
+   },
+   "00152_outer": {
+    "iou": 0.6578,
+    "split_extra": 0.3125,
+    "split_missed": 0.1511,
+    "split_torso_width_ratio": 1.1281,
+    "split_hem_offset": 0.0448,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 31.4201
+   },
+   "00170_upper": {
+    "iou": 0.7839,
+    "split_extra": 0.1641,
+    "split_missed": 0.1031,
+    "split_torso_width_ratio": 1.0273,
+    "split_hem_offset": -0.0229,
+    "inside_share": 0.0081,
+    "cloth_step_ms": 19.7405
+   },
+   "00176_outer": {
+    "iou": 0.4941,
+    "split_extra": 0.2571,
+    "split_missed": 0.3802,
+    "split_torso_width_ratio": 1.0044,
+    "split_hem_offset": 0.0322,
+    "inside_share": 0.0766,
+    "cloth_step_ms": 33.5349
+   },
+   "00190_upper": {
+    "iou": 0.7243,
+    "split_extra": 0.2746,
+    "split_missed": 0.1017,
+    "split_torso_width_ratio": 1.0603,
+    "split_hem_offset": 0.0731,
+    "inside_share": 0.0064,
+    "cloth_step_ms": 16.5764
+   },
+   "10004_outer": {
+    "iou": 0.3188,
+    "split_extra": 1.1234,
+    "split_missed": 0.3973,
+    "split_torso_width_ratio": 1.3572,
+    "split_hem_offset": 0.1876,
+    "inside_share": 0.0178,
+    "cloth_step_ms": 28.8075
+   },
+   "10006_outer": {
+    "iou": 0.6825,
+    "split_extra": 0.2663,
+    "split_missed": 0.1389,
+    "split_torso_width_ratio": 1.1047,
+    "split_hem_offset": -0.0343,
+    "inside_share": 0.0027,
+    "cloth_step_ms": 36.375
+   }
+  },
+  "combo": {
+   "00122_outer": {
+    "iou": 0.6087,
+    "split_extra": 6.576,
+    "split_missed": 0.1822,
+    "split_torso_width_ratio": 5.7829,
+    "split_hem_offset": 0.0166,
+    "inside_share": 0.0091,
+    "cloth_step_ms": 49.8803
+   },
+   "00134_upper": {
+    "iou": 0.7901,
+    "split_extra": 0.125,
+    "split_missed": 0.1155,
+    "split_torso_width_ratio": 1.0368,
+    "split_hem_offset": -0.0042,
+    "inside_share": 0.0066,
+    "cloth_step_ms": 43.2475
+   },
+   "00136_outer": {
+    "iou": 0.6587,
+    "split_extra": 0.2722,
+    "split_missed": 0.18,
+    "split_torso_width_ratio": 1.0376,
+    "split_hem_offset": -0.0545,
+    "inside_share": 0.0069,
+    "cloth_step_ms": 47.002
+   },
+   "00148_outer": {
+    "iou": 0.5439,
+    "split_extra": 0.1334,
+    "split_missed": 0.3868,
+    "split_torso_width_ratio": 0.6302,
+    "split_hem_offset": -0.172,
+    "inside_share": 0.0018,
+    "cloth_step_ms": 64.9866
+   },
+   "00152_outer": {
+    "iou": 0.6537,
+    "split_extra": 0.2921,
+    "split_missed": 0.171,
+    "split_torso_width_ratio": 1.0726,
+    "split_hem_offset": 0.0428,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 47.8491
+   },
+   "00170_upper": {
+    "iou": 0.7831,
+    "split_extra": 0.1631,
+    "split_missed": 0.1047,
+    "split_torso_width_ratio": 1.0235,
+    "split_hem_offset": -0.0229,
+    "inside_share": 0.0081,
+    "cloth_step_ms": 33.0252
+   },
+   "00176_outer": {
+    "iou": 0.5005,
+    "split_extra": 0.2668,
+    "split_missed": 0.3669,
+    "split_torso_width_ratio": 0.9862,
+    "split_hem_offset": 0.0997,
+    "inside_share": 0.0606,
+    "cloth_step_ms": 40.5012
+   },
+   "00190_upper": {
+    "iou": 0.7237,
+    "split_extra": 0.2577,
+    "split_missed": 0.1136,
+    "split_torso_width_ratio": 1.033,
+    "split_hem_offset": 0.0731,
+    "inside_share": 0.0064,
+    "cloth_step_ms": 37.4114
+   },
+   "10004_outer": {
+    "iou": 0.3391,
+    "split_extra": 0.9913,
+    "split_missed": 0.401,
+    "split_torso_width_ratio": 1.2658,
+    "split_hem_offset": 0.1888,
+    "inside_share": 0.0211,
+    "cloth_step_ms": 56.0331
+   },
+   "10006_outer": {
+    "iou": 0.6949,
+    "split_extra": 0.2364,
+    "split_missed": 0.1435,
+    "split_torso_width_ratio": 1.0689,
+    "split_hem_offset": -0.0345,
+    "inside_share": 0.0028,
+    "cloth_step_ms": 47.6649
+   }
+  },
+  "final": {
+   "00122_outer": {
+    "iou": 0.6086,
+    "split_extra": 6.6654,
+    "split_missed": 0.1761,
+    "split_torso_width_ratio": 5.9523,
+    "split_hem_offset": 0.0169,
+    "inside_share": 0.009,
+    "cloth_step_ms": 27.0837
+   },
+   "00170_upper": {
+    "iou": 0.7839,
+    "split_extra": 0.1641,
+    "split_missed": 0.1031,
+    "split_torso_width_ratio": 1.0273,
+    "split_hem_offset": -0.0229,
+    "inside_share": 0.0081,
+    "cloth_step_ms": 38.6212
+   }
+  },
+  "leg0": {
+   "00122_outer": {
+    "iou": 0.5317,
+    "split_extra": 7.4701,
+    "split_missed": 0.2209,
+    "split_torso_width_ratio": 6.8653,
+    "split_hem_offset": 0.0145,
+    "inside_share": 0.0209,
+    "cloth_step_ms": 31.4362
+   },
+   "00136_outer": {
+    "iou": 0.652,
+    "split_extra": 0.3067,
+    "split_missed": 0.1701,
+    "split_torso_width_ratio": 1.0806,
+    "split_hem_offset": -0.0557,
+    "inside_share": 0.0067,
+    "cloth_step_ms": 56.3997
+   },
+   "00152_outer": {
+    "iou": 0.6583,
+    "split_extra": 0.3149,
+    "split_missed": 0.149,
+    "split_torso_width_ratio": 1.1256,
+    "split_hem_offset": 0.0409,
+    "inside_share": 0.0158,
+    "cloth_step_ms": 34.6818
+   },
+   "10006_outer": {
+    "iou": 0.6826,
+    "split_extra": 0.2671,
+    "split_missed": 0.1383,
+    "split_torso_width_ratio": 1.1045,
+    "split_hem_offset": -0.0316,
+    "inside_share": 0.0027,
+    "cloth_step_ms": 45.9097
+   }
+  },
+  "refine": {
+   "00122_outer": {
+    "iou": 0.6086,
+    "split_extra": 6.6654,
+    "split_missed": 0.1761,
+    "split_torso_width_ratio": 5.9523,
+    "split_hem_offset": 0.0169,
+    "inside_share": 0.009,
+    "cloth_step_ms": 27.7967
+   },
+   "00148_upper": {
+    "iou": 0.806,
+    "split_extra": 0.181,
+    "split_missed": 0.0717,
+    "split_torso_width_ratio": 1.0764,
+    "split_hem_offset": 0.068,
+    "inside_share": 0.0119,
+    "cloth_step_ms": 33.9413
+   },
+   "00176_outer": {
+    "iou": 0.4918,
+    "split_extra": 0.2966,
+    "split_missed": 0.3641,
+    "split_torso_width_ratio": 1.0087,
+    "split_hem_offset": 0.1002,
+    "inside_share": 0.0605,
+    "cloth_step_ms": 31.3192
+   },
+   "10004_outer": {
+    "iou": 0.3359,
+    "split_extra": 1.0625,
+    "split_missed": 0.388,
+    "split_torso_width_ratio": 1.3211,
+    "split_hem_offset": 0.1905,
+    "inside_share": 0.021,
+    "cloth_step_ms": 41.9953
+   }
+  },
+  "ride08": {
+   "00122_outer": {
+    "iou": 0.5264,
+    "split_extra": 7.3199,
+    "split_missed": 0.2329,
+    "split_torso_width_ratio": 6.8877,
+    "split_hem_offset": 0.0152,
+    "inside_share": 0.0209,
+    "cloth_step_ms": 37.8798
+   },
+   "00136_outer": {
+    "iou": 0.6449,
+    "split_extra": 0.3017,
+    "split_missed": 0.1819,
+    "split_torso_width_ratio": 1.0827,
+    "split_hem_offset": -0.0614,
+    "inside_share": 0.0068,
+    "cloth_step_ms": 48.9659
+   },
+   "00152_outer": {
+    "iou": 0.6606,
+    "split_extra": 0.3044,
+    "split_missed": 0.1513,
+    "split_torso_width_ratio": 1.1295,
+    "split_hem_offset": 0.0382,
+    "inside_share": 0.0135,
+    "cloth_step_ms": 32.1263
+   },
+   "10006_outer": {
+    "iou": 0.6826,
+    "split_extra": 0.2659,
+    "split_missed": 0.139,
+    "split_torso_width_ratio": 1.1046,
+    "split_hem_offset": -0.0349,
+    "inside_share": 0.0027,
+    "cloth_step_ms": 54.7521
+   }
+  },
+  "ride15": {
+   "00122_outer": {
+    "iou": 0.5266,
+    "split_extra": 7.3189,
+    "split_missed": 0.2331,
+    "split_torso_width_ratio": 6.8866,
+    "split_hem_offset": 0.0137,
+    "inside_share": 0.0207,
+    "cloth_step_ms": 25.2001
+   },
+   "00136_outer": {
+    "iou": 0.6437,
+    "split_extra": 0.2969,
+    "split_missed": 0.1861,
+    "split_torso_width_ratio": 1.0862,
+    "split_hem_offset": -0.0675,
+    "inside_share": 0.0068,
+    "cloth_step_ms": 21.1674
+   },
+   "00152_outer": {
+    "iou": 0.6629,
+    "split_extra": 0.2978,
+    "split_missed": 0.1516,
+    "split_torso_width_ratio": 1.1317,
+    "split_hem_offset": 0.0326,
+    "inside_share": 0.0134,
+    "cloth_step_ms": 32.8201
+   },
+   "10006_outer": {
+    "iou": 0.6828,
+    "split_extra": 0.2655,
+    "split_missed": 0.1391,
+    "split_torso_width_ratio": 1.1046,
+    "split_hem_offset": -0.0352,
+    "inside_share": 0.0027,
+    "cloth_step_ms": 26.8315
+   }
+  },
+  "rigid": {
+   "00122_outer": {
+    "iou": 0.5003,
+    "split_extra": 7.0755,
+    "split_missed": 0.2714,
+    "split_torso_width_ratio": 6.8953,
+    "split_hem_offset": 0.0169,
+    "inside_share": 0.1529,
+    "cloth_step_ms": 0.0
+   },
+   "00136_outer": {
+    "iou": 0.6467,
+    "split_extra": 0.3076,
+    "split_missed": 0.1769,
+    "split_torso_width_ratio": 1.0805,
+    "split_hem_offset": -0.0548,
+    "inside_share": 0.0553,
+    "cloth_step_ms": 0.0
+   },
+   "00152_outer": {
+    "iou": 0.6574,
+    "split_extra": 0.3124,
+    "split_missed": 0.1521,
+    "split_torso_width_ratio": 1.1322,
+    "split_hem_offset": 0.0448,
+    "inside_share": 0.1125,
+    "cloth_step_ms": 0.0
+   },
+   "10006_outer": {
+    "iou": 0.6828,
+    "split_extra": 0.2706,
+    "split_missed": 0.1361,
+    "split_torso_width_ratio": 1.1103,
+    "split_hem_offset": -0.0343,
+    "inside_share": 0.0337,
+    "cloth_step_ms": 0.0
+   }
+  },
+  "tight": {
+   "00122_outer": {
+    "iou": 0.5261,
+    "split_extra": 7.3213,
+    "split_missed": 0.2326,
+    "split_torso_width_ratio": 6.8888,
+    "split_hem_offset": 0.0169,
+    "inside_share": 0.0212,
+    "cloth_step_ms": 39.763
+   },
+   "00136_outer": {
+    "iou": 0.6457,
+    "split_extra": 0.3078,
+    "split_missed": 0.178,
+    "split_torso_width_ratio": 1.0783,
+    "split_hem_offset": -0.0546,
+    "inside_share": 0.0068,
+    "cloth_step_ms": 50.5201
+   },
+   "00152_outer": {
+    "iou": 0.6578,
+    "split_extra": 0.3125,
+    "split_missed": 0.1511,
+    "split_torso_width_ratio": 1.1281,
+    "split_hem_offset": 0.0448,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 39.967
+   }
+  },
+  "wrap1": {
+   "00122_outer": {
+    "iou": 0.5439,
+    "split_extra": 6.4852,
+    "split_missed": 0.2567,
+    "split_torso_width_ratio": 5.6501,
+    "split_hem_offset": 0.0167,
+    "inside_share": 0.0214,
+    "cloth_step_ms": 49.6362
+   },
+   "00136_outer": {
+    "iou": 0.6725,
+    "split_extra": 0.2373,
+    "split_missed": 0.184,
+    "split_torso_width_ratio": 1.0035,
+    "split_hem_offset": -0.0536,
+    "inside_share": 0.0071,
+    "cloth_step_ms": 50.8392
+   },
+   "00152_outer": {
+    "iou": 0.646,
+    "split_extra": 0.2786,
+    "split_missed": 0.1903,
+    "split_torso_width_ratio": 1.0228,
+    "split_hem_offset": 0.042,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 44.022
+   },
+   "10006_outer": {
+    "iou": 0.6971,
+    "split_extra": 0.2193,
+    "split_missed": 0.1527,
+    "split_torso_width_ratio": 1.0489,
+    "split_hem_offset": -0.0348,
+    "inside_share": 0.0031,
+    "cloth_step_ms": 59.1177
+   }
+  },
+  "wrap2": {
+   "00122_outer": {
+    "iou": 0.5438,
+    "split_extra": 6.6763,
+    "split_missed": 0.248,
+    "split_torso_width_ratio": 5.8583,
+    "split_hem_offset": 0.0164,
+    "inside_share": 0.0213,
+    "cloth_step_ms": 38.9282
+   },
+   "00136_outer": {
+    "iou": 0.665,
+    "split_extra": 0.2564,
+    "split_missed": 0.1817,
+    "split_torso_width_ratio": 1.021,
+    "split_hem_offset": -0.0543,
+    "inside_share": 0.007,
+    "cloth_step_ms": 34.3914
+   },
+   "00152_outer": {
+    "iou": 0.6507,
+    "split_extra": 0.2862,
+    "split_missed": 0.179,
+    "split_torso_width_ratio": 1.0492,
+    "split_hem_offset": 0.0423,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 34.0335
+   },
+   "10006_outer": {
+    "iou": 0.6965,
+    "split_extra": 0.2283,
+    "split_missed": 0.1471,
+    "split_torso_width_ratio": 1.0597,
+    "split_hem_offset": -0.0347,
+    "inside_share": 0.0029,
+    "cloth_step_ms": 36.2327
+   }
+  },
+  "wrap2h": {
+   "00122_outer": {
+    "iou": 0.5522,
+    "split_extra": 6.35,
+    "split_missed": 0.2566,
+    "split_torso_width_ratio": 5.2978,
+    "split_hem_offset": 0.0165,
+    "inside_share": 0.0214,
+    "cloth_step_ms": 36.7791
+   },
+   "00136_outer": {
+    "iou": 0.6752,
+    "split_extra": 0.2309,
+    "split_missed": 0.1836,
+    "split_torso_width_ratio": 0.9916,
+    "split_hem_offset": -0.0539,
+    "inside_share": 0.0071,
+    "cloth_step_ms": 38.7974
+   },
+   "00152_outer": {
+    "iou": 0.6429,
+    "split_extra": 0.2773,
+    "split_missed": 0.1947,
+    "split_torso_width_ratio": 1.0167,
+    "split_hem_offset": 0.0402,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 41.0812
+   },
+   "10006_outer": {
+    "iou": 0.698,
+    "split_extra": 0.2131,
+    "split_missed": 0.1564,
+    "split_torso_width_ratio": 1.0361,
+    "split_hem_offset": -0.0345,
+    "inside_share": 0.003,
+    "cloth_step_ms": 42.02
+   }
+  },
+  "wrap3": {
+   "00122_outer": {
+    "iou": 0.5433,
+    "split_extra": 6.8337,
+    "split_missed": 0.2408,
+    "split_torso_width_ratio": 6.0571,
+    "split_hem_offset": 0.0166,
+    "inside_share": 0.0212,
+    "cloth_step_ms": 40.6215
+   },
+   "00136_outer": {
+    "iou": 0.6587,
+    "split_extra": 0.2722,
+    "split_missed": 0.18,
+    "split_torso_width_ratio": 1.0376,
+    "split_hem_offset": -0.0545,
+    "inside_share": 0.0069,
+    "cloth_step_ms": 29.4961
+   },
+   "00152_outer": {
+    "iou": 0.6537,
+    "split_extra": 0.2921,
+    "split_missed": 0.171,
+    "split_torso_width_ratio": 1.0726,
+    "split_hem_offset": 0.0428,
+    "inside_share": 0.0136,
+    "cloth_step_ms": 38.8517
+   },
+   "10006_outer": {
+    "iou": 0.6949,
+    "split_extra": 0.2364,
+    "split_missed": 0.1435,
+    "split_torso_width_ratio": 1.0689,
+    "split_hem_offset": -0.0345,
+    "inside_share": 0.0028,
+    "cloth_step_ms": 27.6105
+   }
+  }
+ }
+}

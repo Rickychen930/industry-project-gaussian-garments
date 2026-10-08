@@ -10,6 +10,7 @@ import argparse
 
 from tryon.app.pipeline import run
 from tryon.app.smooth_display import smooth_display
+from tryon.garment.cloth import LightCloth
 from tryon.garment.renderer import GarmentRenderer
 
 
@@ -38,6 +39,8 @@ def build_parser():
                          help="with --appearance: the garment's distilled shading student when it has one")
     garment.add_argument("--async-appearance", action="store_true",
                          help="with --appearance: shade on a worker thread, each frame uses the newest shading (live speed)")
+    garment.add_argument("--classic-cloth", action="store_true",
+                         help="the first cloth model (LightCloth) instead of the default SmoothCloth, whose parameters were searched against the authors' simulation (same accuracy, about a third of the jitter)")
     garment.add_argument("--gpu-render", action="store_true", help="composite the splats with OpenGL (tryon/rendering/splat_gl.py)")
 
     body = parser.add_argument_group("body")
@@ -79,6 +82,8 @@ def apply_renderer_switches(args):
     GarmentRenderer.APPEARANCE_ASYNC = args.async_appearance
     GarmentRenderer.STUDENT_SHADING = args.student_shading
     GarmentRenderer.DYNAMICS = not args.rigid
+    if args.classic_cloth:
+        GarmentRenderer.CLOTH = LightCloth
 
 
 def pipeline_options(args):

@@ -112,6 +112,35 @@ class OccluderTest(unittest.TestCase):
         np.testing.assert_array_equal(hidden[:, right], plain[:, right])
 
 
+class InstanceRowsTest(unittest.TestCase):
+    """`_instances` fills a reused buffer with what the numpy gathers gave."""
+
+    def test_rows_and_distance_equal_the_numpy_form_bit_for_bit(self):
+        from tryon.rendering.splat_cpu import _prepare
+        from tryon.rendering.splat_gl import _instance_rows, _instances
+
+        splats = _splats(500, seed=6)
+        view = look_at(np.array([0.2, 0.1, 2.5]), np.zeros(3))
+        intrinsics = np.array([[300.0, 0, 64], [0, 300.0, 48], [0, 0, 1]])
+        pixels, depth, valid, cov2d, determinant, colours, opacity, radius = _prepare(splats, view, intrinsics, 3.0)
+        order = np.flatnonzero(valid)[::-1].copy()
+        x0, y0, x1, y1 = (pixels[:, 0] - radius), (pixels[:, 1] - radius), (pixels[:, 0] + radius), (pixels[:, 1] + radius)
+        opacity = np.asarray(opacity, np.float64).ravel()
+        for count in (len(order), len(order) // 2):  # the second frame reuses the first's (larger) buffer
+            rows = _instance_rows(count)
+            _instances(rows, order[:count], x0, y0, x1, y1, pixels, cov2d, determinant, colours, opacity,
+                       splats["xyz"], view[:3, :3].copy(), view[:3, 3].copy(), True)
+            k = order[:count]
+            expected_distance = np.linalg.norm(splats["xyz"][k] @ view[:3, :3].T + view[:3, 3], axis=1)
+            np.testing.assert_array_equal(rows[:, 14], expected_distance.astype(np.float32))
+            np.testing.assert_array_equal(rows[:, 0], x0[k].astype(np.float32))
+            np.testing.assert_array_equal(rows[:, 10], colours[k, 2].astype(np.float32))
+            np.testing.assert_array_equal(rows[:, 15], 0.0)
+            _instances(rows, order[:count], x0, y0, x1, y1, pixels, cov2d, determinant, colours, opacity,
+                       splats["xyz"], view[:3, :3].copy(), view[:3, 3].copy(), False)
+            np.testing.assert_array_equal(rows[:, 14], 0.0)
+
+
 class FillTrianglesTest(unittest.TestCase):
     def test_the_union_of_overlapping_triangles_has_no_holes(self):
         import cv2

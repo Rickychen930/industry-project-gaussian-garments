@@ -54,9 +54,12 @@ models, the tracked body) and `process()` is one frame, in small named steps
 camera loop around it, between a `FrameSource` (camera, file, or the smooth display's
 channel) and a `FrameOutput` (window, video, keys). `app/smooth_display.py` is the
 fluid display: `_live_loop` / `_delayed_loop` with a shared `DisplayOutput`.
-The loop reads one frame ahead: frame t+1's landmarks are found and it is
-sent to the NLF worker (`LiveSession.prefetch`) before frame t is drawn, so
-the regressor works while the renderer does.
+The loop reads one frame ahead: frame t+1's landmarks are found, it is sent
+to the NLF worker and its clothing parse is started (`LiveSession.prefetch`,
+`ClothingRemover.parse_clothing`, chained `MaskJob`s) before frame t is drawn,
+so the regressor and the parser work while the renderer does; the erase of
+frame t (plate update, mask limits, fill) runs on a worker thread beside its
+render (`pipeline.ERASE_BESIDE_RENDER`).
 
 ## The folders
 

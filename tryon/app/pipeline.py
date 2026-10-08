@@ -71,31 +71,70 @@ PREFETCH = True
 POSE_COMPLEXITY = 0
 
 
-def learn_background(plate, remover, frame):
-    """Feeds the frame's non-person pixels (the parser's labels from the
-    mask just computed) to the background plate, before removal edits it."""
-    labels = getattr(remover, "_last_labels", None)
+def learn_background(plate, labels, frame):
+    """Feeds the frame's non-person pixels (the parser's `labels` of THIS
+    frame) to the background plate, before removal edits it."""
     if plate is not None and labels is not None and labels.shape == frame.shape[:2]:
         plate.update(frame, labels != 0)
 
 
 class MaskJob:
-    """`remover.clothing_mask(frame)` on a worker thread; `result()` joins.
+    """`remover.parse_clothing(frame)` on a worker thread; `result()` joins
+    and returns that frame's `ClothingParse` (mask, labels, raw clothing):
+    nothing is left on the remover, so the parses of two frames in flight
+    cannot be mixed. `after`: a job to wait for before starting, so the jobs
+    of consecutive frames run one at a time, in frame order (one SCHP call at
+    a time on the GPU, and the remover's LIP skip counter stays in order).
     An exception in the worker is re-raised by `result()`, not lost."""
 
-    def __init__(self, remover, frame, keypoints=None):
+    def __init__(self, remover, frame, keypoints=None, after=None):
         import threading
 
+        self.frame = frame
         self._remover = remover
-        self._frame = frame
         self._keypoints = keypoints
-        self._mask = None
+        self._after = after
+        self._parse = None
         self._error = None
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def _run(self):
+        if self._after is not None:
+            self._after.wait()
+            self._after = None
         try:
-            self._mask = self._remover.clothing_mask(self._frame, keypoints=self._keypoints)
+            self._parse = self._remover.parse_clothing(self.frame, keypoints=self._keypoints)
+        except Exception as error:  # surfaced in result()
+            self._error = error
+
+    def start(self):
+        self._thread.start()
+
+    def wait(self):
+        """Joins without raising."""
+        self._thread.join()
+
+    def result(self):
+        self.wait()
+        if self._error is not None:
+            raise self._error
+        return self._parse
+
+
+class Call:
+    """`function()` on a worker thread; `result()` joins and returns its value,
+    or re-raises what it raised."""
+
+    def __init__(self, function):
+        import threading
+
+        self._function = function
+        self._value = self._error = None
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self):
+        try:
+            self._value = self._function()
         except Exception as error:  # surfaced in result()
             self._error = error
 
@@ -106,7 +145,7 @@ class MaskJob:
         self._thread.join()
         if self._error is not None:
             raise self._error
-        return self._mask
+        return self._value
 
 
 class StageTimer:
@@ -128,9 +167,14 @@ class StageTimer:
         self._start = self._last = time.perf_counter()
 
 
-# Start the clothing parse before the body regressor (True) or after it,
-# beside the render (False).
+# Start a frame's clothing parse as soon as its landmarks are found
+# (`LiveSession.prefetch`: while the frame before it is erased, composited and
+# shown) when True, or only once its fit is done, beside the render, when False.
 EARLY_MASK = True
+
+# Erase the wearer's clothing on a worker thread while the garment renders
+# (True), or only after the render (False).
+ERASE_BESIDE_RENDER = True
 
 # Clothing is erased only within this fraction of the frame height around
 # the fitted body (and on the arms); 0 turns the limit off.
@@ -275,12 +319,17 @@ class LiveSession:
         self.frames_since_orientation_check = 0
         self.held = 0  # frames the garment has been held on a lost person
         self.last_box = None  # the wearer's box from the regressor, to re-find them
+        self._early = collections.OrderedDict()  # id(frame) -> its MaskJob, started by `prefetch`
+        self._last_job = None  # the newest mask job: the next one waits for it
+        self.last_parse = None  # the newest ClothingParse used (the tracker's silhouette)
 
     # -- the steps of one frame ----------------------------------------------
 
     def prefetch(self, frame, points):
-        """Start the body regressor on `frame` now, before the frame before it
-        is finished; `process(frame, ...)` then reads the answer."""
+        """Start the body regressor and the clothing parse on `frame` now,
+        before the frame before it is finished; `process(frame, ...)` then
+        reads the answers."""
+        self._start_mask_early(frame, points)
         if (PREFETCH and self.regressor_name == "nlf" and self.regression is not None
                 and dressable(points, self.fitter is not None, True)):
             self.regression.prefetch(frame, keypoints=points)
@@ -290,7 +339,7 @@ class LiveSession:
         the time `stamp` for the landmark filter. Returns (status, reprojection
         error, the garment's alpha or None). `untouched`: a copy of `frame`
         as read, if the caller already made one (it is only read)."""
-        early_mask = self._start_mask_early(frame, points)
+        early_mask = self._take_early_mask(frame)
         # The fitter sees the One Euro filtered landmarks; the mask, arm
         # strokes and HUD keep the raw ones, which match the image.
         fit_points = self._filtered(points, stamp)
@@ -307,28 +356,55 @@ class LiveSession:
                 self.landmark_filter.reset()
             reprojection = float("nan")
         elif self.fitter is not None:
-            garment_alpha, early_mask = self._dress(frame, points, early_mask, stage, untouched)
+            garment_alpha = self._dress(frame, points, early_mask, stage, untouched)
             reprojection = self.fitter.reprojection_error(points) if points is not None else float("nan")
         else:
             # A visible torso, but the fitter was just dropped by the
             # orientation check - this frame has no trustworthy pose yet;
             # the next frame cold-fits and resumes.
             reprojection = float("nan")
-        if early_mask is not None:
-            early_mask.result()  # unused this frame; do not let it overlap the next
         if status == "no person" and points is not None:
             status = framing_hint(points)  # someone is there: say what to change
         return status, reprojection, garment_alpha
 
+    def _start_mask(self, frame, points):
+        """The clothing parse of `frame` on its own thread, queued behind the
+        one before it."""
+        job = MaskJob(self.remover, frame, keypoints=points, after=self._last_job)
+        self._last_job = job
+        job.start()
+        return job
+
     def _start_mask_early(self, frame, points):
         """With the body regressor the clothing parse does not wait for the
-        fit: it starts on its thread now, while the regressor runs."""
+        fit, nor for the frame before it to be finished: it starts on its
+        thread as soon as the landmarks are found (called from `prefetch`),
+        and `process(frame)` picks it up. Whether the frame will be dressed
+        is judged on the fitter as it stands now, one frame early: a wrong
+        guess costs a parse nobody reads, or `_dress` starting it late."""
         if (EARLY_MASK and self.regression is not None and self.remover is not None and self.renderer is not None
                 and dressable(points, self.fitter is not None, True)):
-            job = MaskJob(self.remover, frame, keypoints=points)
-            job.start()
-            return job
-        return None
+            self._early[id(frame)] = self._start_mask(frame, points)
+
+    def _take_early_mask(self, frame):
+        """The job `prefetch` started for exactly this `frame`, or None. Jobs
+        of frames older than it that were never processed are dropped (they
+        finish on their own, in order)."""
+        job = self._early.get(id(frame))
+        if job is None or job.frame is not frame:
+            return None
+        for key in list(self._early):
+            del self._early[key]
+            if key == id(frame):
+                break
+        return job
+
+    def finish(self):
+        """Waits for every mask job still running (the frames prefetched but
+        never processed: the loop ended), so no thread outlives the session."""
+        self._early.clear()
+        if self._last_job is not None:
+            self._last_job.wait()
 
     def _filtered(self, points, stamp):
         if points is None or LANDMARK_FILTER is None:
@@ -386,7 +462,7 @@ class LiveSession:
         height, width = frame.shape[:2]
         # the previous frame's parse (the mask runs after tracking, on its
         # own thread) - the silhouette term in the fitter
-        labels = getattr(self.remover, "_last_labels", None) if self.remover is not None else None
+        labels = self.last_parse.labels if self.last_parse is not None else None
         self.fitter.set_silhouette(labels != 0 if labels is not None and labels.shape == (height, width) else None)
         status = track_step(self.fitter, fit_points, self.errors, height, self.orientation, raw_points=points)
         if status == "refit":
@@ -420,8 +496,8 @@ class LiveSession:
             # NLF, given that box, finds the body. When it sees only a sliver
             # (1-3 % of the box, the rest hidden) the garment holds; an empty
             # room is 0 %.
-            self.remover.clothing_mask(frame, keypoints=None)
-            labels = getattr(self.remover, "_last_labels", None)
+            self.last_parse = self._start_mask(frame, None).result()
+            labels = self.last_parse.labels
             if labels is not None and labels.shape == frame.shape[:2]:
                 if person_in_box(labels != 0, self.last_box):
                     prediction = self.regression.predict(frame, box=self.last_box)
@@ -445,66 +521,87 @@ class LiveSession:
 
     def _dress(self, frame, points, early_mask, stage, untouched=None):
         """Render the garment on the fitted body, erase the wearer's own
-        clothing under it and composite. Returns (garment alpha, the early
-        mask job if it was not used)."""
+        clothing under it and composite. `early_mask`: the frame's clothing
+        parse if `prefetch` started it. Returns the garment's alpha."""
         import torch
 
         with torch.no_grad():
             self.history.append(self.fitter._forward().joints[0, self.fitter._smplx_indices].numpy().copy())
         if self.renderer is None:
             draw_body(frame, self.fitter)
-            return None, early_mask
+            return None
         # The clothing parse only READS the frame and the render never
         # touches it, so the two overlap on a worker thread (the parser's
         # ONNX / CoreML call and numba both release the interpreter lock).
-        mask_job, early_mask = early_mask, None
+        mask_job = early_mask
         if self.remover is not None and mask_job is None:
-            # The arms are added from the keypoints (see ClothingRemover.clothing_mask).
-            mask_job = MaskJob(self.remover, frame, keypoints=points)
-            mask_job.start()
+            # The arms are added from the keypoints (see ClothingRemover.parse_clothing).
+            mask_job = self._start_mask(frame, points)
         stage("fit")
+        erase = None
+        if mask_job is not None and ERASE_BESIDE_RENDER:
+            # The erase (plate update, mask limits, the fill) reads the frame
+            # and writes into a copy, and the render never touches the frame,
+            # so the two run side by side; the body fill is the one step that
+            # needs the GL context, so `_start_erase` does it here, first.
+            erase = self._start_erase(frame, points, mask_job, untouched)
+            stage("erase start")
         height, width = frame.shape[:2]
         rgba = self.renderer.render(self.fitter, (height, width))
         stage("render")
-        if mask_job is not None:
-            self._erase_and_composite(frame, points, mask_job, rgba, stage, untouched)
+        if mask_job is not None and erase is None:
+            erase = self._start_erase(frame, points, mask_job, untouched)
+        if erase is not None:
+            parse, erased, original = erase.result()
+            self.last_parse = parse
+            stage("erase wait")
+            frame[:] = erased
+            composite_garment(frame, rgba)
+            keep_in_front(frame, original, parse.labels, points)
+            stage("composite")
         else:
             composite_garment(frame, rgba)
         if self.harmonizer is not None:
             # the garment recoloured to the scene's light
             frame[:] = self.harmonizer(frame, rgba[..., 3] > 25)
-        return rgba[..., 3], early_mask
+        return rgba[..., 3]
 
-    def _erase_and_composite(self, frame, points, mask_job, rgba, stage, untouched=None):
-        """Erase the wearer's own clothing first, so the rendered
-        garment lands on a clean base instead of over the real one."""
-        from tryon.removal.background import body_fill, body_silhouette
+    def _start_erase(self, frame, points, mask_job, untouched=None):
+        """Erase the wearer's own clothing on a worker thread, so the rendered
+        garment lands on a clean base instead of over the real one. The
+        thread's result is (the frame's parse, the erased copy, the frame as
+        read, to restore the face and hands from: the caller's copy, the one
+        the display diffs, when it made one)."""
+        from tryon.removal.background import body_fill
         from tryon.removal.remover import arm_strokes, hand_discs
 
-        remover = self.remover
-        arms = arm_strokes(points, frame.shape, width_fraction=remover.ARM_TUBE_WIDTH) if points is not None else None
-        hands = hand_discs(points, frame.shape) if points is not None else None
-        mask = mask_job.result()
-        stage("mask wait")
         fill = body_fill(self.fitter, frame.shape) if points is not None and (ERASE_NEAR_BODY or self.plate is not None) else None
+        arms = arm_strokes(points, frame.shape, width_fraction=self.remover.ARM_TUBE_WIDTH) if points is not None else None
+        hands = hand_discs(points, frame.shape) if points is not None else None
+        original = frame.copy() if untouched is None else untouched
+        call = Call(lambda: self._erase(frame, points, mask_job, fill, arms, hands, original))
+        call.start()
+        return call
+
+    def _erase(self, frame, points, mask_job, fill, arms, hands, original):
+        """The worker's part of `_start_erase`: no GL, no numba, no writes to
+        `frame`, no state but the background plate (only touched here)."""
+        from tryon.removal.background import body_silhouette
+        from tryon.removal.remover import arm_strokes
+
+        parse = mask_job.result()
+        mask = parse.mask
         if points is not None and ERASE_NEAR_BODY:
             # only the clothing the wearer has on: SCHP also labels shirts
             # hanging in a wardrobe behind them, which were erased into flat
             # patches on a webcam
             mask = mask & (body_silhouette(self.fitter, frame.shape, grow=ERASE_NEAR_BODY, fill=fill) | arm_strokes(points, frame.shape))
-        learn_background(self.plate, remover, frame)
+        learn_background(self.plate, parse.labels, frame)
         body = None
         if self.plate is not None and points is not None:
             body = body_silhouette(self.fitter, frame.shape, fill=fill) | arm_strokes(points, frame.shape)
-        # the frame before the erase, to restore the face and hands from;
-        # the caller's copy (the one the display diffs) when it made one
-        original = frame.copy() if untouched is None else untouched
-        labels = getattr(remover, "_last_labels", None)
-        frame[:] = remover.remove(frame, mask, arms=arms, keep=hands, plate=self.plate, body=body)
-        stage("remove")
-        composite_garment(frame, rgba)
-        keep_in_front(frame, original, labels, points)
-        stage("composite")
+        erased = self.remover.remove(frame, mask, arms=arms, keep=hands, plate=self.plate, body=body, parse=parse)
+        return parse, erased, original
 
     def switch_garment(self, step):
         """Wear the next (+1) or previous (-1) garment of the wardrobe."""
@@ -700,6 +797,7 @@ def run(
             if max_frames and frames >= max_frames:
                 break
         frames_in.release()
+    session.finish()
     out.close(still=output)
     print(f"{frames} frames  last: {hud}")
     if profile and stage_times:

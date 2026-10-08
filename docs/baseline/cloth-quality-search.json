@@ -1,0 +1,59 @@
+{
+ "note": "random search (30 samples, seed 0) on train garments, stride 5; held-out garments 00122_outer 00136_outer 00170_lower 00176_upper 10004_outer",
+ "train": {
+  "default": {
+   "dist": 5.467,
+   "jitter": 0.511
+  },
+  "best": {
+   "dist": 5.438,
+   "jitter": 0.226
+  }
+ },
+ "best_params": {
+  "STIFF_OMEGA": 41.43,
+  "LOOSE_OMEGA": 32.51,
+  "DAMPING_RATIO": 0.243,
+  "LOOSE_RADIUS": 0.1023,
+  "STIFF_RADIUS": 0.00948,
+  "LOOSE_FROM": 0.0249,
+  "LOOSE_SPAN": 0.0208,
+  "MARGIN": 0.0073
+ },
+ "heldout_stride5": {
+  "default": {
+   "dist": 9.398,
+   "jitter": 0.736,
+   "rough": 0.05
+  },
+  "best": {
+   "dist": 9.361,
+   "jitter": 0.258,
+   "rough": 0.037
+  },
+  "skin_only": {
+   "dist": 9.368,
+   "jitter": 0.053,
+   "rough": 0.016
+  },
+  "reference": {
+   "jitter": 3.297,
+   "rough": 0.108
+  }
+ },
+ "heldout_stride10": {
+  "default": {
+   "dist": 9.275,
+   "jitter": 0.33
+  },
+  "best": {
+   "dist": 9.264,
+   "jitter": 0.291
+  }
+ },
+ "vs_registration_mean_iou": {
+  "base": 0.7282,
+  "tuned": 0.7284,
+  "one_euro_5_10": 0.7277
+ }
+}

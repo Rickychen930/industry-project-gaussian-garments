@@ -2,6 +2,7 @@
 /models
 /models/
 /data/
+/output/
 
 # The data root lives outside the repository (tryon/paths.py); these guard a copy made inside it
 /garments/

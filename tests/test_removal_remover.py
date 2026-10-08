@@ -185,31 +185,116 @@ class ParserWiringTest(unittest.TestCase):
 
 
 class MaskJobTest(unittest.TestCase):
-    """live.py runs the mask on a worker thread while the CPU renders."""
+    """the live loop runs the mask on a worker thread while the CPU renders."""
 
-    def test_result_matches_the_direct_call(self):
+    def test_result_is_the_frames_own_parse(self):
         from tryon.app.pipeline import MaskJob
 
         class Remover:
-            def clothing_mask(self, frame, keypoints=None):
+            def parse_clothing(self, frame, keypoints=None):
                 return frame[..., 0] > 100
 
         frame = np.random.default_rng(1).integers(0, 255, (20, 30, 3), dtype=np.uint8)
         job = MaskJob(Remover(), frame)
         job.start()
         np.testing.assert_array_equal(job.result(), frame[..., 0] > 100)
+        self.assertIs(job.frame, frame)
 
     def test_a_worker_exception_is_raised_by_result(self):
         from tryon.app.pipeline import MaskJob
 
         class Broken:
-            def clothing_mask(self, frame, keypoints=None):
+            def parse_clothing(self, frame, keypoints=None):
                 raise ValueError("boom")
 
         job = MaskJob(Broken(), np.zeros((4, 4, 3), np.uint8))
         job.start()
         with self.assertRaises(ValueError):
             job.result()
+
+    def test_jobs_chained_with_after_run_one_at_a_time_in_order(self):
+        import time
+
+        from tryon.app.pipeline import MaskJob
+
+        log, running, overlap = [], [0], []
+
+        class Remover:
+            def parse_clothing(self, frame, keypoints=None):
+                running[0] += 1
+                overlap.append(running[0])
+                time.sleep(0.02 if frame[0, 0, 0] == 0 else 0.0)  # the first is the slowest
+                log.append(int(frame[0, 0, 0]))
+                running[0] -= 1
+                return int(frame[0, 0, 0])
+
+        frames = [np.full((2, 2, 3), i, np.uint8) for i in range(4)]
+        jobs, previous = [], None
+        for frame in frames:
+            previous = MaskJob(Remover(), frame, after=previous)
+            previous.start()
+            jobs.append(previous)
+        self.assertEqual([job.result() for job in jobs], [0, 1, 2, 3])
+        self.assertEqual(log, [0, 1, 2, 3])
+        self.assertEqual(max(overlap), 1)
+
+
+class ParseClothingTest(unittest.TestCase):
+    """`parse_clothing` returns the parse; `clothing_mask` is it plus the legacy state."""
+
+    class Schp:
+        def fast_clothing(self, frame, classes):
+            labels = np.zeros(frame.shape[:2], np.uint8)
+            labels[frame[..., 0] > 100] = 4
+            return (labels == 4).astype(np.float32), labels
+
+    def _remover(self):
+        remover = bare_remover(schp=self.Schp())
+        remover.dilate_px, remover.refine, remover.tta = 0, "none", False
+        return remover
+
+    def test_the_parse_is_returned_and_nothing_is_left_on_the_remover(self):
+        remover = self._remover()
+        frame = np.zeros((30, 30, 3), np.uint8)
+        frame[10:20, 10:20, 0] = 200
+        parse = remover.parse_clothing(frame)
+        self.assertTrue(parse.mask[10:20, 10:20].all() and not parse.mask[0, 0])
+        np.testing.assert_array_equal(parse.labels == 4, parse.mask)
+        np.testing.assert_array_equal(parse.clothing, parse.mask)
+        self.assertFalse(hasattr(remover, "_last_labels"), "the pure parse shares nothing")
+
+    def test_two_parses_do_not_touch_each_other(self):
+        remover = self._remover()
+        a, b = np.zeros((30, 30, 3), np.uint8), np.zeros((30, 30, 3), np.uint8)
+        a[:10, :, 0] = 200
+        b[20:, :, 0] = 200
+        parse_a = remover.parse_clothing(a)
+        parse_b = remover.parse_clothing(b)
+        self.assertTrue(parse_a.mask[:10].all() and not parse_a.mask[20:].any())
+        self.assertTrue(parse_b.mask[20:].all() and not parse_b.mask[:10].any())
+        self.assertTrue((parse_a.labels[:10] == 4).all(), "frame a's labels survived parsing b")
+
+    def test_clothing_mask_is_the_parses_mask_and_keeps_the_legacy_state(self):
+        remover = self._remover()
+        frame = np.zeros((30, 30, 3), np.uint8)
+        frame[10:20, 10:20, 0] = 200
+        mask = remover.clothing_mask(frame)
+        np.testing.assert_array_equal(mask, remover.parse_clothing(frame).mask)
+        np.testing.assert_array_equal(remover._last_labels == 4, mask)
+
+    def test_remove_and_skin_colour_read_the_given_parse_not_the_last_call(self):
+        from tryon.removal.remover import ClothingParse
+
+        remover = self._remover()
+        frame = np.full((60, 60, 3), 100, np.uint8)
+        frame[20:40, 20:40] = (90, 120, 160)
+        face = np.zeros((60, 60), np.uint8)
+        face[20:40, 20:40] = 11
+        other = np.zeros((60, 60), np.uint8)
+        mine = ClothingParse(np.zeros((60, 60), bool), face, np.zeros((60, 60), bool))
+        remover._last_labels = other  # another frame's parse, left by the legacy interface
+        np.testing.assert_array_equal(remover.skin_colour(frame, mine), [90, 120, 160])
+        self.assertIsNone(remover.skin_colour(frame))
 
 
 class ClothingMaskTest(unittest.TestCase):
@@ -593,6 +678,110 @@ class CroppedWorkTest(unittest.TestCase):
         full = cv2.inpaint(frame, ring.astype(np.uint8), 3, cv2.INPAINT_TELEA)
         np.testing.assert_array_equal(remover._inpaint_ring(frame, ring), full)
         np.testing.assert_array_equal(remover._inpaint_ring(frame, np.zeros_like(ring)), frame)
+
+
+class LabelFillTest(unittest.TestCase):
+    """The label-aware fill (`LABEL_FILL`): a hole is filled from the nearest source of its own kind."""
+
+    GREEN, BLUE, SKIN, RED = (60, 180, 60), (180, 90, 40), (120, 150, 210), (0, 0, 220)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.remover = bare_remover()
+        cls.remover.LABEL_FILL = True
+
+    def setUp(self):
+        from tryon.removal.remover import ClothingRemover
+
+        ClothingRemover._rng = None
+
+    def scene(self):
+        """Room on the left half, trousers (label 6) on the right, a red shirt hole across the seam, an arm (14)."""
+        frame = np.zeros((120, 160, 3), np.uint8)
+        labels = np.zeros((120, 160), np.uint8)
+        frame[:] = self.GREEN
+        frame[:, 80:] = self.BLUE
+        labels[:, 80:] = 6
+        mask = np.zeros((120, 160), bool)
+        mask[30:90, 50:110] = True
+        frame[mask] = self.RED
+        labels[mask] = 4
+        return frame, labels, mask
+
+    def fill(self, frame, labels, mask, **kwargs):
+        from tryon.removal.remover import ClothingParse
+
+        return self.remover.remove(frame, mask, parse=ClothingParse(mask, labels, mask.copy()), **kwargs)
+
+    def test_a_hole_across_two_regions_takes_each_regions_colour_not_a_blend(self):
+        frame, labels, mask = self.scene()
+        out = self.fill(frame, labels, mask).astype(float)
+        rows = slice(55, 65)
+        left, right = out[rows, 55:70].reshape(-1, 3), out[rows, 95:105].reshape(-1, 3)
+        np.testing.assert_allclose(left.mean(axis=0), self.GREEN, atol=12)
+        np.testing.assert_allclose(right.mean(axis=0), self.BLUE, atol=12)
+        # no filled pixel is far from both colours (a blend of the two would be)
+        filled = out[mask]
+        nearest = np.minimum(np.abs(filled - self.GREEN).sum(axis=1), np.abs(filled - self.BLUE).sum(axis=1))
+        self.assertLess(np.percentile(nearest, 75), 40)
+
+    def test_pixels_outside_the_hole_are_untouched(self):
+        frame, labels, mask = self.scene()
+        out = self.fill(frame, labels, mask)
+        np.testing.assert_array_equal(out[~mask], frame[~mask])
+
+    def test_the_arm_tube_is_skin_coloured_with_the_visible_arms_grain(self):
+        frame, labels, mask = self.scene()
+        rng = np.random.default_rng(1)
+        arm = np.zeros_like(mask)
+        arm[8:20, 10:150] = True  # a bare arm across the top
+        frame[arm] = np.clip(np.array(self.SKIN) + rng.normal(0, 4, (int(arm.sum()), 3)), 0, 255).astype(np.uint8)
+        labels[arm] = 14
+        tube_hole = np.zeros_like(mask)
+        tube_hole[8:20, 55:105] = True  # the middle of it erased
+        tube = tube_hole.copy()
+        out = self.fill(frame, labels, tube_hole, arms=tube)
+        patch = out[11:17, 60:100].reshape(-1, 3).astype(float)
+        np.testing.assert_allclose(patch.mean(axis=0), self.SKIN, atol=20)
+        self.assertGreater(patch.std(axis=0).mean(), 0.5, "the fill is flat")
+        self.assertLess(patch.std(axis=0).mean(), 12)
+
+    def test_an_undershirt_is_continued_not_the_necks_skin(self):
+        frame, labels, mask = self.scene()
+        frame[:, :] = self.GREEN
+        labels[:] = 0
+        labels[mask] = 4
+        neck = np.zeros_like(mask)
+        neck[10:28, 70:90] = True
+        frame[neck] = self.SKIN
+        labels[neck] = 11
+        under = np.zeros_like(mask)
+        under[92:118, 55:105] = True  # the kept inner layer, below the hole (label 4, not in the mask)
+        frame[under] = (240, 240, 240)
+        labels[under] = 4
+        body = np.zeros_like(mask)
+        body[10:118, 45:115] = True
+        out = self.fill(frame, labels, mask, body=body).astype(float)
+        np.testing.assert_allclose(out[32:40, 70:90].reshape(-1, 3).mean(axis=0), (240, 240, 240), atol=30)
+
+    def test_nearest_source_matches_brute_force(self):
+        rng = np.random.default_rng(3)
+        sources = rng.random((40, 50)) > 0.97
+        ny, nx = type(self.remover)._nearest_source(sources)
+        ys, xs = np.nonzero(sources)
+        for y, x in [(0, 0), (20, 25), (39, 49), (10, 40)]:
+            distance = (ys - y) ** 2 + (xs - x) ** 2
+            self.assertEqual((ny[y, x] - y) ** 2 + (nx[y, x] - x) ** 2, distance.min())
+
+    def test_the_default_fill_is_unchanged_when_the_label_fill_is_off(self):
+        frame, labels, mask = self.scene()
+        from tryon.removal.remover import ClothingParse
+
+        off = bare_remover()
+        off.LABEL_FILL = False
+        a = off.remove(frame, mask, parse=ClothingParse(mask, labels, mask.copy()))
+        b = off.remove(frame, mask)
+        np.testing.assert_array_equal(a, b)
 
 
 if __name__ == "__main__":

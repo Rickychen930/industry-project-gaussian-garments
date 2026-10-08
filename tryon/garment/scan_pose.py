@@ -98,6 +98,39 @@ class ScanPoseBinder:
 
         return width(fitter) / max(width(bind_fitter), 1e-6)
 
+    # How the wearer/scan size ratios become the garment's (x, y, z) scale
+    # (`size_factors`); "current" is the live behaviour. Measured by
+    # tools/evaluate/vs_registration --size-mode (docs/baseline/size-ablation.json).
+    #   current   height ratio on all axes (+ chest ratio >= 1 when the
+    #             renderer's WIDEN_TO_WEARER is on)
+    #   no_chest  the same with the chest ratio never used
+    #   widen     height ratio, and the chest ratio >= 1 on x / z
+    #   none      no resizing
+    #   shrink    ratios capped at 1 (a larger wearer does not grow the garment)
+    #   damped    ratios ** 0.5
+    #   frozen    height ratio = median over the first FREEZE_FRAMES frames
+    #             (renderer), then held
+    #   height_y  height ratio on y only, x / z untouched
+    SIZE_MODES = ("current", "no_chest", "widen", "none", "shrink", "damped", "frozen", "height_y")
+    FREEZE_FRAMES = 30
+
+    @staticmethod
+    def size_factors(mode, height, chest, widen=False):
+        """(3,) x, y, z scale of the garment for `mode` from the wearer's
+        `height` and `chest` ratios over the scan body's."""
+        if mode not in ScanPoseBinder.SIZE_MODES:
+            raise ValueError(f"unknown size mode {mode!r}: {ScanPoseBinder.SIZE_MODES}")
+        if mode == "none":
+            return np.ones(3)
+        width = max(1.0, chest) if (mode == "widen" or (mode == "current" and widen)) else 1.0
+        if mode == "shrink":
+            height, width = min(height, 1.0), 1.0
+        if mode == "damped":
+            height = height**0.5
+        if mode == "height_y":
+            return np.array([1.0, height, 1.0])
+        return np.array([width * height, height, width * height])
+
     @staticmethod
     def height_ratio(fitter, bind_fitter):
         """Zero-pose height of `fitter`'s body over `bind_fitter`'s."""
@@ -123,7 +156,11 @@ class ScanPoseBinder:
         if not path.exists():
             return None
         data = np.load(path)
-        return {key: data[key] for key in ("body_pose", "global_orient", "betas", "offset")}
+        pose = {key: data[key] for key in ("body_pose", "global_orient", "betas", "offset")}
+        # a pose a one-off tool re-fitted because the trajectory file's first
+        # frame was not this template (`REFINE_ARMS`)
+        pose["refined"] = bool("refined" in data.files and int(data["refined"]))
+        return pose
 
     def _posed_like_scan(self, fitter, theta, arm_axes=None, scan_pose=None):
         """A fitter with this body's shape and camera, arms `theta` degrees
@@ -259,6 +296,8 @@ class ScanPoseBinder:
         scan_pose = self._scan_pose()
         bind_fitter, aligned = self._posed_like_scan(fitter, self.SCAN_BIND_ANGLE, scan_pose=scan_pose)
         sleeve = label(bind_fitter, aligned)
+        if scan_pose is not None and self.refine_arms(bind_fitter, aligned, sleeve, scan_pose["refined"]):
+            sleeve = label(bind_fitter, aligned)
         arm_axes = None
         self.scan_pose_used = scan_pose is not None
         if scan_pose is None and self.SCAN_AXIS_REFINE and sleeve.any():
@@ -278,6 +317,88 @@ class ScanPoseBinder:
         return bind_fitter, self.SCAN_BIND_ANGLE, aligned, sleeve
 
     SCAN_AXIS_REFINE = True
+
+    # Refit the arms of a cached scan pose to the garment's sleeves. The cache
+    # is a fit to the authors' trajectory body `obstacle[0]`, which is the body
+    # of the template only when the trajectory's `pred[0]` IS the template:
+    # for 00122_outer, 00176_outer and 10004_outer it is not (8-9 cm median
+    # vertex distance between the two, 0.6 mm for the other garments), so the
+    # bound arms stood 5-14 cm from their sleeves and the sleeves, skinned from
+    # those arms, stuck out from the wearer's (00122_outer: median sleeve to
+    # arm 55 mm, p90 143 mm). The cache flags such a pose `refined` (a one-off
+    # tool re-fitted it, 00148_upper too). None = off; "refined": only the
+    # flagged poses; "poor": when the median sleeve-to-arm distance exceeds
+    # REFINE_POOR; "always".
+    # Measured against the real shirt (tools/evaluate/open_front.py, NLF body,
+    # 30-38 frames each): garment IoU 00122_outer 0.526 -> 0.609 (sleeve to arm
+    # 38 -> 14 mm, garment vertices inside the body 2.1 -> 0.9 %), 10004_outer
+    # 0.319 -> 0.336, 00176_outer 0.494 -> 0.492, 00148_upper 0.802 -> 0.806;
+    # the unflagged garments are unchanged to the bit.
+    REFINE_ARMS = "refined"
+    REFINE_POOR = 0.04  # m
+    REFINE_STEPS = 50
+    REFINE_LEARNING_RATE = 0.03
+    REFINE_JOINTS = (16, 17, 18, 19, 20, 21)  # shoulders, elbows, wrists
+    REFINE_CLAMP = 0.10  # m: a sleeve vertex further than this from every arm vertex does not pull
+    REFINE_PRIOR = 1e-3  # on the squared rotation change, rad^2
+
+    @staticmethod
+    def sleeve_arm_distance(body, body_is_arm, aligned, sleeve):
+        """Median distance (m) from the sleeve vertices to the nearest arm vertex of `body`."""
+        from scipy.spatial import cKDTree
+
+        if not sleeve.any():
+            return 0.0
+        return float(np.median(cKDTree(body[body_is_arm]).query(aligned[sleeve])[0]))
+
+    def refine_arms(self, bind_fitter, aligned, sleeve, flagged=False):
+        """Rotate the bind body's shoulders, elbows and wrists (in place) so its
+        arms sit inside the garment's sleeves; True when the pose changed.
+
+        Adam on the joints' axis-angle change, minimising the clamped nearest
+        distance from each sleeve vertex to the posed ARM vertices (a sleeve is
+        a tube around the arm, so this centres the arm in it) plus a small
+        prior on the change. Accepted only if the median sleeve-to-arm distance
+        falls."""
+        if not self.REFINE_ARMS or not sleeve.any() or (self.REFINE_ARMS == "refined" and not flagged):
+            return False
+        weights = bind_fitter.model.lbs_weights.detach().numpy().astype(np.float64)
+        body_is_arm = weights[:, list(SkinnedGarment.ARM_JOINTS)].sum(axis=1) > 0.5
+        with torch.no_grad():
+            before_body = bind_fitter._forward().vertices[0].numpy().astype(np.float64)
+        before = self.sleeve_arm_distance(before_body, body_is_arm, aligned, sleeve)
+        if self.REFINE_ARMS == "poor" and before <= self.REFINE_POOR:
+            return False
+        slices = [slice((j - 1) * 3, (j - 1) * 3 + 3) for j in self.REFINE_JOINTS]
+        base = bind_fitter.body_pose.detach().clone()
+        delta = torch.zeros(len(slices), 3, requires_grad=True)
+        points = torch.as_tensor(aligned[sleeve][::3], dtype=torch.float32)
+        arm_ids = torch.as_tensor(np.flatnonzero(body_is_arm)[::3])
+
+        def posed(change):
+            pose = base.clone()
+            for k, part in enumerate(slices):
+                pose[0, part] = base[0, part] + change[k]
+            return bind_fitter.model(betas=bind_fitter.betas.detach(), body_pose=pose, global_orient=bind_fitter.global_orient.detach())
+
+        optimiser = torch.optim.Adam([delta], self.REFINE_LEARNING_RATE)
+        for _ in range(int(self.REFINE_STEPS)):
+            optimiser.zero_grad()
+            arm = posed(delta).vertices[0][arm_ids]
+            nearest = torch.cdist(points, arm).min(dim=1).values.clamp(max=self.REFINE_CLAMP)
+            loss = nearest.mean() + self.REFINE_PRIOR * (delta**2).sum()
+            loss.backward()
+            optimiser.step()
+        with torch.no_grad():
+            pose = posed(delta.detach())
+            after_body = pose.vertices[0].numpy().astype(np.float64)
+        after = self.sleeve_arm_distance(after_body, body_is_arm, aligned, sleeve)
+        if after >= before:
+            return False
+        with torch.no_grad():
+            for k, part in enumerate(slices):
+                bind_fitter.body_pose[0, part] = base[0, part] + delta.detach()[k]
+        return True
 
     @staticmethod
     def _sleeve_axes(bind_fitter, aligned, sleeve):

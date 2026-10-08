@@ -17,12 +17,60 @@ pushed out of the body (`collision.push_out_of_body`).
 from __future__ import annotations
 
 import numpy as np
+from numba import njit
 from scipy.spatial import cKDTree
 
 from tryon.garment.collision import BodySurface, push_out_of_body
 
 SUBSTEP = 1.0 / 120.0  # s: semi-implicit Euler is stable here for omega * SUBSTEP < ~1
-MAX_DT = 0.25  # s: a longer gap (a hitch, a lost person) restarts from the skin
+MAX_DT = 0.5  # s: a longer gap (a hitch, a lost person) restarts from the skin; the springs are stable and measured fine at the 0.4 s of a slow frame (tools/evaluate/cloth_smoothness.py), while 0.25 restarted them on every frame of a loaded machine, i.e. no cloth at all
+
+
+@njit(cache=True)
+def _springs_serial(x, v, start, target, looseness, stiff_omega, loose_omega, stiff_radius, loose_radius, damping, n, h):
+    """`LightCloth._springs_numpy` in one serial pass per vertex (the same
+    scalar operations in the same order, so the result is bit-identical):
+    `n` semi-implicit Euler substeps of `h` toward the goal that moves
+    linearly from `start` to `target`, then the radius clamp. Returns the new
+    (x, v); `x`, `v` are not touched."""
+    count = len(x)
+    x_new = np.empty((count, 3))
+    v_new = np.empty((count, 3))
+    over = np.zeros(count, np.bool_)
+    any_over = False
+    clamp = np.ones(count)
+    for p in range(count):
+        w = looseness[p]
+        omega = stiff_omega + (loose_omega - stiff_omega) * w
+        radius = stiff_radius + (loose_radius - stiff_radius) * w
+        stiffness = omega * omega
+        friction = 2.0 * damping * omega
+        for c in range(3):
+            xc = x[p, c]
+            vc = v[p, c]
+            for i in range(1, n + 1):
+                goal = start[p, c] + (target[p, c] - start[p, c]) * (i / n)
+                a = stiffness * (goal - xc) - friction * vc
+                vc = vc + h * a
+                xc = xc + h * vc
+            x_new[p, c] = xc
+            v_new[p, c] = vc
+        o0 = x_new[p, 0] - target[p, 0]
+        o1 = x_new[p, 1] - target[p, 1]
+        o2 = x_new[p, 2] - target[p, 2]
+        length = np.sqrt(o0 * o0 + o1 * o1 + o2 * o2)
+        if length > radius:
+            over[p] = True
+            any_over = True
+            clamp[p] = radius / max(length, 1e-12)
+    if any_over:
+        # as the numpy form: every vertex is rebuilt as target + offset * clamp (1.0 where not over)
+        for p in range(count):
+            for c in range(3):
+                x_new[p, c] = target[p, c] + (x_new[p, c] - target[p, c]) * clamp[p]
+                if over[p]:
+                    v_new[p, c] = v_new[p, c] * 0.5
+    return x_new, v_new
 
 
 class LightCloth:
@@ -36,10 +84,77 @@ class LightCloth:
     LOOSE_FROM, LOOSE_SPAN = 0.01, 0.06  # m off the body at rest: where looseness starts / saturates
     MARGIN = 0.01  # m: collision clearance (the fitted body is ~1.2 cm off the true one; 2 / 1 / 0.5 / 0 cm gave garment IoU 0.647 / 0.659 / 0.664 / 0.666 with sleeves inside the body 0.1 / 2.6 / 5.6 / 8.1 %)
     PASSES = 3
+    # Neighbour coupling of the displacement d = x - skinned target after the
+    # springs (the springs are per vertex, so d is spatially noisy). None = off
+    # (the original). "laplacian": COUPLING_ITERATIONS Jacobi steps of
+    # d += COUPLING_RATE * (1 - stiffness weight) * (mean of neighbours' d - d).
+    COUPLING = None
+    COUPLING_RATE, COUPLING_ITERATIONS = 0.5, 3
 
-    def __init__(self):
+    # One-sided horizontal wrap: a vertex further than distance d from the
+    # tangent plane of its nearest body vertex is pulled toward the body by
+    # `rate` of the excess, along the plane normal's HORIZONTAL part (a coat
+    # hangs by gravity along the torso: the pull narrows it and never lifts
+    # the hem). None = off (the original); else (d m, rate).
+    WRAP = None
+
+    # One Euro filter (Casiez et al. 2012) on the skinned target, per vertex,
+    # before the springs: the body regressor's per-frame pose noise passes
+    # straight into the cloth otherwise. None = off (the original); else
+    # (min_cutoff Hz, beta s/m): the cutoff is min_cutoff + beta * speed.
+    TARGET_FILTER = None
+    # Fraction of the previous frame's skinned velocity the springs start the
+    # frame with (feed-forward: a swinging sleeve keeps swinging). 0 = off.
+    VELOCITY_INHERIT = 0.0
+
+    def __init__(self, edges=None):
         self.x = self.v = self.target = None
         self.looseness = None
+        self.edges = edges  # (E, 2) mesh edges, needed by COUPLING
+        self._mean_neighbours = None
+        self._filtered = self._filtered_rate = None
+
+    def _filter_target(self, target, dt):
+        """The One Euro filter of `TARGET_FILTER`, state kept in `_filtered`."""
+        if self.TARGET_FILTER is None:
+            return target
+        if self._filtered is None or len(self._filtered) != len(target):
+            self._filtered, self._filtered_rate = target.copy(), np.zeros_like(target)
+            return target
+        min_cutoff, beta = self.TARGET_FILTER
+
+        def alpha(cutoff):
+            return 1.0 / (1.0 + 1.0 / (2.0 * np.pi * cutoff * dt))
+
+        rate = (target - self._filtered) / dt
+        a_rate = alpha(1.0)
+        self._filtered_rate = self._filtered_rate + a_rate * (rate - self._filtered_rate)
+        speed = np.linalg.norm(self._filtered_rate, axis=1, keepdims=True)
+        a = alpha(min_cutoff + beta * speed)
+        self._filtered = self._filtered + a * (target - self._filtered)
+        return self._filtered.copy()
+
+    def _neighbour_mean(self, n):
+        if self._mean_neighbours is None or self._mean_neighbours.shape[0] != n:
+            import scipy.sparse as sp
+
+            e = np.asarray(self.edges)
+            a = sp.coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(n, n)).tocsr()
+            a = ((a + a.T) > 0).astype(np.float64)
+            degree = np.maximum(np.asarray(a.sum(axis=1)).ravel(), 1.0)
+            self._mean_neighbours = (sp.diags(1.0 / degree) @ a).tocsr()
+        return self._mean_neighbours
+
+    def _couple(self, x, target):
+        """Smooth the displacement over the mesh, loose vertices most."""
+        if self.COUPLING is None or self.edges is None:
+            return x
+        mean = self._neighbour_mean(len(x))
+        rate = (self.COUPLING_RATE * self.looseness)[:, None]
+        d = x - target
+        for _ in range(int(self.COUPLING_ITERATIONS)):
+            d = d + rate * (mean @ d - d)
+        return target + d
 
     def _looseness(self, target, body_vertices):
         distance, _ = cKDTree(body_vertices).query(target, k=1)
@@ -49,12 +164,37 @@ class LightCloth:
         self.x = np.array(target, np.float64)
         self.v = np.zeros_like(self.x)
         self.target = self.x.copy()
+        self._filtered, self._filtered_rate = None, None
+        self._skin_velocity = np.zeros_like(self.x)
         # the looseness map is the garment's (how far each vertex hangs off
-        # the body), kept across resets: the synchronous display's frame
-        # (~0.36 s) is longer than MAX_DT, so it reset every frame and
-        # rebuilt this KD-tree query each time (~10 ms) for nothing
+        # the body), kept across resets: a frame longer than MAX_DT resets, and
+        # rebuilding this KD-tree query each time cost ~10 ms for nothing
         if body_vertices is not None and (self.looseness is None or len(self.looseness) != len(self.x)):
             self.looseness = self._looseness(self.x, body_vertices)
+
+    def _springs_numpy(self, target, dt, v):
+        """The original numpy form of the spring step: the oracle for
+        `_springs_serial`. Returns (x, v) from `self.x`, `self.target`."""
+        w = self.looseness[:, None]
+        omega = self.STIFF_OMEGA + (self.LOOSE_OMEGA - self.STIFF_OMEGA) * w
+        radius = self.STIFF_RADIUS + (self.LOOSE_RADIUS - self.STIFF_RADIUS) * w
+        n = max(1, int(np.ceil(dt / SUBSTEP)))
+        h = dt / n
+        x = self.x
+        for i in range(1, n + 1):
+            # the skinned target moves linearly across the frame
+            goal = self.target + (target - self.target) * (i / n)
+            a = omega * omega * (goal - x) - 2.0 * self.DAMPING_RATIO * omega * v
+            v = v + h * a
+            x = x + h * v
+        offset = x - target
+        length = np.linalg.norm(offset, axis=1, keepdims=True)
+        over = length > radius
+        if over.any():
+            clamp = np.where(over, radius / np.maximum(length, 1e-12), 1.0)
+            x = target + offset * clamp
+            v = v * np.where(over, 0.5, 1.0)  # lose some speed on hitting the limit
+        return x, v
 
     def step(self, target, dt, body_vertices, body_faces):
         target = np.asarray(target, np.float64)
@@ -64,26 +204,48 @@ class LightCloth:
         else:
             if self.looseness is None:
                 self.looseness = self._looseness(target, body_vertices)
-            w = self.looseness[:, None]
-            omega = self.STIFF_OMEGA + (self.LOOSE_OMEGA - self.STIFF_OMEGA) * w
-            radius = self.STIFF_RADIUS + (self.LOOSE_RADIUS - self.STIFF_RADIUS) * w
+            target = self._filter_target(target, dt)
             n = max(1, int(np.ceil(dt / SUBSTEP)))
             h = dt / n
-            x, v = self.x, self.v
-            for i in range(1, n + 1):
-                # the skinned target moves linearly across the frame
-                goal = self.target + (target - self.target) * (i / n)
-                a = omega * omega * (goal - x) - 2.0 * self.DAMPING_RATIO * omega * v
-                v = v + h * a
-                x = x + h * v
-            offset = x - target
-            length = np.linalg.norm(offset, axis=1, keepdims=True)
-            over = length > radius
-            if over.any():
-                clamp = np.where(over, radius / np.maximum(length, 1e-12), 1.0)
-                x = target + offset * clamp
-                v = v * np.where(over, 0.5, 1.0)  # lose some speed on hitting the limit
+            v = self.v
+            if self.VELOCITY_INHERIT:
+                v = v + self.VELOCITY_INHERIT * (self._skin_velocity - v)
+                self._skin_velocity = (target - self.target) / dt
+            x, v = _springs_serial(
+                self.x, v, self.target, target, np.ascontiguousarray(self.looseness, np.float64),
+                self.STIFF_OMEGA, self.LOOSE_OMEGA, self.STIFF_RADIUS, self.LOOSE_RADIUS, self.DAMPING_RATIO, n, h,
+            )
             self.v = v
-        x = push_out_of_body(x, BodySurface(body_vertices, body_faces), self.MARGIN, self.PASSES)
+        x = self._couple(x, target)
+        surface = BodySurface(body_vertices, body_faces)
+        x = self._wrap(x, surface)
+        x = push_out_of_body(x, surface, self.MARGIN, self.PASSES)
         self.x, self.target = x, target
         return x
+
+    def _wrap(self, x, surface):
+        """Pull vertices that hang far off the body toward it (`WRAP`)."""
+        if self.WRAP is None or len(x) == 0:
+            return x
+        distance, rate = self.WRAP
+        vertex, normal = surface.nearest(x)
+        excess = np.sum((x - vertex) * normal, axis=1) - distance
+        pull = np.where(excess > 0.0, rate * excess, 0.0)
+        horizontal = normal * np.array([1.0, 0.0, 1.0])
+        return x - pull[:, None] * horizontal
+
+
+class SmoothCloth(LightCloth):
+    """`LightCloth` with the parameters of a 30-sample random search against
+    the authors' ContourCraft trajectories (train: 00152_outer, 00170_upper,
+    00134_upper, 00148_outer, 00176_lower; stride 5). Held out (00122_outer,
+    00136_outer, 00170_lower, 00176_upper, 10004_outer), dt 0.2 s: distance
+    9.361 vs 9.398 cm, displacement jitter 0.26 vs 0.74 cm (tools/evaluate/
+    cloth_smoothness.py). Stiffer and less swinging than the default; opt in
+    with `GarmentRenderer.CLOTH = SmoothCloth`."""
+
+    STIFF_OMEGA, LOOSE_OMEGA = 41.4, 32.5
+    DAMPING_RATIO = 0.243
+    STIFF_RADIUS, LOOSE_RADIUS = 0.0095, 0.102
+    LOOSE_FROM, LOOSE_SPAN = 0.0249, 0.0208
+    MARGIN = 0.0073

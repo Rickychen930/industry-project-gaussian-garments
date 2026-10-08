@@ -145,3 +145,28 @@ def _uv_binding_python(mesh, count):
         f"Could not reproduce the {count} stored Gaussians from the UV atlas at "
         "any standard resolution; the checkpoint and template may not match."
     )
+
+
+RELAXED_REST_NAME = "relaxed_rest.npz"
+
+
+def relaxed_rest_path(model_dir):
+    """Where a garment's relaxed rest offset lives: next to `scan_pose.npz`."""
+    from pathlib import Path
+
+    return Path(model_dir) / "stage1" / RELAXED_REST_NAME
+
+
+def load_relaxed_rest(model_dir, vertex_count):
+    """(vertex_count, 3) offset of the garment's relaxed rest shape from its
+    template, in the skinning's zero-pose frame at the scan subject's size
+    (`tools/evaluate/relaxed_rest.py`); None when the file is absent or does
+    not fit this mesh, so a garment without one binds as before."""
+    path = relaxed_rest_path(model_dir)
+    if not path.exists():
+        return None
+    try:
+        offset = np.asarray(np.load(path)["offset"], np.float64)
+    except (OSError, KeyError, ValueError):
+        return None
+    return offset if offset.shape == (vertex_count, 3) else None

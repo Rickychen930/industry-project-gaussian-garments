@@ -254,6 +254,61 @@ class GarmentRendererDynamicsTest(unittest.TestCase):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
+class RideUpTest(unittest.TestCase):
+    """`GarmentRenderer.RIDE_UP`: the hem rides up when the arms rise."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.renderer = GarmentRenderer(GARMENT, dynamics=False)
+
+    @staticmethod
+    def arms(angle):
+        """A body with the arms `angle` radians from horizontal (+: up)."""
+        import torch
+
+        from tryon.body.fitter import BodyFitter
+
+        fitter = BodyFitter()
+        with torch.no_grad():
+            fitter.body_pose[0, 15 * 3 + 2] = angle
+            fitter.body_pose[0, 16 * 3 + 2] = -angle
+        return fitter
+
+    def test_the_raise_is_zero_for_hanging_arms_and_one_for_raised_ones(self):
+        down, up = self.arms(-1.4), self.arms(1.4)
+        self.assertEqual(self.renderer.arm_raise(down)[0], 0.0)
+        self.assertGreater(self.renderer.arm_raise(up)[0], 0.99)
+        self.assertGreater(self.renderer.arm_raise(up)[1][1], 0.9)  # the spine points up
+
+    def test_off_is_the_original_and_on_lifts_the_hem_but_not_the_collar(self):
+        fitter = self.arms(1.4)
+        plain = self.renderer._posed_mesh(fitter).copy()
+        self.renderer.RIDE_UP = 0.1
+        try:
+            lifted = self.renderer._posed_mesh(fitter)
+        finally:
+            del self.renderer.RIDE_UP
+        shift = lifted[:, 1] - plain[:, 1]
+        rest = self.renderer._binding.physical_rest[:, 1]
+        body = ~self.renderer.sleeve_vertices
+        low = body & (rest < np.percentile(rest[body], 5))
+        high = body & (rest > np.percentile(rest[body], 95))
+        self.assertGreater(float(shift[low].mean()), 0.04)
+        self.assertLess(float(np.abs(shift[high]).mean()), 0.01)
+        self.assertEqual(float(np.abs(shift[self.renderer.sleeve_vertices]).max()), 0.0)
+
+    def test_hanging_arms_lift_nothing(self):
+        fitter = self.arms(-1.4)
+        plain = self.renderer._posed_mesh(fitter).copy()
+        self.renderer.RIDE_UP = 0.1
+        try:
+            np.testing.assert_array_equal(self.renderer._posed_mesh(fitter), plain)
+        finally:
+            del self.renderer.RIDE_UP
+
+
+@unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
+@unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class ScanPoseBindingTest(unittest.TestCase):
     """The scanned coat has its arms hanging; bound on a T-posed body its
     sleeves sat beside the hips (axes 57 / 67 degrees off the arms on a

@@ -6,8 +6,7 @@ was archived, and what was dropped and why. Updated 8 Oct 2026; the history is i
 Everything outside the repository lives under one data root, `~/tryon-data/`
 (`TRYON_DATA` moves it; `tryon/paths.py` is the one place the folders are
 named): `garments/`, `trajectories/`, `release_videos/`, `body_models/smplx/`,
-`references/`, `captures/`, `training_logs/`. `tools/data/migrate_layout.sh`
-moves the older layout (loose folders in `~/Downloads`) into it.
+`references/`, `captures/`, `training_logs/`.
 
 ## In use (on disk, no registration)
 

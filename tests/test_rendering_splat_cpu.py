@@ -17,6 +17,7 @@ from tryon.rendering.splat_cpu import (
     face_frames,
     face_scaled_log_scaling,
     look_at,
+    _project_points_numpy,
     project_points,
     quaternion_to_rotation,
     render_splats,
@@ -227,6 +228,15 @@ class ProjectionTests(unittest.TestCase):
         )
         self.assertFalse(bool(valid[0]))
         self.assertTrue(bool(valid[1]))
+
+    def test_the_compiled_projection_equals_the_numpy_original_bit_for_bit(self):
+        rng = np.random.default_rng(5)
+        points = rng.uniform(-4.0, 4.0, (3000, 3))  # in front of and behind the camera
+        view = look_at(np.array([0.3, 0.2, 2.5]), np.array([0.0, 0.1, 0.0]))
+        intrinsics = np.array([[420.0, 0, 250.5], [0, 417.0, 301.25], [0, 0, 1.0]])
+        for got, expected in zip(project_points(points, view, intrinsics), _project_points_numpy(points, view, intrinsics)):
+            np.testing.assert_array_equal(got, expected)
+        self.assertFalse(project_points(points, view, intrinsics)[2].all())
 
 
 class LookAtTests(unittest.TestCase):

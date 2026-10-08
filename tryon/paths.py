@@ -43,19 +43,6 @@ HARMONIZER = DATA_ROOT / "references" / "Harmonizer"
 CAPTURES = DATA_ROOT / "captures"
 TRAINING_LOGS = DATA_ROOT / "training_logs"
 
-# The layout before 8 Oct 2026 (data loose in ~/Downloads). Used only while
-# `tools/data/migrate_layout.sh` has not been run; delete this block after.
-_LEGACY = Path.home() / "Downloads"
-if "TRYON_DATA" not in os.environ and not DATA_ROOT.exists() and (_LEGACY / "gaugar_models").is_dir():
-    DATA_ROOT = _LEGACY
-    GARMENTS = _LEGACY / "gaugar_models"
-    TRAJECTORIES = _LEGACY / "gaugar_trajectories"
-    RELEASE_VIDEOS = _LEGACY / "drive-download-20260829T090506Z-1-001"
-    SMPLX_ROOT = _LEGACY / "models"
-    HARMONIZER = _LEGACY / "tryon_refs" / "survey" / "Harmonizer"
-    CAPTURES = _LEGACY / "async_capture"
-    TRAINING_LOGS = _LEGACY / "student_training"
-
 CACHE = Path.home() / ".cache" / "tryon"
 SCRATCH = Path(tempfile.gettempdir()) / "tryon"
 

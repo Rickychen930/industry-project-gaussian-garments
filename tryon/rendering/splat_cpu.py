@@ -203,8 +203,64 @@ def look_at(eye, target, up=(0.0, 1.0, 0.0)):
     return view
 
 
+@njit(cache=True, fastmath={"contract"})
+def camera_coordinates(px, py, pz, rotation, translation):
+    """The camera-space position of a world point: the row `points @ R.T + t`
+    gives, bit for bit. Accelerate's gemm evaluates each dot product as a
+    multiply and two fused multiply-adds in the order y, x, z (found by trying
+    every order: equal to the matmul on random views at every row count from 1
+    to 200,000, where the plain sum differs in the last bit on 5 % of the
+    rows). `contract` lets LLVM fuse them; it covers this function's own
+    instructions only, so the callers' other arithmetic is not fused."""
+    a = py * rotation[0, 1]
+    a = px * rotation[0, 0] + a
+    x = (pz * rotation[0, 2] + a) + translation[0]
+    b = py * rotation[1, 1]
+    b = px * rotation[1, 0] + b
+    y = (pz * rotation[1, 2] + b) + translation[1]
+    c = py * rotation[2, 1]
+    c = px * rotation[2, 0] + c
+    z = (pz * rotation[2, 2] + c) + translation[2]
+    return x, y, z
+
+
+@njit(cache=True)
+def _project_numba(points, rotation, translation, fx, fy, cx, cy):
+    """`_project_points_numpy` in one serial pass: no BLAS (the 85k x 3 gemm
+    took 0.5 ms alone and 10-19 ms when the cores were busy) and no
+    temporaries. The camera coordinates are the matmul's bit for bit (see
+    `_dot3`), so pixels, depths and `valid` equal the numpy ones. Serial: it
+    may run on any thread."""
+    n = len(points)
+    pixels = np.empty((n, 2))
+    depth = np.empty(n)
+    valid = np.empty(n, np.bool_)
+    for i in range(n):
+        x, y, z = camera_coordinates(points[i, 0], points[i, 1], points[i, 2], rotation, translation)
+        depth[i] = z
+        ok = z > 1e-6
+        valid[i] = ok
+        safe = z if ok else 1.0
+        pixels[i, 0] = fx * x / safe + cx
+        pixels[i, 1] = fy * y / safe + cy
+    return pixels, depth, valid
+
+
 def project_points(points, view, intrinsics):
     """Pixel coordinates, depth, and which points are in front."""
+    return _project_numba(
+        np.ascontiguousarray(points, np.float64),
+        np.ascontiguousarray(view[:3, :3], np.float64),
+        np.ascontiguousarray(view[:3, 3], np.float64),
+        float(intrinsics[0, 0]),
+        float(intrinsics[1, 1]),
+        float(intrinsics[0, 2]),
+        float(intrinsics[1, 2]),
+    )
+
+
+def _project_points_numpy(points, view, intrinsics):
+    """The original numpy `project_points`: the oracle for the compiled one."""
     points = np.asarray(points, np.float64)
     camera = points @ view[:3, :3].T + view[:3, 3]
     depth = camera[:, 2]

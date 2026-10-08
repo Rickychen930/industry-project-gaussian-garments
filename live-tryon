@@ -128,7 +128,7 @@ Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
   ./live-tryon [flags]           pick a garment from a list, then the live webcam try-on
   ./live-tryon run [N|name] ...  start directly with garment N or its name (default 00190_upper)
                                  in the window: n / p next / previous garment, q quit
-                                 --sync (default): every shown frame carries its own garment, 4.4-4.8 fps on the M1
+                                 --sync (default): every shown frame carries its own garment, ~7 fps on the M1
                                  --smooth: camera at full rate, the garment carried between pipeline frames
                                  --delayed: --smooth shown ~1 s late, garment from the nearest pipeline frame
                                  other flags pass through: --harmonize, --source video.mp4, --max-width 720, ...

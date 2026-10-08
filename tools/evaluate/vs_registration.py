@@ -25,11 +25,13 @@ from __future__ import annotations
 
 import argparse
 import collections
+import time
 
 import cv2
 import numpy as np
 
 from tools.evaluate._common import iou, write_json
+from tools.evaluate.cloth_trajectory import REFERENCE_FPS
 
 from tryon.paths import GARMENTS, RELEASE_VIDEOS
 HEIGHT = 870
@@ -75,7 +77,7 @@ def warp(mask, s, ox, oy, shape):
     return cv2.warpAffine(mask.astype(np.uint8), m, (shape[1], shape[0]), flags=cv2.INTER_NEAREST).astype(bool)
 
 
-def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, cloth=None):
+def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, cloth=None, subsample=None, sweep=()):
     import mediapipe as mp
 
     from tools.evaluate.reference_frame import find_panel
@@ -92,7 +94,14 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
     from tryon.removal.parsing_schp import LIP_CHECKPOINT
 
     lip = SCHPParser(LIP_CHECKPOINT, size=473)
-    renderer = GarmentRenderer(GARMENTS / name, dynamics=dynamics)
+    renderer = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=subsample)
+    # `sweep`: more fractions to score on the very same fitted bodies, each
+    # "F" (uniform subset) or "Fi" (importance subset); see GarmentRenderer.subsample
+    variants = {}
+    for spec in sweep:
+        GarmentRenderer.SUBSAMPLE_BY_IMPORTANCE = spec.endswith("i")
+        fraction = float(spec.rstrip("i"))
+        variants[spec] = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=fraction if fraction < 1.0 else None)
     # `export`: save every frame's fitted body (model space) and the frame-0
     # garment for an offline simulator (none in the repo now); `cloth`: an
     # npz of such a simulator's garment per frame (reference 7972-vertex
@@ -191,9 +200,16 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
                 if replay is not None and t < len(replay):
                     frame_mesh = np.asarray(replay[t], np.float64)[to_ref]
                     renderer.posed_mesh = lambda _f, dt=None, _m=frame_mesh: _m
-                ours = renderer.render(fitter, panel.shape[:2])[..., 3] > 25
+                ours = renderer.render(fitter, panel.shape[:2], dt=every / REFERENCE_FPS)[..., 3] > 25
                 ours_person = ours | body_silhouette(fitter, panel.shape, grow=0.0)
             theirs_person = warp(reg_person, *similarity[1:], person.shape)
+            swept = {}
+            if fitter is not None:
+                for spec, variant in variants.items():
+                    started = time.perf_counter()
+                    drawn = variant.render(fitter, panel.shape[:2], dt=every / REFERENCE_FPS)[..., 3] > 25
+                    swept[f"render_ms@{spec}"] = 1000 * (time.perf_counter() - started)
+                    swept[f"ours@{spec}"] = iou(drawn, shirt)
             if CAPTURE is not None:
                 CAPTURE.append((t, None if raw is None else np.array(raw), ours.copy(), shirt.copy()))
             rows.append({"frame": t, "theirs": iou(theirs, shirt), "ours": iou(ours, shirt),
@@ -209,7 +225,7 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
                          "ours_extra_skin": float((ours & ~shirt & np.isin(labels, (11, 14, 15, 12, 13))).sum() / max(shirt.sum(), 1)),
                          "ours_extra_lower": float((ours & ~shirt & np.isin(labels, (5, 6))).sum() / max(shirt.sum(), 1)),
                          "ours_extra_other": float((ours & ~shirt & person & ~np.isin(labels, (11, 14, 15, 12, 13, 5, 6))).sum() / max(shirt.sum(), 1)),
-                         "ours_missed": float((shirt & ~ours).sum() / max(shirt.sum(), 1))})
+                         "ours_missed": float((shirt & ~ours).sum() / max(shirt.sum(), 1)), **swept})
             print(f"{name} frame {t}: IoU vs real shirt - theirs {rows[-1]['theirs']:.3f}, ours {rows[-1]['ours']:.3f}", flush=True)
             if png is not None and len(tiles) < 8 and (t % (every * 4) == 0 if not SHOW else t in SHOW):
                 vis = panel.copy()
@@ -242,7 +258,28 @@ def main():
     parser.add_argument("--regress-lag", type=int, default=0)
     parser.add_argument("--regression-camera", choices=["regressor", "keypoints"], default=None)
     parser.add_argument("--cloth", default=None, help="npz with 'cloth' (T, V_ref, 3): render this garment sequence instead")
+    parser.add_argument("--subsample", type=float, default=None, help="draw only this fraction of the garment's Gaussians (live: --garment-subsample)")
+    parser.add_argument("--importance", action="store_true", help="with --subsample: keep the splats with the largest opacity * footprint, not a uniform subset")
+    parser.add_argument("--gpu-render", action="store_true", help="the live path's OpenGL splat renderer (the launcher's --gpu-render)")
+    parser.add_argument("--size-mode", default=None, help="GarmentRenderer.SIZE_MODE: how the wearer's size ratios scale the garment (ScanPoseBinder.SIZE_MODES)")
+    parser.add_argument("--classic-cloth", action="store_true", help="LightCloth instead of SmoothCloth (live: --classic-cloth)")
+    parser.add_argument("--relaxed-rest", action="store_true", help="GarmentRenderer.RELAXED_REST='mean': bind to the garment's relaxed rest shape (stage1/relaxed_rest.npz, tools/evaluate/relaxed_rest.py)")
+    parser.add_argument("--relaxed-scale", type=float, default=None, help="GarmentRenderer.RELAXED_SCALE: fraction of the relaxed-rest offset applied")
+    parser.add_argument("--sweep", default="", help="comma list of fractions scored on the same bodies: 0.5 uniform, 0.5i importance (1.0 = all)")
     args = parser.parse_args()
+    from tryon.garment.cloth import LightCloth
+    from tryon.garment.renderer import GarmentRenderer
+
+    if args.classic_cloth:
+        GarmentRenderer.CLOTH = LightCloth
+    GarmentRenderer.SUBSAMPLE_BY_IMPORTANCE = args.importance
+    if args.relaxed_rest:
+        GarmentRenderer.RELAXED_REST = "mean"
+    if args.relaxed_scale is not None:
+        GarmentRenderer.RELAXED_SCALE = args.relaxed_scale
+    if args.size_mode:
+        GarmentRenderer.SIZE_MODE = args.size_mode
+    GarmentRenderer.GPU_RASTER = GarmentRenderer.GPU_RASTER or args.gpu_render
     global REGRESSOR, REGRESS_EVERY
     global REGRESS_LAG
     REGRESSOR, REGRESS_EVERY, REGRESS_LAG = args.regressor, args.regress_every, args.regress_lag
@@ -257,7 +294,7 @@ def main():
     results = []
     for name in args.videos.split(","):
         png = None if args.png is None else args.png.replace(".jpg", f"_{name}.jpg")
-        result = evaluate(name, args.every, args.frames, png, dynamics=not args.rigid, export=args.export, cloth=args.cloth)
+        result = evaluate(name, args.every, args.frames, png, dynamics=not args.rigid, export=args.export, cloth=args.cloth, subsample=args.subsample, sweep=[x for x in args.sweep.split(',') if x])
         print(name, result["summary"], flush=True)
         results.append(result)
     if args.out:

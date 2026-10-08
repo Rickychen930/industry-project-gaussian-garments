@@ -231,6 +231,12 @@ class SkinnedGarment:
 
     # SMPL-X joints of the arms: shoulders, elbows, wrists and the fingers.
     ARM_JOINTS = (16, 17, 18, 19, 20, 21) + tuple(range(25, 55))
+    # SMPL-X joints of the legs: hips, knees, ankles, feet.
+    LEG_JOINTS = (1, 2, 4, 5, 7, 8, 10, 11)
+    # Factor on the garment's skinning weights over the leg joints (the rows are
+    # renormalised): 1 = as transferred from the body; 0 = a hem that hangs
+    # from the pelvis and does not ride the thighs (`GarmentRenderer.bind`).
+    LEG_SCALE = 1.0
 
     @classmethod
     def build(cls, garment_vertices, fitter, neighbours=200, sleeve=None):
@@ -243,6 +249,12 @@ class SkinnedGarment:
         with torch.no_grad():
             body = fitter._forward().vertices[0].numpy().astype(np.float64)
         body_weights = fitter.model.lbs_weights.detach().numpy().astype(np.float64)
+        if cls.LEG_SCALE != 1.0:
+            scaled = body_weights.copy()
+            scaled[:, list(cls.LEG_JOINTS)] *= cls.LEG_SCALE
+            total = scaled.sum(axis=1, keepdims=True)
+            # a body vertex carried by the legs alone (a foot) keeps its weights
+            body_weights = np.where(total > 1e-6, scaled / np.maximum(total, 1e-12), body_weights)
         if sleeve is None:
             return cls(garment, cls._transfer(garment, body, body_weights, neighbours))
         sleeve = np.asarray(sleeve, bool)
@@ -317,6 +329,20 @@ class SkinnedGarment:
         homogeneous = np.concatenate([garment, np.ones((len(garment), 1))], axis=1)
         zero_frame = np.einsum("nab,nb->na", np.linalg.inv(per_vertex), homogeneous)[:, :3]
         return cls(zero_frame, skinned.weights, physical_rest=garment)
+
+    def relaxed(self, offset):
+        """A copy whose rest is displaced by `offset` ((N, 3), the zero-pose
+        frame at the scan subject's size, i.e. before `scale`): the garment's
+        RELAXED rest shape, how the worn fabric hangs rather than how the scan
+        captured it (`tools/evaluate/relaxed_rest.py`). The physical rest stays
+        the template's: strain limiting and the torn-face test keep measuring
+        against the fabric's own edge lengths (moving it too measured the same
+        distance to the simulation, and would let a stretched relaxed face go
+        undetected). A zero offset is the identity."""
+        offset = np.asarray(offset, np.float64)
+        if offset.shape != self.rest.shape:
+            raise ValueError(f"offset {offset.shape} does not match the garment's {self.rest.shape}")
+        return SkinnedGarment(self.rest + offset, self.weights, physical_rest=self.physical_rest)
 
     def apply(self, fitter):
         """Where the garment sits in the fitter's current pose."""

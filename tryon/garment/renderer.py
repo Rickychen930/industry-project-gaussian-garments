@@ -35,8 +35,8 @@ import numpy as np
 import torch
 from numba import njit, prange
 
-from tryon.garment.checkpoint import load_checkpoint, uv_binding
-from tryon.garment.cloth import LightCloth
+from tryon.garment.checkpoint import load_checkpoint, load_relaxed_rest, uv_binding
+from tryon.garment.cloth import SmoothCloth
 from tryon.garment.raycast import build_scene, hit_distance, occluded_from
 from tryon.garment.scan_pose import ScanPoseBinder
 from tryon.garment.skinning import SkinnedGarment
@@ -207,14 +207,24 @@ class GarmentRenderer:
                     bary[~same] = 1.0 / 3.0
             except (OSError, ValueError, KeyError):
                 pass
+        # which of the checkpoint's Gaussians this renderer holds (None: all):
+        # the shading network answers for every one of them
+        self._subset = None
         if subsample is not None:
             fraction = float(subsample)
             if not 0.0 < fraction < 1.0:
                 raise ValueError(f"subsample must be in (0, 1), got {fraction}")
-            keep = np.random.default_rng(seed).choice(
-                usable, int(usable * fraction), replace=False
-            )
+            count = int(usable * fraction)
+            if self.SUBSAMPLE_BY_IMPORTANCE:
+                # the splats that cover the most opaque area first: opacity
+                # times the footprint (the two largest scales' product)
+                opacity = 1.0 / (1.0 + np.exp(-appearance["opacity"].ravel()))
+                widest = np.sort(np.exp(log_scaling), axis=1)[:, -2:]
+                keep = np.argsort(-(opacity * widest[:, 0] * widest[:, 1]), kind="stable")[:count]
+            else:
+                keep = np.random.default_rng(seed).choice(usable, count, replace=False)
             keep.sort()
+            self._subset = keep
             face_of = face_of[keep]
             bary = bary[keep]
             local_xyz = local_xyz[keep]
@@ -253,6 +263,13 @@ class GarmentRenderer:
         self._strain = None  # (key, edges, limit, count) of `_limit_strain`, per binding
         self._torn_limit = None  # (key, per-face-edge tear length) of `torn_faces`, per binding
 
+    # `subsample` keeps the splats with the largest opacity * footprint
+    # (True) or a uniform random subset (False).
+    SUBSAMPLE_BY_IMPORTANCE = False
+    # the cloth model class: SmoothCloth (parameters searched against the authors' ContourCraft
+    # simulation: same distance and IoU as LightCloth, about a third of the jitter), or LightCloth
+    CLOTH = SmoothCloth
+
     # Cloth motion on by default (see `__init__`'s `dynamics`).
     DYNAMICS = True
     # Never draw the faces straddling the sleeve label (see `bind`).
@@ -263,6 +280,15 @@ class GarmentRenderer:
     # wearer. Reference frame 00152_outer: garment IoU 0.73 with, 0.75
     # without (erased-photo PSNR 14.05 vs 14.00 dB).
     WIDEN_TO_WEARER = False
+    # How the wearer's size ratios scale the garment: `ScanPoseBinder.SIZE_MODES`.
+    SIZE_MODE = "current"
+    # Bind to the garment's RELAXED rest shape instead of the raw template:
+    # None (the template) or "mean" (template + the garment's stored offset,
+    # `stage1/relaxed_rest.npz`, silently the template when the file is
+    # absent). `relaxed_offset` set on an instance overrides the file.
+    RELAXED_REST = None
+    RELAXED_SCALE = 1.0  # fraction of the stored offset applied
+    relaxed_offset = None
 
     def bind(self, fitter):
         """Skin the garment to this fitter's body at rest. Once per person.
@@ -304,11 +330,18 @@ class GarmentRenderer:
         bind_fitter, _, aligned, sleeve = self.scan_binder.bind(fitter)
         self.sleeve_vertices = sleeve
         self._binding = SkinnedGarment.build_in_pose(aligned, bind_fitter, sleeve=sleeve)
+        if self.RELAXED_REST:
+            offset = self.relaxed_offset
+            if offset is None:
+                offset = load_relaxed_rest(self.checkpoint_dir, len(self.rest_vertices))
+            if offset is not None:
+                self._binding = self._binding.relaxed(offset * self.RELAXED_SCALE)
         # Bound in the template frame, the garment is the scan subject's
         # size; scale its zero-pose rest by the wearer's height over the
         # scan body's so it fits the person in front of the camera (the
         # zero-pose body of either is, to first order, the other scaled).
-        self._size_ratio = self.scan_binder.height_ratio(fitter, bind_fitter) if self.scan_pose_used else 1.0
+        mode = self.SIZE_MODE
+        height = self.scan_binder.height_ratio(fitter, bind_fitter) if self.scan_pose_used else 1.0
         # Width: measured on the authors' resize simulations (20 bodies,
         # tools/evaluate/resize_trajectories.py) a height-only resize
         # leaves 34-40% of the garment inside a short-and-wide body (the
@@ -316,8 +349,15 @@ class GarmentRenderer:
         # wide bodies to 3-11% - and breaks narrow ones (sleeves pulled
         # into the arms, 21-43%). So the width factor is applied only
         # when the wearer is WIDER than the scan subject, never below 1.
-        self._width_ratio = max(1.0, self.scan_binder.chest_ratio(fitter, bind_fitter)) if self.scan_pose_used and self.WIDEN_TO_WEARER else 1.0
-        self._binding.scale((self._width_ratio * self._size_ratio, self._size_ratio, self._width_ratio * self._size_ratio))
+        needs_chest = mode == "widen" or (mode == "current" and self.WIDEN_TO_WEARER)
+        chest = self.scan_binder.chest_ratio(fitter, bind_fitter) if self.scan_pose_used and needs_chest else 1.0
+        self._size_history = [height]
+        self._size_binder = (fitter, bind_fitter)
+        factors = self.scan_binder.size_factors(mode, height, chest, self.WIDEN_TO_WEARER) if self.scan_pose_used else np.ones(3)
+        self._size_ratio = float(factors[1])
+        self._width_ratio = float(factors[0] / max(factors[1], 1e-9))
+        self._size_applied = factors
+        self._binding.scale(factors)
         self._bound_to = id(fitter)
         self._covered_body = self._body_covered_by_garment(fitter) if self.OCCLUDE_UNCOVERED_ONLY else None
 
@@ -386,10 +426,69 @@ class GarmentRenderer:
         own frame interval."""
         return self._limit_strain(self._posed_mesh(fitter, dt))
 
+    # A shirt rides up when the arms rise (00152_outer: the hem is 10-12 % of
+    # the shirt's height too low on the frames with the hands above the
+    # shoulders, correlation 0.85 between the two over the clip; leg weights
+    # of the hem were not it). Lift the garment's body vertices along the
+    # spine by RIDE_UP x the garment's height x how far the arms are raised x
+    # how far down the garment the vertex hangs (0 at the collar, 1 at the
+    # hem). None = off. The arms' raise is the mean elevation angle of the
+    # shoulder-to-wrist directions, a smoothstep between RIDE_FROM and RIDE_TO
+    # degrees (-90 = hanging, 0 = horizontal, +90 = straight up).
+    RIDE_UP = None
+    RIDE_FROM, RIDE_TO = -20.0, 70.0
+    _RIDE_JOINTS = (0, 12, 16, 17, 20, 21)  # pelvis, neck, shoulders, wrists
+
+    def arm_raise(self, fitter):
+        """(raise in [0, 1], unit spine direction) of the fitter's current pose."""
+        joints = fitter.joints(indices=list(self._RIDE_JOINTS)).detach().numpy().astype(np.float64)
+        spine = joints[1] - joints[0]
+        up = spine / max(float(np.linalg.norm(spine)), 1e-9)
+        elevations = []
+        for shoulder, wrist in ((2, 4), (3, 5)):
+            arm = joints[wrist] - joints[shoulder]
+            elevations.append(np.degrees(np.arcsin(np.clip(float(arm @ up) / max(float(np.linalg.norm(arm)), 1e-9), -1.0, 1.0))))
+        t = np.clip((float(np.mean(elevations)) - self.RIDE_FROM) / (self.RIDE_TO - self.RIDE_FROM), 0.0, 1.0)
+        return float(t * t * (3.0 - 2.0 * t)), up
+
+    def _ride_weights(self):
+        """Per vertex: 0 at the garment's top, 1 at its hem, 0 on the sleeves (cached per binding)."""
+        key = id(self._binding)
+        if getattr(self, "_ride", None) is None or self._ride[0] != key:
+            rest = self._binding.physical_rest
+            body = ~np.asarray(self.sleeve_vertices, bool)
+            top, bottom = float(np.percentile(rest[body, 1], 98)), float(np.percentile(rest[body, 1], 2))
+            weight = np.clip((top - rest[:, 1]) / max(top - bottom, 1e-9), 0.0, 1.0) * body
+            self._ride = (key, weight, top - bottom)
+        return self._ride[1], self._ride[2]
+
+    def _ride_up(self, vertices, fitter):
+        raised, up = self.arm_raise(fitter)
+        if raised <= 0.0:
+            return vertices
+        weight, height = self._ride_weights()
+        return vertices + (self.RIDE_UP * height * raised * weight)[:, None] * up
+
+    def _freeze_size(self, fitter):
+        """SIZE_MODE "frozen": the garment's scale is the median height ratio
+        of the first `FREEZE_FRAMES` frames of this person, then held (one
+        frame's regressed shape is noisy; the median is not)."""
+        if self.SIZE_MODE != "frozen" or not self.scan_pose_used or len(self._size_history) >= self.scan_binder.FREEZE_FRAMES:
+            return
+        self._size_history.append(self.scan_binder.height_ratio(*self._size_binder))
+        target = float(np.median(self._size_history))
+        change = target / max(float(self._size_applied[1]), 1e-9)
+        self._binding.scale(change)
+        self._size_applied = self._size_applied * change
+        self._size_ratio = float(self._size_applied[1])
+
     def _posed_mesh(self, fitter, dt=None):
         if self._binding is None or self._bound_to != id(fitter):
             self.bind(fitter)
+        self._freeze_size(fitter)
         skin_target = self._binding.apply(fitter)
+        if self.RIDE_UP:
+            skin_target = self._ride_up(skin_target, fitter)
         if not self.dynamics_enabled:
             return skin_target
         now = time.perf_counter()
@@ -397,7 +496,7 @@ class GarmentRenderer:
             dt = 0.0 if self._last_tick is None else now - self._last_tick
         self._last_tick = now
         if self._light is None:
-            self._light = LightCloth()
+            self._light = self.CLOTH(self.scan_binder.edges)
         return self._light.step(skin_target, dt, fitter.vertices(), fitter.faces)
 
     # A face whose edge has stretched past this factor of its rest length
@@ -476,6 +575,14 @@ class GarmentRenderer:
             **{key: value[keep] for key, value in appearance.items()},
         }
 
+    def _checkpoint_index(self, index):
+        """`index` (into the splats this renderer holds; None: all of them) as
+        an index into the checkpoint's Gaussians, which is what the shading
+        network's result is indexed by (they differ with `subsample`)."""
+        if self._subset is None:
+            return index
+        return self._subset if index is None else self._subset[index]
+
     def _static_colours(self, splats):
         """`splats` with the checkpoint's own colours, if `splats(colours=False)` left them out."""
         if all(key in splats for key in self.COLOUR_KEYS):
@@ -528,7 +635,7 @@ class GarmentRenderer:
         from tryon.garment.appearance import merge
 
         result = self._shading_result(mesh, view, fitter)
-        return self._static_colours(splats) if result is None else merge(splats, result, self._kept_indices)
+        return self._static_colours(splats) if result is None else merge(splats, result, self._checkpoint_index(self._kept_indices))
 
     def _splats_numpy(self, vertices):
         """The original numpy placement; the oracle for `splats`."""
@@ -680,7 +787,7 @@ class GarmentRenderer:
         return body, faces
 
 
-    def render(self, fitter, size, occlude_body=True, render_scale=None):
+    def render(self, fitter, size, occlude_body=True, render_scale=None, dt=None):
         """BGRA uint8 of the garment on the fitter's current pose (BGR,
         the rasteriser's own order, plus alpha).
 
@@ -697,7 +804,7 @@ class GarmentRenderer:
         """
         height, width = size
         scale = float(self.render_scale if render_scale is None else render_scale)
-        mesh = self.posed_mesh(fitter)
+        mesh = self.posed_mesh(fitter, dt)
         # the GL path takes every Gaussian with a "keep" mask (no gathers)
         full = bool(self.GPU_RASTER and self.GL_OCCLUSION)
         shaded = self.appearance_enabled
@@ -713,7 +820,7 @@ class GarmentRenderer:
 
             result = self._shading_result(mesh, view, fitter)
             if result is not None:
-                splats = merge(splats, result, index, keys=("xyz",))
+                splats = merge(splats, result, self._checkpoint_index(index), keys=("xyz",))
         occluder = None
         if occlude_body and self.GPU_RASTER and self.GL_OCCLUSION:
             occluder = self.body_occluder(fitter)
@@ -722,8 +829,8 @@ class GarmentRenderer:
             splats = {key: value[keep] for key, value in splats.items()}
             index = np.flatnonzero(keep) if index is None else index[keep]
         if shaded:
-            source = self.appearance if result is None else result
-            splats = {**splats, **{key: source[key] if index is None else source[key][index] for key in self.COLOUR_KEYS}}
+            source, where = (self.appearance, index) if result is None else (result, self._checkpoint_index(index))
+            splats = {**splats, **{key: source[key] if where is None else source[key][where] for key in self.COLOUR_KEYS}}
         small = (max(int(round(height * scale)), 1), max(int(round(width * scale)), 1))
         if small != (height, width):
             # Same camera, fewer pixels: focal length and principal point

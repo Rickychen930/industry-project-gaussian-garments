@@ -30,6 +30,7 @@ erase a little skin at the boundary than leave a rim of the real garment.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -191,6 +192,19 @@ def _guided_refine(frame_bgr, probability, radius=8, eps=1e-3):
     return out
 
 
+@dataclass(frozen=True)
+class ClothingParse:
+    """What one frame's clothing parse produced, returned by
+    `ClothingRemover.parse_clothing` so that two frames' parses can never be
+    mixed through shared state: `mask` the pixels to erase, `labels` the
+    parser's per-pixel ATR labels, `clothing` the raw (undilated, stroke-free)
+    clothing the parser itself saw. Treat the arrays as read-only."""
+
+    mask: np.ndarray
+    labels: np.ndarray | None
+    clothing: np.ndarray
+
+
 class ClothingRemover:
     """Erase the wearer's detected clothing so a rendered garment can be
     composited onto a clean base.
@@ -256,24 +270,30 @@ class ClothingRemover:
     def clothing_probability(self, frame_bgr):
         """Per-pixel probability, at frame resolution, that a pixel is the
         wearer's own clothing (upper-clothes + dress). Probabilities are
-        upsampled, not labels, so the edge keeps a soft ramp."""
+        upsampled, not labels, so the edge keeps a soft ramp. (Also leaves
+        the labels in `_last_labels`: the single-threaded legacy interface.)"""
+        probability, self._last_labels = self._probability_and_labels(frame_bgr)
+        return probability
+
+    def _probability_and_labels(self, frame_bgr):
+        """(clothing probability, the parser's ATR labels), no shared state."""
         if self.fashn is not None:
             from tryon.removal.parsing_fashn import TO_ATR, UPPER_CLASSES
 
             parsed = self.fashn.probabilities(frame_bgr)
-            self._last_labels = TO_ATR[parsed.argmax(axis=0)]
+            labels = TO_ATR[parsed.argmax(axis=0)]
             clothing = parsed[list(UPPER_CLASSES)].sum(axis=0)
-            return _guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing
+            return (_guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing), labels
         if not (self.tta and self.SCHP_FLIP):
             # softmax and argmax on the network's square, only the two maps
             # warped to the frame (`fast_clothing`): 131 -> 109 ms, mask IoU
             # 0.996-0.999 and 99.7 % of labels as before (9 frames, 3 clips)
-            clothing, self._last_labels = self.schp.fast_clothing(frame_bgr, (4, 7))
-            return _guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing
+            clothing, labels = self.schp.fast_clothing(frame_bgr, (4, 7))
+            return (_guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing), labels
         parsed = self.schp.probabilities(frame_bgr, flip=self.tta and self.SCHP_FLIP)
-        self._last_labels = parsed.argmax(axis=0)
+        labels = parsed.argmax(axis=0)
         clothing = parsed[4] + parsed[7]
-        return _guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing
+        return (_guided_refine(frame_bgr, clothing) if self.refine == "guided" else clothing), labels
 
     # Keep an undershirt: when the wearer has a coat (LIP "Coat" covers at
     # least COAT_FRACTION of the LIP upper-body clothing), the pixels LIP
@@ -318,7 +338,15 @@ class ClothingRemover:
         return inner
 
     def clothing_mask(self, frame_bgr, keypoints=None):
-        """Boolean mask of pixels to erase: thresholded probability, grown
+        """`parse_clothing(...).mask`, also leaving the parse in `_last_labels`
+        / `_last_clothing` for `remove` and `skin_colour` (the single-threaded
+        legacy interface; the live loop passes the `ClothingParse` instead)."""
+        parse = self.parse_clothing(frame_bgr, keypoints)
+        self._last_labels, self._last_clothing = parse.labels, parse.clothing
+        return parse.mask
+
+    def parse_clothing(self, frame_bgr, keypoints=None):
+        """The `ClothingParse` of a frame; the mask is a boolean mask of pixels to erase: thresholded probability, grown
         by `dilate_px` (see the module docstring for why it is grown).
 
         `keypoints`: MediaPipe's (33, 3) landmarks in pixels; when given,
@@ -331,7 +359,6 @@ class ClothingRemover:
         whatever the wearer's arm is wearing without needing to recognise
         it, and the rendered garment's sleeves land on top.
         """
-        self._last_labels = None
         # The LIP pass (the inner-layer rule) is independent of the clothing
         # parse and as long: run it beside it. Identical outputs; mask job
         # 406 -> 314 ms on the dancer clip under load (ONNX releases the GIL).
@@ -342,10 +369,11 @@ class ClothingRemover:
 
                 self._lip_pool = ThreadPoolExecutor(1)
             inner_job = self._lip_pool.submit(self._inner_layer, frame_bgr)
-        mask = (self.clothing_probability(frame_bgr) > self.threshold).astype(np.uint8)
+        probability, labels = self._probability_and_labels(frame_bgr)
+        mask = (probability > self.threshold).astype(np.uint8)
         # the raw (undilated, stroke-free) clothing, so `remove(keep=...)`
         # can refuse to keep pixels the parser itself calls clothing
-        self._last_clothing = mask.astype(bool)
+        clothing = mask.astype(bool)
         if self.dilate_px > 0:
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * self.dilate_px + 1,) * 2)
             mask = cv2.dilate(mask, kernel)
@@ -357,12 +385,12 @@ class ClothingRemover:
             inner = inner & ~arm_strokes(keypoints, mask.shape)
         if inner is not None:
             mask &= ~inner
-            self._last_clothing &= ~inner
-        if self._last_labels is not None:
-            mask &= ~hem_leak(self._last_labels, keypoints)
+            clothing &= ~inner
+        if labels is not None:
+            mask &= ~hem_leak(labels, keypoints)
         if keypoints is not None:
             mask |= arm_strokes(keypoints, mask.shape).astype(np.uint8)
-        return mask.astype(bool)
+        return ClothingParse(mask.astype(bool), labels, clothing)
 
     # How the removed region is filled: "skin" (Telea blended toward the
     # wearer's skin colour) or "lama" (LaMa, Suvorov et al.
@@ -416,13 +444,21 @@ class ClothingRemover:
     FACE_CLASS = 11  # LIP/ATR id of the face, the skin sample
     SKIN_BLEND = 0.7  # share of the estimated skin colour in the fill; the rest is the inpaint
 
-    def skin_colour(self, frame_bgr):
+    def _parse_state(self, parse):
+        """(labels, raw clothing) of `parse`, or of the last `clothing_mask`
+        call when no parse is given."""
+        if parse is not None:
+            return parse.labels, parse.clothing
+        return getattr(self, "_last_labels", None), getattr(self, "_last_clothing", None)
+
+    def skin_colour(self, frame_bgr, parse=None):
         """Median BGR of the wearer's face pixels (ATR class 11), or None
         when no face is confidently seen. What the removed region is filled
         with: a torso under an open coat, or a forearm past a sleeve, IS
         skin, and the inpainter cannot know that - it fills from the
-        boundary, which on a fur coat is fur."""
-        labels = getattr(self, "_last_labels", None)
+        boundary, which on a fur coat is fur. `parse`: this frame's
+        `ClothingParse` (default: the last `clothing_mask` call's)."""
+        labels, _ = self._parse_state(parse)
         if labels is not None and labels.shape == frame_bgr.shape[:2]:
             # the parse `clothing_mask` just ran on this frame: a second
             # SCHP pass for the face alone cost ~150 ms a frame
@@ -475,7 +511,7 @@ class ClothingRemover:
         out[mask] = filled[mask]
         return out
 
-    def remove(self, frame_bgr, mask=None, skin_bgr=None, arms=None, keep=None, plate=None, body=None):
+    def remove(self, frame_bgr, mask=None, skin_bgr=None, arms=None, keep=None, plate=None, body=None, parse=None):
         """A copy of `frame_bgr` with the wearer's clothing removed.
 
         `mask` (optional) skips re-running the parser when the caller
@@ -486,26 +522,33 @@ class ClothingRemover:
         `background.body_silhouette`): hole pixels outside the body that
         the plate has seen are filled with the observed background first
         (`_prefill_from_plate`); the rest by the fill, `skin` (`_fill_skin`)
-        or `lama` (`_fill_lama`).
+        or `lama` (`_fill_lama`). `parse`: this frame's `ClothingParse` (its
+        labels and raw clothing are what the fills read; default: the last
+        `clothing_mask` call's).
         """
         if mask is None:
-            mask = self.clothing_mask(frame_bgr)
+            parse = self.parse_clothing(frame_bgr)
+            mask = parse.mask
+        labels, clothing = self._parse_state(parse)
         if not mask.any():
             return frame_bgr.copy()
         if self.fill == "lama":
-            keep = self._lama_keep(mask, keep)
+            keep = self._lama_keep(mask, keep, labels, clothing)
         frame_bgr, mask, keep = self._prefill_from_plate(frame_bgr, mask, keep, plate, body)
         if not mask.any():
             return frame_bgr.copy()
         if self.fill == "lama":
-            return self._fill_lama(frame_bgr, mask, keep, arms, skin_bgr)
-        return self._fill_skin(frame_bgr, mask, arms, skin_bgr)
+            return self._fill_lama(frame_bgr, mask, keep, arms, skin_bgr, parse)
+        if self.LABEL_FILL:
+            labels, clothing = self._parse_state(parse)
+            if labels is not None and labels.shape == mask.shape:
+                return self._fill_labels(frame_bgr, mask, arms, skin_bgr, labels, clothing, body)
+        return self._fill_skin(frame_bgr, mask, arms, skin_bgr, parse)
 
-    def _lama_keep(self, mask, keep):
+    def _lama_keep(self, mask, keep, labels, clothing):
         """The pixels LaMa must leave alone: the parser's bare arm / hand
         skin when there is a parse, else the given hand discs, minus any
         clothing the parser saw."""
-        labels = getattr(self, "_last_labels", None)
         if self.KEEP_PARSED_SKIN and labels is not None and labels.shape == mask.shape:
             # Keep what the parser calls bare arm / hand skin, not a
             # keypoint disc: on the turn clip the disc sat on the fur
@@ -514,9 +557,9 @@ class ClothingRemover:
             # (fur hairs over the skin) is still filled.
             skin = np.isin(labels, SKIN_CLASSES).astype(np.uint8)
             keep = cv2.erode(skin, np.ones((5, 5), np.uint8)).astype(bool)
-        if keep is not None and getattr(self, "_last_clothing", None) is not None and self._last_clothing.shape == mask.shape:
+        if keep is not None and clothing is not None and clothing.shape == mask.shape:
             # a hand disc also covers the fur cuff: keep the hand, not the cuff
-            keep = np.asarray(keep, bool) & ~self._last_clothing
+            keep = np.asarray(keep, bool) & ~clothing
         return keep
 
     @staticmethod
@@ -533,14 +576,14 @@ class ClothingRemover:
         keep = from_plate if keep is None else (np.asarray(keep, bool) | from_plate)
         return prefilled, rest, keep
 
-    def _fill_lama(self, frame_bgr, mask, keep, arms, skin_bgr):
+    def _fill_lama(self, frame_bgr, mask, keep, arms, skin_bgr, parse=None):
         out = self._lama(frame_bgr, mask, keep=keep)
         # LaMa fills the hole from the background, so the wearer's
         # arms vanish with their sleeves (camera 0004: the person read
         # as armless). Where the caller knows the arms (`arms`, the
         # keypoint strokes), draw them back as skin-coloured tubes.
         if arms is not None and skin_bgr is None:
-            skin_bgr = self.skin_colour(frame_bgr)
+            skin_bgr = self.skin_colour(frame_bgr, parse)
         if arms is None or skin_bgr is None:
             return out
         tube = np.asarray(arms, bool) & mask
@@ -559,11 +602,11 @@ class ClothingRemover:
         ring = tube & ~cv2.erode(tube.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
         return cv2.inpaint(out, ring.astype(np.uint8), 2, cv2.INPAINT_TELEA)
 
-    def _fill_skin(self, frame_bgr, mask, arms, skin_bgr):
+    def _fill_skin(self, frame_bgr, mask, arms, skin_bgr, parse=None):
         """Telea inpaint, blended toward the wearer's skin colour on the arms."""
         inpainted = self._telea(frame_bgr, mask)
         if skin_bgr is None:
-            skin_bgr = self.skin_colour(frame_bgr)
+            skin_bgr = self.skin_colour(frame_bgr, parse)
         if skin_bgr is None:
             return inpainted
         out = inpainted.copy()
@@ -578,6 +621,137 @@ class ClothingRemover:
         # Soften the seam: re-inpaint a thin ring just inside the boundary.
         ring = tinted & ~cv2.erode(tinted.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
         return self._inpaint_ring(out, ring)
+
+    # ------------------------------------------------------------------
+    # The label-aware fill (`LABEL_FILL`)
+    # ------------------------------------------------------------------
+    # Telea fills a hole from ALL the boundary at once, so a torso hole beside
+    # a lamp, jeans and bare arm took a bit of each: radial grey and white
+    # wedges, and a flat pink body. This fill reads the parser's labels: every
+    # hole pixel is skin (the arm tube; or inside the body with a skin pixel
+    # nearest) or "other" (nearest non-skin source: room, trousers, undershirt).
+    # Skin is the colour of the visible skin of the same limb (a smooth field
+    # of the nearby skin pixels, so it varies along the arm), shaded darker
+    # toward the tube's edge and given the frame's own grain; "other" is the
+    # nearest source colour, softened. No blending across the two.
+    LABEL_FILL = True
+    # skin from the visible skin of the same limb and shaded like a cylinder (True), or the one face-median colour (False)
+    SKIN_MODEL = True
+    LABEL_SCALE = 0.5  # the fill runs at this fraction of the frame
+    LABEL_PAD = 32  # px of context around the hole's bounding box
+    SKIN_LABELS = (11, 14, 15)  # ATR: face, left arm, right arm
+    SKIN_FIELD_SIGMA = 10.0  # px (at LABEL_SCALE) over which the skin colour varies
+    OTHER_SIGMA = 3.0  # px (at LABEL_SCALE) the nearest-source fill is softened by
+    TUBE_SHADE = 0.15  # the tube's edge is this much darker than its axis
+    LABEL_INNER_REACH = 40.0  # px (at LABEL_SCALE): how far an undershirt is continued into the hole
+    LABEL_MIN_INNER = 150  # px (at LABEL_SCALE) of kept inner layer that count as an undershirt
+    GRAIN = 1.0  # share of the neighbouring pixels' grain (std of gray - blur) the fill gets
+    _rng = None
+
+    @staticmethod
+    def _nearest_source(sources):
+        """(row, col) of the nearest True pixel of `sources` for every pixel."""
+        distance, nearest = cv2.distanceTransformWithLabels((~sources).astype(np.uint8), cv2.DIST_L2, 3, labelType=cv2.DIST_LABEL_PIXEL)
+        ys, xs = np.nonzero(sources)
+        index = np.clip(nearest - 1, 0, ys.size - 1)
+        return ys[index], xs[index]
+
+    @staticmethod
+    def _smooth(image, weight, sigma):
+        """Normalised convolution: `image` averaged over `weight` with a Gaussian."""
+        numerator = cv2.GaussianBlur(image * weight[..., None], (0, 0), sigma)
+        denominator = cv2.GaussianBlur(weight, (0, 0), sigma)
+        return numerator / np.maximum(denominator, 1e-4)[..., None], denominator
+
+    def _fill_labels(self, frame_bgr, mask, arms, skin_bgr, labels, clothing, body):
+        height, width = mask.shape
+        rows, cols = np.flatnonzero(mask.any(axis=1)), np.flatnonzero(mask.any(axis=0))
+        pad = self.LABEL_PAD
+        y0, y1 = max(rows[0] - pad, 0), min(rows[-1] + 1 + pad, height)
+        x0, x1 = max(cols[0] - pad, 0), min(cols[-1] + 1 + pad, width)
+        window = (slice(y0, y1), slice(x0, x1))
+        crop = np.ascontiguousarray(frame_bgr[window])
+        hole_full = mask[window]
+        scale = self.LABEL_SCALE
+        size = (max(int(round(crop.shape[1] * scale)), 2), max(int(round(crop.shape[0] * scale)), 2))
+        small = cv2.resize(crop, size, interpolation=cv2.INTER_AREA).astype(np.float32)
+
+        def shrink(array):
+            return cv2.resize(np.ascontiguousarray(array).astype(np.uint8), size, interpolation=cv2.INTER_NEAREST).astype(bool)
+
+        hole = cv2.dilate(shrink(hole_full).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+        labels_small = cv2.resize(np.ascontiguousarray(labels[window]), size, interpolation=cv2.INTER_NEAREST)
+        covered = hole | (shrink(clothing[window]) if clothing is not None else False)
+        sources = ~covered
+        if not sources.any():
+            return self._telea(frame_bgr, mask)
+        skin_pixel = np.isin(labels_small, self.SKIN_LABELS)
+        skin_source = cv2.erode((sources & skin_pixel).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+        tube = shrink(arms[window]) & hole if arms is not None else np.zeros_like(hole)
+        inside = shrink(body[window]) | tube if body is not None else np.ones_like(hole)
+
+        ny, nx = self._nearest_source(sources)
+        nearest_skin = skin_pixel[ny, nx]
+        # an undershirt the parser kept (the inner layer: its label is clothing, but it is not in the
+        # mask) is what lies under the removed coat, not skin: it is drawn from it wherever the
+        # body is, and the bare skin of the neck above it stays out of it
+        inner = sources & np.isin(labels_small, (4, 7))
+        has_inner = int(inner.sum()) > self.LABEL_MIN_INNER
+        is_skin = hole & (tube | (inside & nearest_skin & skin_source.any() & ~has_inner))
+        # "other" everywhere in the hole: the nearest NON-skin source, softened
+        other_sources = sources & ~skin_pixel
+        if other_sources.any():
+            oy, ox = self._nearest_source(other_sources)
+            nearest = small.copy()
+            nearest[hole] = small[oy, ox][hole]
+            weight = (other_sources | hole).astype(np.float32)
+            out, _ = self._smooth(nearest, weight, self.OTHER_SIGMA)
+        else:
+            out = small[ny, nx]
+        if has_inner:
+            iy, ix = self._nearest_source(inner)
+            under = small.copy()
+            under[hole] = small[iy, ix][hole]
+            soft, _ = self._smooth(under, (inner | hole).astype(np.float32), self.OTHER_SIGMA)
+            # not where the trousers or legs are the nearest thing (the thigh under a long hem)
+            near_inner = cv2.distanceTransform((~inner).astype(np.uint8), cv2.DIST_L2, 3) < self.LABEL_INNER_REACH
+            lower = np.isin(labels_small[ny, nx], LOWER_BODY_CLASSES)
+            out = np.where((hole & inside & ~tube & near_inner & ~lower)[..., None], soft, out)
+        if is_skin.any():
+            field, density = self._smooth(small, skin_source.astype(np.float32), self.SKIN_FIELD_SIGMA)
+            global_skin = np.asarray(skin_bgr, np.float32) if skin_bgr is not None else small[skin_source].mean(axis=0)
+            confidence = np.clip(density * 4.0, 0.0, 1.0)[..., None] * float(self.SKIN_MODEL)
+            colour = confidence * field + (1.0 - confidence) * global_skin
+            depth = cv2.distanceTransform(tube.astype(np.uint8), cv2.DIST_L2, 3)
+            radius = max(float(depth.max()), 1.0)
+            shade = 1.0 - self.TUBE_SHADE * float(self.SKIN_MODEL) * (1.0 - np.sqrt(np.clip(depth / radius, 0.0, 1.0)))
+            colour = np.where(tube[..., None], colour * shade[..., None], colour)
+            # a soft edge between the two kinds (the known skin counts as skin, so the
+            # fill meets it at full strength)
+            alpha = cv2.GaussianBlur((is_skin | (sources & skin_pixel)).astype(np.float32), (0, 0), 1.5)[..., None]
+            out = np.where(hole[..., None], alpha * colour + (1.0 - alpha) * out, small)
+        out = np.where(hole[..., None], out, small)
+        filled = cv2.resize(out, (crop.shape[1], crop.shape[0]), interpolation=cv2.INTER_LINEAR)
+        if self.GRAIN > 0:
+            filled = filled + self._grain(crop, cv2.resize(skin_source.astype(np.uint8), (crop.shape[1], crop.shape[0]), interpolation=cv2.INTER_NEAREST).astype(bool)) * self.GRAIN
+        result = frame_bgr.copy()
+        result[window][hole_full] = np.clip(filled[hole_full], 0, 255).astype(np.uint8)
+        # seam: a thin ring just inside the hole's edge is re-inpainted from both sides
+        ring = mask & ~cv2.erode(mask.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        return self._inpaint_ring(result, ring)
+
+    def _grain(self, crop, skin):
+        """Luminance noise at the level of the visible skin's own grain (std of gray - its blur over the
+        `skin` pixels), the same value on all channels; none when no skin is visible."""
+        if skin.sum() < 200:
+            return 0.0
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        detail = gray - cv2.GaussianBlur(gray, (0, 0), 1.0)
+        level = min(float(detail[skin].std()), 6.0)
+        if ClothingRemover._rng is None:
+            ClothingRemover._rng = np.random.default_rng(0)
+        noise = ClothingRemover._rng.standard_normal(gray.shape).astype(np.float32)
+        return (cv2.GaussianBlur(noise, (0, 0), 0.7) * (level * 1.6))[..., None]
 
     SEAM_RADIUS = 3
     # Telea reads `SEAM_RADIUS` px around a pixel: a crop this far past the
