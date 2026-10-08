@@ -289,3 +289,63 @@ class NLF:
             "betas": answer["betas"],
             "score": 1.0,
         }
+
+
+# ---------------------------------------------------------------- arm refinement
+# SMPL-X joints (collar, shoulder, elbow, wrist) of each arm; the elbow is a hinge about its local y,
+# flexion = -y on the left, +y on the right (NLF's elbow axis-angles, 10004_outer).
+ARM_JOINTS = {"left": (13, 16, 18, 20, -1.0), "right": (14, 17, 19, 21, 1.0)}
+MAX_FLEXION = 2.7  # rad, a little past the elbow's range
+MIN_FLEXION = -0.15
+
+
+def _rotation(vectors):
+    """3x3 rotation of an axis-angle vector (Rodrigues)."""
+    angle = float(np.linalg.norm(vectors))
+    if angle < 1e-9:
+        return np.eye(3)
+    x, y, z = vectors / angle
+    skew = np.array([[0.0, -z, y], [z, 0.0, -x], [-y, x, 0.0]])
+    return np.eye(3) + np.sin(angle) * skew + (1.0 - np.cos(angle)) * (skew @ skew)
+
+
+def refine_arm(frames, targets, length, camera, sign, shoulder_prior=0.3, twist_prior=1.0, flexion_prior=0.1, scale_loss=0.1, steps=5):
+    """Rotations of one arm's shoulder and elbow that put its elbow and wrist on 2D targets.
+
+    `frames`: dict of the current chain, all in the world the camera projects: `R_collar` (3, 3) the
+    collar's global rotation, `shoulder` (3,) the shoulder joint, `a_shoulder`, `a_elbow` (3,) the
+    current local axis-angles, `o_elbow` (3,) the elbow in the shoulder's frame and `o_wrist` (3,) the
+    wrist in the elbow's frame. `targets`: {"elbow": (x, y) or None, "wrist": ...} pixels. `length`: the
+    torso length in px, the unit of the residuals. `camera`: (scale, translation (2,)): y flips, as
+    `BodyFitter._project`. The prior holds the shoulder (`shoulder_prior` per rad) and the elbow's
+    non-hinge components (`twist_prior`) near the regressor's pose and leaves the flexion free inside
+    its range. Returns (a_shoulder, a_elbow, cost before, cost after) with the cost in torso lengths.
+    """
+    from scipy.optimize import least_squares
+
+    scale, translation = camera
+    a0 = np.concatenate([frames["a_shoulder"], frames["a_elbow"]])
+    wanted = [(name, np.asarray(xy, np.float64)) for name, xy in targets.items() if xy is not None]
+
+    def joints(a):
+        r_sh = frames["R_collar"] @ _rotation(a[:3])
+        elbow = frames["shoulder"] + r_sh @ frames["o_elbow"]
+        wrist = elbow + (r_sh @ _rotation(a[3:])) @ frames["o_wrist"]
+        return {"elbow": elbow, "wrist": wrist}
+
+    def residual(a):
+        posed = joints(a)
+        out = []
+        for name, xy in wanted:
+            out.extend((posed[name][:2] * (1.0, -1.0) * scale + translation - xy) / length)
+        delta = a - a0
+        flexion = sign * a[4]
+        out.extend(shoulder_prior * delta[:3])
+        out.extend((twist_prior * delta[3], flexion_prior * delta[4], twist_prior * delta[5]))
+        out.append(twist_prior * (max(flexion - MAX_FLEXION, 0.0) + max(MIN_FLEXION - flexion, 0.0)))
+        return np.array(out)
+
+    before = float(np.linalg.norm(residual(a0)[: 2 * len(wanted)]))
+    solution = least_squares(residual, a0, loss="soft_l1", f_scale=scale_loss, max_nfev=steps, diff_step=1e-4)
+    after = float(np.linalg.norm(residual(solution.x)[: 2 * len(wanted)]))
+    return solution.x[:3], solution.x[3:], before, after

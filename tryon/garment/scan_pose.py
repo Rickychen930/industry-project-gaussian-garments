@@ -11,9 +11,12 @@ the wearer and the scan body are here too.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import torch
 
+from tryon import paths
 from tryon.garment.skinning import SkinnedGarment, align_to_body
 
 
@@ -37,6 +40,23 @@ def _neutral_height():
             vertices = BodyFitter()._forward().vertices[0].numpy()
         _neutral_body_height = float(vertices[:, 1].max() - vertices[:, 1].min())
     return _neutral_body_height
+
+
+def scan_pose_file(checkpoint_dir):
+    """(path, source) of the scan pose a garment binds on: "asset" = the
+    repository's assets/scan_poses/<garment>.npz (authoritative, so every
+    machine binds identically), "cached" = the checkpoint's own
+    stage1/scan_pose.npz (fitted here by tools/data/fit_scan_pose.py), or
+    (None, "missing")."""
+    if checkpoint_dir is None:
+        return None, "missing"
+    asset = paths.SCAN_POSES / f"{Path(checkpoint_dir).name}.npz"
+    if asset.exists():
+        return asset, "asset"
+    cached = Path(checkpoint_dir) / "stage1" / "scan_pose.npz"
+    if cached.exists():
+        return cached, "cached"
+    return None, "missing"
 
 
 def unique_edges(faces):
@@ -151,9 +171,10 @@ class ScanPoseBinder:
         `obstacle[0]` is the body of the frame the template was scanned
         in; fitted to 1.0 cm mean vertex residual on 00152_outer, arms 19 /
         31 degrees from vertical with the right upper arm tilted 18
-        degrees back). None when there is no cache."""
-        path = self.checkpoint_dir / "stage1" / "scan_pose.npz"
-        if not path.exists():
+        degrees back). The repository's copy wins over the checkpoint's own
+        (`scan_pose_file`). None when there is neither."""
+        path, _source = scan_pose_file(self.checkpoint_dir)
+        if path is None:
             return None
         data = np.load(path)
         pose = {key: data[key] for key in ("body_pose", "global_orient", "betas", "offset")}

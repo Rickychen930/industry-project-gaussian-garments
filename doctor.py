@@ -11,7 +11,8 @@ import importlib
 import sys
 from pathlib import Path
 
-from tryon.paths import DATA, GARMENTS, SMPLX_ROOT
+from tryon.garment.scan_pose import scan_pose_file
+from tryon.paths import DATA, GARMENTS, SCAN_POSES, SMPLX_ROOT
 
 GARMENTS_ROOT = GARMENTS
 ANNOTATED = DATA / "annotated"
@@ -66,6 +67,38 @@ def check_garments():
     return 0 if meshes else 1
 
 
+def check_scan_poses():
+    """The scan pose each garment binds on: where it comes from, and whether a
+    garment whose trajectory frame is not its template has the refined one."""
+    import numpy as np
+
+    groups = {}
+    for template in sorted(GARMENTS_ROOT.glob("*/stage1/template_uv.obj")):
+        name = template.parents[1].name
+        path, source = scan_pose_file(template.parents[1])
+        if path is not None and source == "cached" and not (SCAN_POSES / f"{name}.npz").exists():
+            # a pose of our own fitting: suspicious when the fit says it is not this template's body
+            data = np.load(path)
+            mismatch = float(data["template_mismatch_m"]) if "template_mismatch_m" in data.files else 0.0
+            if mismatch > 0.01 and "refined" not in data.files:
+                source = "suspicious"
+        groups.setdefault(source, []).append(name)
+    if not groups:
+        print("  info     no garments, no scan poses")
+        return 0
+    texts = {
+        "asset": "from assets/scan_poses/ (the repository's own; same on every machine)",
+        "cached": "cached in the checkpoint (fitted here, no repository asset)",
+        "suspicious": "UNREFINED: the trajectory frame is not the template -> python -m tools.data.refine_scan_pose <checkpoint>",
+        "missing": "none: binds on a default arm angle -> ./setup.sh",
+    }
+    for source in ("asset", "cached", "suspicious", "missing"):
+        if source in groups:
+            flag = "ok      " if source in ("asset", "cached") else "WARNING "
+            print(f"  {flag} scan pose {texts[source]}: {len(groups[source])} ({' '.join(groups[source])})")
+    return 0
+
+
 def check_data():
     # Neither blocks: the fit and the binding work without them. They are
     # what the evaluation and the goal tests measure against.
@@ -111,6 +144,7 @@ def main():
         ("Packages", check_packages),
         ("Body models", check_body_models),
         ("Garments", check_garments),
+        ("Scan poses", check_scan_poses),
         ("Data", check_data),
         ("Compute", check_compute),
     )

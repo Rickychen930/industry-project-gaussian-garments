@@ -1,0 +1,87 @@
+[
+ {
+  "video": "00152_outer",
+  "frames": 5,
+  "tube_px_mean": 11196.6,
+  "visible_px_mean": 732.4,
+  "visible_share_pooled": 0.06541271457406712,
+  "visible_share_per_frame": [
+   0.002,
+   0.072,
+   0.233,
+   0.003,
+   0.004
+  ]
+ },
+ {
+  "video": "00122_outer",
+  "frames": 5,
+  "tube_px_mean": 5474.6,
+  "visible_px_mean": 1074.4,
+  "visible_share_pooled": 0.19625178095203302,
+  "visible_share_per_frame": [
+   0.367,
+   0.036,
+   0.097,
+   0.584,
+   0.848
+  ]
+ },
+ {
+  "video": "00170_upper",
+  "frames": 5,
+  "tube_px_mean": 11057.8,
+  "visible_px_mean": 1781.4,
+  "visible_share_pooled": 0.16109895277541644,
+  "visible_share_per_frame": [
+   0.107,
+   0.155,
+   0.323,
+   0.185,
+   0.105
+  ]
+ },
+ {
+  "video": "00176_upper",
+  "frames": 7,
+  "tube_px_mean": 1619.4285714285713,
+  "visible_px_mean": 781.8571428571429,
+  "visible_share_pooled": 0.4827981651376147,
+  "visible_share_per_frame": [
+   0.347,
+   0.497,
+   0.321,
+   0.797,
+   0.677,
+   0.262
+  ]
+ },
+ {
+  "video": "10006_outer",
+  "frames": 5,
+  "tube_px_mean": 11534.2,
+  "visible_px_mean": 1047.2,
+  "visible_share_pooled": 0.09079086542629744,
+  "visible_share_per_frame": [
+   0.102,
+   0.278,
+   0.05,
+   0.0,
+   0.002
+  ]
+ },
+ {
+  "video": "00190_upper",
+  "frames": 5,
+  "tube_px_mean": 11037.0,
+  "visible_px_mean": 761.4,
+  "visible_share_pooled": 0.06898613753737429,
+  "visible_share_per_frame": [
+   0.098,
+   0.128,
+   0.039,
+   0.026,
+   0.05
+  ]
+ }
+]

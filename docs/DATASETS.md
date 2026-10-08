@@ -16,6 +16,7 @@ named): `garments/`, `trajectories/`, `release_videos/`, `body_models/smplx/`,
 | The authors' release videos (ground-truth panel + their registration) | `~/tryon-data/release_videos/` | `tools/evaluate/vs_registration.py`, `tracking_jitter.py`, `dropouts.py`, live profiling |
 | The authors' cloth trajectories (`individual-garments/`, `resize/`, ...) | `~/tryon-data/trajectories/` | scan poses (`tools/data/fit_scan_pose.py`), shading-student poses, `cloth_trajectory.py`, `resize_trajectories.py` |
 | SMPL-X body models | `~/tryon-data/body_models/smplx/` | the body |
+| Scan poses (15 files, 2 KB: our own SMPL-X fits, no capture data) | `assets/scan_poses/<garment>.npz` in the repository; `./setup.sh` copies them to `<garment>/stage1/scan_pose.npz` where missing | the bind of every garment (`tryon/garment/scan_pose.py`; the repository copy wins) |
 
 ## Where each was downloaded from
 
@@ -25,6 +26,7 @@ named): `garments/`, `trajectories/`, `release_videos/`, `body_models/smplx/`,
 | Cloth trajectories | https://drive.google.com/file/d/1VoCmCfL-YmWL4BsgcdN8gxcEt3djJp-v/view (same README) |
 | 4D-DRESS demo sample (`data/annotated/`) | https://drive.google.com/file/d/1gtlAiL1_uXGIvV6YFWHp4N9EJk8Vt977/view (the repo's `DataPreparation.md`) |
 | Release videos | a Google Drive folder from the authors, downloaded 29 Aug 2026; the link was not recorded |
+| Scan poses | not downloaded: `tools/data/fit_scan_pose.py` fits SMPL-X to the trajectory's first body; for 00122_outer, 00148_upper, 00176_outer and 10004_outer (trajectory frame 3-22 cm from the template) `tools/data/refine_scan_pose.py` then refits it to the template (`refined=1`). Both results are in `assets/scan_poses/` (see its README) |
 | SMPL-X | https://smpl-x.is.tue.mpg.de (free account) |
 | NLF-S | https://github.com/isarandi/nlf/releases/download/v0.2.2/nlf_s_multi_0.2.2.torchscript |
 | SCHP ATR / LIP (ONNX) | https://huggingface.co/yisol/IDM-VTON/tree/main/humanparsing |

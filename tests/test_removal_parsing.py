@@ -47,6 +47,21 @@ class ParserTest(unittest.TestCase):
         self.assertGreater((labels == full.argmax(axis=0)).mean(), 0.97)
         np.testing.assert_array_equal(self.parser.fast_labels(frame), labels)
 
+    def test_the_windowed_fast_path_matches_the_reference_labels_exactly(self):
+        # wide, tall and square frames (the letterbox leaves padding on two of
+        # them): same probability array, same labels, same thresholded mask
+        import cv2
+
+        rng = np.random.default_rng(3)
+        for shape in ((140, 300), (300, 120), (200, 200)):
+            frame = cv2.GaussianBlur(rng.integers(0, 255, (*shape, 3), np.uint8), (9, 9), 3)
+            p0, l0 = self.parser.fast_clothing_reference(frame, (4, 7))
+            p1, l1 = self.parser.fast_clothing(frame, (4, 7))
+            np.testing.assert_allclose(p0, p1, atol=1e-6)  # cv2.exp: one float32 ulp from numpy's
+            np.testing.assert_array_equal(l0, l1)
+            np.testing.assert_array_equal(p0 > 0.5, p1 > 0.5)
+            np.testing.assert_array_equal(self.parser.fast_labels_reference(frame), self.parser.fast_labels(frame))
+
     def test_probabilities_are_a_distribution_at_frame_resolution(self):
         frame = np.random.default_rng(0).integers(0, 255, (96, 80, 3), np.uint8)
         p = self.parser.probabilities(frame, flip=False)

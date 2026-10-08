@@ -73,6 +73,66 @@ def _springs_serial(x, v, start, target, looseness, stiff_omega, loose_omega, st
     return x_new, v_new
 
 
+def geodesic_from(count, edges, rest, anchors):
+    """Shortest path along the mesh edges from each vertex to the nearest of `anchors`.
+
+    Returns (distance, anchor_of): `distance[i]` is the path length over the edges of `rest` (inf when no anchor
+    can be reached, e.g. a piece of cloth with no anchor on it), `anchor_of[i]` the anchor it is measured from
+    (-1 when unreachable). One Dijkstra over the whole mesh, `edges` as (E, 2) vertex pairs."""
+    import scipy.sparse as sp
+    from scipy.sparse.csgraph import dijkstra
+
+    e = np.asarray(edges)
+    rest = np.asarray(rest, np.float64)
+    length = np.maximum(np.linalg.norm(rest[e[:, 1]] - rest[e[:, 0]], axis=1), 1e-9)
+    graph = sp.coo_matrix((length, (e[:, 0], e[:, 1])), shape=(count, count)).tocsr()
+    distance, _, source = dijkstra(graph, directed=False, indices=np.asarray(anchors), min_only=True, return_predecessors=True)
+    anchor_of = np.where(np.isfinite(distance), source, -1).astype(np.int64)
+    return distance, anchor_of
+
+
+@njit(cache=True)
+def _long_range(x, anchor_of, limit):
+    """Pull every vertex back toward its anchor to at most `limit` (a long-range attachment, one-sided: a vertex
+    already inside its limit does not move). Returns a new array."""
+    out = x.copy()
+    for p in range(len(x)):
+        a = anchor_of[p]
+        if a < 0 or a == p:
+            continue
+        d0 = x[p, 0] - x[a, 0]
+        d1 = x[p, 1] - x[a, 1]
+        d2 = x[p, 2] - x[a, 2]
+        length = np.sqrt(d0 * d0 + d1 * d1 + d2 * d2)
+        if length > limit[p]:
+            k = limit[p] / length
+            out[p, 0] = x[a, 0] + d0 * k
+            out[p, 1] = x[a, 1] + d1 * k
+            out[p, 2] = x[a, 2] + d2 * k
+    return out
+
+
+@njit(cache=True)
+def _long_range_vertical(x, anchor_of, limit):
+    """`_long_range`, but a vertex only moves along y (up, toward its anchor), by as much as restores the
+    distance to the anchor: a hem hangs by gravity, it is lifted and never dragged sideways. A vertex already
+    inside its limit, or not below its anchor, stays."""
+    out = x.copy()
+    for p in range(len(x)):
+        a = anchor_of[p]
+        if a < 0 or a == p:
+            continue
+        d0 = x[a, 0] - x[p, 0]
+        d1 = x[a, 1] - x[p, 1]
+        d2 = x[a, 2] - x[p, 2]
+        lateral2 = d0 * d0 + d2 * d2
+        if lateral2 + d1 * d1 <= limit[p] * limit[p] or d1 <= 0.0:
+            continue
+        room = limit[p] * limit[p] - lateral2
+        out[p, 1] = x[p, 1] + d1 - (np.sqrt(room) if room > 0.0 else 0.0)
+    return out
+
+
 class LightCloth:
     """Per-vertex damped springs toward the skinned garment, a looseness
     map from how far each vertex hangs off the body at rest, and a hard
@@ -107,7 +167,15 @@ class LightCloth:
     # frame with (feed-forward: a swinging sleeve keeps swinging). 0 = off.
     VELOCITY_INHERIT = 0.0
 
+    # Long-range attachment from the garment's top ring (`set_long_range`): after the springs, a vertex is no
+    # farther from its anchor than its rest path along the mesh times (1 + LRA); a hem is pulled up when the
+    # shoulders rise and nothing happens when they do not. None = off. Default on since 9 Oct (anchors: the sleeve's border, `GarmentRenderer.LRA_ANCHORS`): loose-garment IoU +0.015 with `DRAPE_NARROW`, see docs/LOG.md.
+    LRA = 0.03
+    LRA_VERTICAL = False  # True: the attachment only lifts (along y), never drags a vertex sideways
+    LRA_MARGIN = 0.06  # m: added to the limit (without it the vertices next to an anchor are tied to it and the panel narrows)
+
     def __init__(self, edges=None):
+        self._long_range_state = None
         self.x = self.v = self.target = None
         self.looseness = None
         self.edges = edges  # (E, 2) mesh edges, needed by COUPLING
@@ -155,6 +223,18 @@ class LightCloth:
         for _ in range(int(self.COUPLING_ITERATIONS)):
             d = d + rate * (mean @ d - d)
         return target + d
+
+    def set_long_range(self, anchor_of, geodesic):
+        """Install the attachment (`geodesic_from` of the rest mesh); `LRA` says whether it is applied."""
+        limit = np.where(np.isfinite(geodesic), geodesic, 0.0)
+        self._long_range_state = (np.ascontiguousarray(anchor_of, np.int64), np.ascontiguousarray(limit, np.float64))
+
+    def _attach(self, x):
+        if self.LRA is None or self._long_range_state is None or len(self._long_range_state[0]) != len(x):
+            return x
+        anchor_of, limit = self._long_range_state
+        kernel = _long_range_vertical if self.LRA_VERTICAL else _long_range
+        return kernel(np.ascontiguousarray(x, np.float64), anchor_of, limit * (1.0 + self.LRA) + self.LRA_MARGIN)
 
     def _looseness(self, target, body_vertices):
         distance, _ = cKDTree(body_vertices).query(target, k=1)
@@ -217,6 +297,7 @@ class LightCloth:
             )
             self.v = v
         x = self._couple(x, target)
+        x = self._attach(x)
         surface = BodySurface(body_vertices, body_faces)
         x = self._wrap(x, surface)
         x = push_out_of_body(x, surface, self.MARGIN, self.PASSES)

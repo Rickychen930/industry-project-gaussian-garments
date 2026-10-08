@@ -42,14 +42,31 @@ else
   echo "  needs uv (https://docs.astral.sh/uv/: 'brew install uv'), then re-run ./setup.sh"
 fi
 
-step 4/5 "Scan poses of the garment checkpoints (once per garment)"
-MODELS="$(PYTHONPATH="$ROOT" .venv/bin/python -c 'from tryon.paths import GARMENTS; print(GARMENTS)')"
-if [[ -d "$MODELS" ]]; then
-  for dir in "$MODELS"/*/; do
-    [[ -d "$dir/stage1" && ! -f "$dir/stage1/scan_pose.npz" ]] || continue
-    echo "  fitting $(basename "$dir")"
-    PYTHONPATH="$ROOT" .venv/bin/python -m tools.data.fit_scan_pose "$dir" >/dev/null || echo "  (no trajectory for $(basename "$dir"); it binds on the default pose)"
+step 4/5 "Scan poses of the garment checkpoints (assets/scan_poses/, once per garment)"
+# The repository's assets/scan_poses/<garment>.npz are the right poses (four garments need a
+# refined one that a plain fit does not give); install them where a checkpoint has none, never
+# over a file that is already there. A checkpoint with neither is fitted, and refined when the
+# trajectory's first frame is not its template (fit_scan_pose.py --refine).
+install_scan_poses() {  # $1 garments dir, $2 assets dir
+  local dir name
+  for dir in "$1"/*/; do
+    [[ -d "$dir/stage1" ]] || continue
+    name="$(basename "$dir")"
+    if [[ -f "$dir/stage1/scan_pose.npz" ]]; then
+      continue
+    elif [[ -f "$2/$name.npz" ]]; then
+      cp "$2/$name.npz" "$dir/stage1/scan_pose.npz"
+      echo "  installed $name"
+    else
+      echo "  fitting $name (no asset)"
+      PYTHONPATH="$ROOT" .venv/bin/python -m tools.data.fit_scan_pose --refine "$dir" || echo "  (no trajectory for $name; it binds on the default pose)"
+    fi
   done
+}
+MODELS="$(PYTHONPATH="$ROOT" .venv/bin/python -c 'from tryon.paths import GARMENTS; print(GARMENTS)')"
+ASSETS="$(PYTHONPATH="$ROOT" .venv/bin/python -c 'from tryon.paths import SCAN_POSES; print(SCAN_POSES)')"
+if [[ -d "$MODELS" ]]; then
+  install_scan_poses "$MODELS" "$ASSETS"
   echo "  done"
 else
   echo "  no garments at $MODELS yet (see the check below)"

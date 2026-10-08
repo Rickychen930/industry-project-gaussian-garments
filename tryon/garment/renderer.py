@@ -36,10 +36,10 @@ import torch
 from numba import njit, prange
 
 from tryon.garment.checkpoint import load_checkpoint, load_relaxed_rest, uv_binding
-from tryon.garment.cloth import SmoothCloth
+from tryon.garment.cloth import SmoothCloth, geodesic_from
 from tryon.garment.raycast import build_scene, hit_distance, occluded_from
 from tryon.garment.scan_pose import ScanPoseBinder
-from tryon.garment.skinning import SkinnedGarment
+from tryon.garment.skinning import SkinnedGarment, closed_front_flag, drape_narrowing, front_closure, front_opening
 from tryon.rendering.splat_cpu import face_frame, face_frames, quaternion_to_rotation, render_splats, rotation_to_quaternion
 
 # Far enough that weak perspective and perspective agree to <2% over a
@@ -290,6 +290,34 @@ class GarmentRenderer:
     RELAXED_SCALE = 1.0  # fraction of the stored offset applied
     relaxed_offset = None
 
+    # Bring the two front panels of an open-front garment together at the body's midline
+    # (`skinning.front_closure`, once at bind, in the zero-pose frame: skinning carries it). None = off (the
+    # garment as scanned); "auto": only for a garment whose wearer wears it closed, which one frame cannot tell, so
+    # it is a per-garment flag file, `stage1/closed_front.json` (`skinning.closed_front_flag`; absent = off);
+    # "always": every garment (for evaluation).
+    CLOSE_FRONT = "auto"
+    CLOSE_SEAM = 0.01  # m: gap left between the two inner edges
+    CLOSE_BLEND = 0.2  # m: lateral distance over which the pull fades out
+
+    # Narrow the loose lower torso toward the body's centre line by this fraction of its distance from it, scaled
+    # by how far it hangs off the body (`skinning.drape_narrowing`). None = off. 0.15 hurt 00152_outer (-0.005), 0.08 with the long-range attachment is the default.
+    DRAPE_NARROW = 0.08
+    DRAPE_START = 0.3  # of the way from the top to the hem where the narrowing starts, and the span it ramps up over
+    DRAPE_SPAN = 0.4
+
+    # Open the lower front of an open-front garment (`skinning.front_opening`): the inner edge of each front panel
+    # is moved out to this fraction of the half-width at its height, from `FRONT_OPEN_START` of the way from the
+    # top to the hem over `FRONT_OPEN_SPAN`. Measured: the real shirt's front gap is 0.3 of its width below the
+    # chest, ours 0.1-0.25 (docs/figures/torso-width.jpg). None = off; not applied to a garment worn closed.
+    FRONT_OPEN = None
+    FRONT_OPEN_START = 0.35
+    FRONT_OPEN_SPAN = 0.4
+
+    def closes_front(self):
+        if self.CLOSE_FRONT == "always":
+            return True
+        return self.CLOSE_FRONT == "auto" and closed_front_flag(self.checkpoint_dir)
+
     def bind(self, fitter):
         """Skin the garment to this fitter's body at rest. Once per person.
 
@@ -336,6 +364,18 @@ class GarmentRenderer:
                 offset = load_relaxed_rest(self.checkpoint_dir, len(self.rest_vertices))
             if offset is not None:
                 self._binding = self._binding.relaxed(offset * self.RELAXED_SCALE)
+        if self.closes_front():
+            self._binding = self._binding.moved(front_closure(self._binding.rest, self.faces, self.CLOSE_SEAM, self.CLOSE_BLEND))
+        if self.FRONT_OPEN and not self.closes_front():
+            self._binding = self._binding.moved(front_opening(self._binding.rest, self.faces, sleeve, self.FRONT_OPEN, self.FRONT_OPEN_START, self.FRONT_OPEN_SPAN))
+        if self.DRAPE_NARROW:
+            from scipy.spatial import cKDTree
+
+            with torch.no_grad():
+                bind_body = bind_fitter._forward().vertices[0].numpy().astype(np.float64)
+            distance = cKDTree(bind_body).query(aligned)[0]
+            offset = drape_narrowing(self._binding.rest, distance, sleeve, self.DRAPE_NARROW, start=self.DRAPE_START, span=self.DRAPE_SPAN)
+            self._binding = self._binding.moved(offset)
         # Bound in the template frame, the garment is the scan subject's
         # size; scale its zero-pose rest by the wearer's height over the
         # scan body's so it fits the person in front of the camera (the
@@ -469,6 +509,32 @@ class GarmentRenderer:
         weight, height = self._ride_weights()
         return vertices + (self.RIDE_UP * height * raised * weight)[:, None] * up
 
+    # What a long-range attachment (`LightCloth.LRA`) hangs the garment from: "top" the highest
+    # TOP_RING_FRACTION of the body (non-sleeve) vertices at rest (measured: a hem never gets farther from them
+    # than its rest path, 1.00-1.03, so it does nothing); "sleeve" the sleeve's border with the body panels
+    # (the armhole: the arm carries it up, the panel below it may not be farther than its rest path from it,
+    # so a raised arm lifts the hem). Only body (non-sleeve) vertices are limited.
+    LRA_ANCHORS = "sleeve"
+    TOP_RING_FRACTION = 0.03
+
+    def _long_range_anchors(self):
+        """(anchor_of, rest geodesic) per vertex from the anchors, over the garment's physical rest; once per binding."""
+        key = (id(self._binding), self.LRA_ANCHORS)
+        if getattr(self, "_anchors", None) is None or self._anchors[0] != key:
+            rest = self._binding.physical_rest
+            sleeve = np.asarray(self.sleeve_vertices, bool)
+            edges = self.scan_binder.edges
+            if self.LRA_ANCHORS == "sleeve":
+                crossing = sleeve[edges[:, 0]] != sleeve[edges[:, 1]]
+                ring = np.unique(np.where(sleeve[edges[crossing, 0]], edges[crossing, 0], edges[crossing, 1]))
+            else:
+                ids = np.flatnonzero(~sleeve)
+                ring = ids[rest[ids, 1] >= np.quantile(rest[ids, 1], 1.0 - self.TOP_RING_FRACTION)]
+            distance, anchor_of = geodesic_from(len(rest), edges, rest, ring)
+            anchor_of = np.where(sleeve, -1, anchor_of)  # a sleeve follows its arm
+            self._anchors = (key, anchor_of, distance)
+        return self._anchors[1:]
+
     def _freeze_size(self, fitter):
         """SIZE_MODE "frozen": the garment's scale is the median height ratio
         of the first `FREEZE_FRAMES` frames of this person, then held (one
@@ -497,6 +563,8 @@ class GarmentRenderer:
         self._last_tick = now
         if self._light is None:
             self._light = self.CLOTH(self.scan_binder.edges)
+            if self.CLOTH.LRA is not None:
+                self._light.set_long_range(*self._long_range_anchors())
         return self._light.step(skin_target, dt, fitter.vertices(), fitter.faces)
 
     # A face whose edge has stretched past this factor of its rest length

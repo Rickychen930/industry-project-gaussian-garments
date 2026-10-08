@@ -6,6 +6,8 @@ Inside the repository:
     MODELS          models/: trained and pretrained weights (`./setup.sh` fills it)
     DATA            data/: test sets (annotated views, parsing sets; git-ignored)
     BASELINE        docs/baseline/: every measured result, as JSON
+    SCAN_POSES      assets/scan_poses/<garment>.npz: the scan pose each garment binds on
+    CLOSED_FRONT    assets/closed_front/<garment>.json: garments worn closed over an open template
 
 Outside it, under one data root - `~/tryon-data` unless the environment
 variable TRYON_DATA says otherwise (docs/DATASETS.md says where each was
@@ -33,6 +35,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MODELS = REPO_ROOT / "models"
 DATA = REPO_ROOT / "data"
 BASELINE = REPO_ROOT / "docs" / "baseline"
+SCAN_POSES = REPO_ROOT / "assets" / "scan_poses"
+CLOSED_FRONT = REPO_ROOT / "assets" / "closed_front"
 
 DATA_ROOT = Path(os.environ.get("TRYON_DATA", Path.home() / "tryon-data")).expanduser()
 GARMENTS = DATA_ROOT / "garments"

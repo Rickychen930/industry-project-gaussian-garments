@@ -115,6 +115,19 @@ def refine(checkpoint, iterations=300, learning_rate=0.01, truncate=0.10, repair
     return result, before, after
 
 
+def refine_and_write(checkpoint, iterations=500, coarse=200, **options):
+    """Refine with the command line's defaults (300 fine + 200 coarse steps) and
+    replace stage1/scan_pose.npz (the trajectory fit is kept as
+    scan_pose_trajectory.npz); returns (before, after) distances."""
+    result, before, after = refine(checkpoint, iterations=iterations, coarse=coarse, **options)
+    stage1 = Path(checkpoint) / "stage1"
+    if not (stage1 / "scan_pose_trajectory.npz").exists():
+        shutil.copy(stage1 / "scan_pose.npz", stage1 / "scan_pose_trajectory.npz")
+    np.savez(stage1 / "scan_pose.npz", **result)
+    print(f"wrote {stage1 / 'scan_pose.npz'} (trajectory fit kept as scan_pose_trajectory.npz)")
+    return before, after
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("checkpoint")

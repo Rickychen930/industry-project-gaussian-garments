@@ -102,7 +102,13 @@ Tested on macOS with Apple Silicon (M1, 16 GB). Tick each box in order;
       `~/tryon-data/trajectories/` (`docs/DATASETS.md`).
 - [ ] **4. Everything else**: `./setup.sh` - the Python environment, the
       SCHP parsers, the NLF-S body regressor and its environment, and each
-      garment's scan pose. Re-running it only does what is missing.
+      garment's scan pose. The 15 scan poses ship in `assets/scan_poses/`
+      (four of them hand-refined, `refined=1`, because the authors'
+      trajectory does not hold their template's body); setup copies them
+      into the checkpoints that lack one, never over an existing file, and
+      fits (and, when the trajectory frame is not the template, refines) a
+      pose only for a garment with no asset. `./live-tryon doctor` lists
+      where each pose comes from. Re-running it only does what is missing.
 - [ ] **5. Check**: `./live-tryon doctor` ends with `Ready.` and lists MPS,
       SCHP on CoreML, OpenGL on Metal and NLF-S as available.
 - [ ] **6. Tests**: `./live-tryon test` passes.

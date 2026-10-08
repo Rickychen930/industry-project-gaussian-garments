@@ -103,6 +103,73 @@ def hand_discs(keypoints, shape, wrist_extension=1.3, hand_fraction=0.12):
     return hands.astype(bool)
 
 
+# A bare arm narrows from the upper arm to the wrist: width at the elbow and at
+# the wrist as a share of the width at the shoulder, and how far past the wrist
+# keypoint (share of the forearm) the tube runs before the hand takes over.
+TUBE_ELBOW = 0.9
+TUBE_WRIST = 0.7
+TUBE_PAST_WRIST = 0.12
+_TUBE_STEP = 3.0  # px between the discs that make the tube
+
+
+# A real arm is not a cone: the upper arm bulges (biceps / triceps) about half way to the
+# elbow and the forearm is fullest just below it. Share of the width added at the peak.
+MUSCLE_UPPER = 0.08
+MUSCLE_FOREARM = 0.07
+
+
+def _bulge(segment, t, amount):
+    """Width factor along a segment, `t` in [0, 1] from its start: upper arm (0) a half sine, forearm (1) a
+    bump at a quarter of the way to the wrist."""
+    if amount <= 0:
+        return 1.0
+    if segment == 0:
+        return 1.0 + amount * MUSCLE_UPPER * np.sin(np.pi * t)
+    return 1.0 + amount * MUSCLE_FOREARM * np.exp(-(((t - 0.25) / 0.3) ** 2))
+
+
+def arm_limb(keypoints, shape, width_fraction=0.22, muscle=0.0):
+    """(mask, half-width, along) of the bare arms as TAPERED tubes along each shoulder-elbow-wrist
+    polyline: full width (`width_fraction` of the shoulder width) at the shoulder, `TUBE_ELBOW` at
+    the elbow, `TUBE_WRIST` at the wrist; `muscle` (0 = a cone, 1 = the `MUSCLE_*` bulges, 8 % / 7 % of the width) swells
+    the upper arm and the top of the forearm. The half-width map (px, 0 outside) lets a fill shade each
+    point against the tube's own radius; `along` is 0 at the shoulder, 0.5 at the elbow, 1 at the hand.
+    Arms whose landmarks are not all visible are skipped."""
+    keypoints = np.asarray(keypoints, np.float64)
+    height, width = shape[:2]
+    mask = np.zeros((height, width), np.uint8)
+    radius = np.zeros((height, width), np.float32)
+    along = np.zeros((height, width), np.float32)
+    left, right = keypoints[11], keypoints[12]
+    if left[2] < _VISIBLE or right[2] < _VISIBLE:
+        return mask.astype(bool), radius, along
+    shoulder_width = float(np.linalg.norm(left[:2] - right[:2]))
+    full = max(shoulder_width * width_fraction / 2.0, 1.5)
+    for shoulder, elbow, wrist in _ARMS:
+        s, e, w = keypoints[shoulder], keypoints[elbow], keypoints[wrist]
+        if min(s[2], e[2], w[2]) < _VISIBLE or not np.isfinite(keypoints[[shoulder, elbow, wrist], :2]).all():
+            continue
+        end = w[:2] + TUBE_PAST_WRIST * (w[:2] - e[:2])
+        path = ((s[:2], e[:2], full, full * TUBE_ELBOW), (e[:2], end, full * TUBE_ELBOW, full * TUBE_WRIST))
+        for segment, (a, b, ra, rb) in enumerate(path):
+            steps = max(int(np.hypot(*(b - a)) / _TUBE_STEP), 1)
+            for k in range(steps + 1):
+                t = k / steps
+                centre = (int(round((a + t * (b - a))[0])), int(round((a + t * (b - a))[1])))
+                r = (ra + t * (rb - ra)) * _bulge(segment, t, muscle)
+                disc = max(int(round(r)), 1)
+                cv2.circle(mask, centre, disc, 1, -1)
+                cv2.circle(radius, centre, disc, float(r), -1)
+                cv2.circle(along, centre, disc, 0.5 * (segment + t), -1)
+    return mask.astype(bool), radius, along
+
+
+def arm_tube(keypoints, shape, width_fraction=0.22):
+    """(mask, half-width) of the bare arms as tapered tubes: `arm_limb` without the muscle bulges."""
+    mask, radius, _ = arm_limb(keypoints, shape, width_fraction)
+    return mask, radius
+
+
 # ATR labels of the wearer's LOWER body: skirt, pants, left / right leg.
 LOWER_BODY_CLASSES = (5, 6, 12, 13)
 # ATR labels of bare skin a fill must keep: left / right arm (hands included).
@@ -112,7 +179,105 @@ SKIN_CLASSES = (14, 15)
 _HIP_ROW_PERCENTILE = 5.0
 
 
-def hem_leak(labels, keypoints=None):
+# A long shirt hangs from the torso: the dress-labelled pixels below the hip line that
+# are one region with the upper clothing above it, still at least this share of the torso's
+# width a few rows below the hip line, are the shirt's hem, not a leak. Rows of the
+# region above the hip line the torso width is read from, and the row below it where
+# the width is read.
+HANG_WIDTH = 0.5
+HANG_ROWS = 12
+HANG_BELOW = 4
+
+
+def hanging_hem(labels, hip_y):
+    """Boolean mask of the upper-clothing (ATR 4 / 7) pixels below `hip_y` that belong to a
+    garment hanging from the torso: the 8-connected region reaches above the hip line and is
+    still `HANG_WIDTH` of the torso's width (median row width over the `HANG_ROWS` rows above the
+    hip line) `HANG_BELOW` rows below it. A blob the parser leaves under a short jacket's hem
+    (camera 0076) is narrower than the torso there, or not joined to it."""
+    labels = np.asarray(labels)
+    height = labels.shape[0]
+    hip_row = int(round(hip_y))
+    out = np.zeros(labels.shape, bool)
+    if hip_row < HANG_ROWS or hip_row + HANG_BELOW >= height:
+        return out
+    upper = np.isin(labels, (4, 7)).astype(np.uint8)
+    count, region = cv2.connectedComponents(upper, connectivity=8)
+    above = region[hip_row - HANG_ROWS : hip_row + 1]
+    for index in np.unique(above[above > 0]):
+        member = region == index
+        widths = member[hip_row - HANG_ROWS : hip_row + 1].sum(axis=1)
+        widths = widths[widths > 0]
+        if widths.size < HANG_ROWS // 2:
+            continue
+        if member[hip_row + HANG_BELOW].sum() >= HANG_WIDTH * np.median(widths):
+            out |= member
+    return out
+
+
+def hip_line(labels, keypoints=None):
+    """Row of the hip line: the two hip landmarks' mean when visible, else the 5th percentile
+    row of the parser's lower-body region; None when there is neither."""
+    if keypoints is not None:
+        keypoints = np.asarray(keypoints, np.float64)
+        if min(keypoints[23, 2], keypoints[24, 2]) >= _VISIBLE:
+            return float((keypoints[23, 1] + keypoints[24, 1]) / 2)
+    rows = np.nonzero(np.isin(labels, LOWER_BODY_CLASSES).sum(axis=1) >= 3)[0]
+    return float(np.percentile(rows, _HIP_ROW_PERCENTILE)) if len(rows) else None
+
+
+# The long plaid hem of 00152_outer is labelled LEG (12 / 13) by the parser where it
+# overlaps the thighs, 4-9k px a frame (measured, `tools/evaluate/hem_leak_study.py`), so no label
+# rule can tell it from a leg. Its colour can: a candidate below the hip line is given back
+# to the erase when it is within GARMENT_MATCH CIELAB units of a colour the garment itself
+# shows above the hip line (colours holding at least GARMENT_MIN_SHARE of its pixels, on a
+# GARMENT_BIN grid) and is one region with the erase mask.
+GARMENT_BIN = 8.0
+GARMENT_MATCH = 12.0
+GARMENT_MIN_SHARE = 0.01
+GARMENT_MIN_PIXELS = 400
+
+
+def _lab(bgr):
+    return cv2.cvtColor((np.asarray(bgr, np.float32) / 255.0).reshape(-1, 1, 3), cv2.COLOR_BGR2LAB).reshape(-1, 3)
+
+
+def hem_rescue(frame_bgr, mask, leak, clothing, hip_y):
+    """Boolean mask of the `hem_leak` pixels that are the garment's own hem: in `mask` and in `leak`,
+    colour-matched to the garment's pixels above `hip_y` (the parser's `clothing` inside `mask`,
+    eroded 5 px), and connected to the part of `mask` the leak leaves."""
+    candidates = leak & mask
+    if hip_y is None or int(candidates.sum()) == 0:
+        return candidates
+    above = np.arange(mask.shape[0])[:, None] < hip_y
+    reference = cv2.erode((clothing & mask & above).astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+    if int(reference.sum()) < GARMENT_MIN_PIXELS:
+        return np.zeros_like(candidates)
+    lab = _lab(frame_bgr[reference][:: max(int(reference.sum()) // 3000, 1)])
+    cells, inverse, counts = np.unique(np.floor(lab / GARMENT_BIN).astype(np.int32), axis=0, return_inverse=True, return_counts=True)
+    inverse = np.asarray(inverse).reshape(-1)
+    keep = counts >= GARMENT_MIN_SHARE * len(lab)
+    if not keep.any():
+        return np.zeros_like(candidates)
+    centres = np.stack([lab[inverse == k].mean(axis=0) for k in np.flatnonzero(keep)])
+    rows, cols = np.flatnonzero(candidates.any(axis=1)), np.flatnonzero(candidates.any(axis=0))
+    window = (slice(rows[0], rows[-1] + 1), slice(cols[0], cols[-1] + 1))
+    pixels = _lab(frame_bgr[window][candidates[window]])
+    nearest = np.sqrt(((pixels[:, None, :] - centres[None, :, :]) ** 2).sum(axis=2)).min(axis=1)
+    matched = np.zeros_like(candidates)
+    matched[window][candidates[window]] = nearest <= GARMENT_MATCH
+    # one region with the mask that stays: a match is the hem only when it hangs from the garment
+    stays = mask & ~leak
+    wide = (slice(max(rows[0] - 1, 0), rows[-1] + 2), slice(max(cols[0] - 1, 0), cols[-1] + 2))
+    joined = (matched | stays)[wide].astype(np.uint8)
+    count, region = cv2.connectedComponents(joined, connectivity=8)
+    touching = np.unique(region[stays[wide] & (region > 0)])
+    full = np.zeros(mask.shape, np.int32)
+    full[wide] = region
+    return matched & np.isin(full, touching[touching > 0])
+
+
+def hem_leak(labels, keypoints=None, hanging=True):
     """Pixels below the hip line that the parser itself assigns to the
     lower body, or calls "dress" on a wearer who is wearing trousers.
 
@@ -131,23 +296,26 @@ def hem_leak(labels, keypoints=None):
     are given (visibility >= `_VISIBLE`), else the top of the parser's
     own lower-body region (5th percentile row of rows with at least a
     few lower-body pixels: 405 vs the landmarks' 400 on camera 0076).
+
+    A long shirt over shorts is the opposite case (00152_outer, a plaid shirt to
+    the thigh over denim shorts): its hem is labelled dress below the hip line, and
+    with the rule above the real plaid hem was dropped from the erase and stayed
+    visible round the new garment. Dress pixels that are one region with the torso's
+    upper clothing and as wide as the torso below the hip line (`hanging_hem`) stay in
+    the mask; `hanging=False` is the rule without that exception.
     """
     labels = np.asarray(labels)
     lower = np.isin(labels, LOWER_BODY_CLASSES)
-    hip_y = None
-    if keypoints is not None:
-        keypoints = np.asarray(keypoints, np.float64)
-        if min(keypoints[23, 2], keypoints[24, 2]) >= _VISIBLE:
-            hip_y = float((keypoints[23, 1] + keypoints[24, 1]) / 2)
+    hip_y = hip_line(labels, keypoints)
     if hip_y is None:
-        rows = np.nonzero(lower.sum(axis=1) >= 3)[0]
-        if len(rows) == 0:
-            return np.zeros(labels.shape, bool)
-        hip_y = float(np.percentile(rows, _HIP_ROW_PERCENTILE))
+        return np.zeros(labels.shape, bool)
     below = np.arange(labels.shape[0])[:, None] > hip_y
     leak = lower
     if np.isin(labels, (5, 6)).sum() > (labels == 7).sum():
-        leak = leak | (labels == 7)
+        dress = labels == 7
+        if hanging and (dress & below).any():
+            dress &= ~hanging_hem(labels, hip_y)
+        leak = leak | dress
     return leak & below
 
 
@@ -203,6 +371,7 @@ class ClothingParse:
     mask: np.ndarray
     labels: np.ndarray | None
     clothing: np.ndarray
+    points: np.ndarray | None = None  # the (33, 3) keypoints the parse was made with, for the arm tubes
 
 
 class ClothingRemover:
@@ -304,6 +473,9 @@ class ClothingRemover:
     # the white T-shirts under the fur and white jackets). LIP separated
     # the layers on all four clips checked (coat 30-43k px, inner 0.5-17k).
     KEEP_INNER_LAYER = True
+    # Give back to the erase the lower-body-labelled pixels below the hip line that are the garment's
+    # own colour and hang from it (a long shirt over shorts), see `hem_rescue`.
+    HEM_COLOUR = True
     COAT_FRACTION = 0.5
     # While LIP finds no coat, it runs on only every LIP_RECHECK-th frame
     # (the other frames: no inner layer, as it found): most wearers have no
@@ -342,7 +514,7 @@ class ClothingRemover:
         / `_last_clothing` for `remove` and `skin_colour` (the single-threaded
         legacy interface; the live loop passes the `ClothingParse` instead)."""
         parse = self.parse_clothing(frame_bgr, keypoints)
-        self._last_labels, self._last_clothing = parse.labels, parse.clothing
+        self._last_labels, self._last_clothing, self._last_points = parse.labels, parse.clothing, parse.points
         return parse.mask
 
     def parse_clothing(self, frame_bgr, keypoints=None):
@@ -387,10 +559,13 @@ class ClothingRemover:
             mask &= ~inner
             clothing &= ~inner
         if labels is not None:
-            mask &= ~hem_leak(labels, keypoints)
+            leak = hem_leak(labels, keypoints)
+            if self.HEM_COLOUR and leak.any():
+                leak &= ~hem_rescue(frame_bgr, mask.astype(bool), leak, clothing, hip_line(labels, keypoints))
+            mask &= ~leak
         if keypoints is not None:
             mask |= arm_strokes(keypoints, mask.shape).astype(np.uint8)
-        return ClothingParse(mask.astype(bool), labels, clothing)
+        return ClothingParse(mask.astype(bool), labels, clothing, None if keypoints is None else np.asarray(keypoints, np.float64))
 
     # How the removed region is filled: "skin" (Telea blended toward the
     # wearer's skin colour) or "lama" (LaMa, Suvorov et al.
@@ -511,7 +686,7 @@ class ClothingRemover:
         out[mask] = filled[mask]
         return out
 
-    def remove(self, frame_bgr, mask=None, skin_bgr=None, arms=None, keep=None, plate=None, body=None, parse=None):
+    def remove(self, frame_bgr, mask=None, skin_bgr=None, arms=None, keep=None, plate=None, body=None, parse=None, limb=None):
         """A copy of `frame_bgr` with the wearer's clothing removed.
 
         `mask` (optional) skips re-running the parser when the caller
@@ -524,7 +699,9 @@ class ClothingRemover:
         (`_prefill_from_plate`); the rest by the fill, `skin` (`_fill_skin`)
         or `lama` (`_fill_lama`). `parse`: this frame's `ClothingParse` (its
         labels and raw clothing are what the fills read; default: the last
-        `clothing_mask` call's).
+        `clothing_mask` call's). `limb` (optional): the fitted body's own silhouette
+        (`background.body_silhouette`) WITHOUT the keypoint strokes `body` is united with;
+        with `ARM_FROM_BODY` the bare arm takes its outline from it.
         """
         if mask is None:
             parse = self.parse_clothing(frame_bgr)
@@ -542,7 +719,8 @@ class ClothingRemover:
         if self.LABEL_FILL:
             labels, clothing = self._parse_state(parse)
             if labels is not None and labels.shape == mask.shape:
-                return self._fill_labels(frame_bgr, mask, arms, skin_bgr, labels, clothing, body)
+                points = parse.points if parse is not None else getattr(self, "_last_points", None)
+                return self._fill_labels(frame_bgr, mask, arms, skin_bgr, labels, clothing, body, points, limb)
         return self._fill_skin(frame_bgr, mask, arms, skin_bgr, parse)
 
     def _lama_keep(self, mask, keep, labels, clothing):
@@ -645,6 +823,11 @@ class ClothingRemover:
     TUBE_SHADE = 0.15  # the tube's edge is this much darker than its axis
     LABEL_INNER_REACH = 40.0  # px (at LABEL_SCALE): how far an undershirt is continued into the hole
     LABEL_MIN_INNER = 150  # px (at LABEL_SCALE) of kept inner layer that count as an undershirt
+    # Skin texture transfer (off): the fill's grain is a tile of the wearer's own visible skin
+    # (its high-pass luminance: the real mottling, pores, hair) instead of Gaussian noise.
+    ARM_SKIN_TEXTURE = False
+    TEXTURE_PATCH = 40  # px side of the skin patch that is tiled
+    TEXTURE_COVER = 0.9  # share of skin a patch must have
     GRAIN = 1.0  # share of the neighbouring pixels' grain (std of gray - blur) the fill gets
     _rng = None
 
@@ -663,7 +846,85 @@ class ClothingRemover:
         denominator = cv2.GaussianBlur(weight, (0, 0), sigma)
         return numerator / np.maximum(denominator, 1e-4)[..., None], denominator
 
-    def _fill_labels(self, frame_bgr, mask, arms, skin_bgr, labels, clothing, body):
+    # The parser's own bare arm / hand pixels (not clothing, 2 px inside their edge) are
+    # never refilled: the 0.45-wide strokes and the 6 px dilation put them in the hole, and
+    # a fill that replaced them with the nearest non-skin colour drew a pale halo on the
+    # real arm (00122_outer: white undershirt).
+    KEEP_REAL_SKIN = True
+    # The bare-arm tube narrows along the real limb (`arm_tube`, needs the keypoints in the
+    # parse); False: the constant-width stroke passed as `arms`.
+    TAPER_TUBE = True
+    SKIN_REACH = 3.0  # px at LABEL_SCALE, see `_fill_labels`
+
+    # How a fully erased arm is drawn (see `_arm_shade`, `_limb_tube`); each False / 0 is the flat tube.
+    # The outline follows the fitted body's limb (`remove(limb=...)`) where it agrees with the keypoints.
+    ARM_FROM_BODY = False
+    ARM_WIDE = 1.5  # the tube the body outline is cut from, as a multiple of `ARM_TUBE_WIDTH`
+    ARM_BODY_COVER = 0.5  # share of the keypoint tube the body outline must cover, else the tube is kept
+    # width swells (upper arm, top of the forearm), share of `MUSCLE_*` used
+    ARM_MUSCLE = 0.0
+    # Lambertian cylinder lit from the direction the same wearer's face is brighter from, instead of the
+    # constant edge darkening; the ambient share of the light and the elevation of the lateral part
+    ARM_LAMBERT = False
+    ARM_AMBIENT = 0.72
+    ARM_LIGHT_MIN, ARM_LIGHT_MAX = 0.25, 0.75
+    # redder at the elbow and the hand: share of the red / green / blue change at the peak
+    ARM_WARM = 0.0
+    # thin darker rim where the arm's edge is (ambient occlusion), share of the colour, and its width (px at LABEL_SCALE)
+    ARM_RIM = 0.0
+    ARM_RIM_WIDTH = 2.0
+    # shading eases to none over this many px (at LABEL_SCALE) toward the kept hand
+    ARM_HAND_BLEND = 0.0
+    # torso / neck skin from the face, not the arm (True), or the field of all visible skin (False)
+    TORSO_FROM_FACE = True
+
+    # The parser calls a white cuff or sleeve "arm" now and then (00170_upper: 2,592 arm
+    # pixels, median colour white): an arm-labelled pixel counts as skin only when its
+    # CIELAB chroma (a, b) is within this of the same frame's face (white, grey, plaid:
+    # 25-40 away; skin in shade or sun: under 12).
+    SKIN_CHROMA = 16.0
+
+    def _real_skin_labels(self, frame_bgr, labels, mask):
+        """`labels` with the arm-labelled pixels around the hole that are not skin-coloured
+        (against the face) set to 255, so neither the keep nor the fill's skin sources see them."""
+        face = labels == self.FACE_CLASS
+        if int(face.sum()) < 50:
+            return labels
+        pixels = np.ascontiguousarray(frame_bgr[face][::5]).reshape(-1, 1, 3)
+        reference = np.median(cv2.cvtColor(pixels, cv2.COLOR_BGR2LAB).reshape(-1, 3)[:, 1:].astype(np.float32), axis=0)
+        rows, cols = np.flatnonzero(mask.any(axis=1)), np.flatnonzero(mask.any(axis=0))
+        margin = self.LABEL_PAD + 2
+        window = (slice(max(rows[0] - margin, 0), rows[-1] + 1 + margin), slice(max(cols[0] - margin, 0), cols[-1] + 1 + margin))
+        arm = np.isin(labels[window], SKIN_CLASSES)
+        if not arm.any():
+            return labels
+        lab = cv2.cvtColor(np.ascontiguousarray(frame_bgr[window]), cv2.COLOR_BGR2LAB).astype(np.float32)
+        away = np.hypot(lab[..., 1] - reference[0], lab[..., 2] - reference[1]) >= self.SKIN_CHROMA
+        out = labels.copy()
+        out[window][arm & away] = 255
+        return out
+
+    def _spare_real_skin(self, mask, labels, clothing):
+        """`mask` without the parser's real arm / hand skin."""
+        skin = np.isin(labels, SKIN_CLASSES)
+        if clothing is not None:
+            skin &= ~clothing
+        skin &= mask
+        if not skin.any():
+            return mask
+        rows, cols = np.flatnonzero(skin.any(axis=1)), np.flatnonzero(skin.any(axis=0))
+        window = (slice(max(rows[0] - 2, 0), rows[-1] + 3), slice(max(cols[0] - 2, 0), cols[-1] + 3))
+        spare = cv2.erode(np.ascontiguousarray(skin[window]).astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        out = mask.copy()
+        out[window] &= ~spare
+        return out
+
+    def _fill_labels(self, frame_bgr, mask, arms, skin_bgr, labels, clothing, body, points=None, limb=None):
+        if self.KEEP_REAL_SKIN:
+            labels = self._real_skin_labels(frame_bgr, labels, mask)
+            mask = self._spare_real_skin(mask, labels, clothing)
+            if not mask.any():
+                return frame_bgr.copy()
         height, width = mask.shape
         rows, cols = np.flatnonzero(mask.any(axis=1)), np.flatnonzero(mask.any(axis=0))
         pad = self.LABEL_PAD
@@ -688,6 +949,17 @@ class ClothingRemover:
         skin_pixel = np.isin(labels_small, self.SKIN_LABELS)
         skin_source = cv2.erode((sources & skin_pixel).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
         tube = shrink(arms[window]) & hole if arms is not None else np.zeros_like(hole)
+        tube_radius = None
+        along = None
+        if arms is not None and points is not None and self.TAPER_TUBE:
+            tapered, half_width, along_full = arm_limb(points, mask.shape, self.ARM_TUBE_WIDTH, self.ARM_MUSCLE)
+            if self.ARM_FROM_BODY and limb is not None:
+                tapered = self._limb_tube(points, mask.shape, tapered, limb, window)
+                half_width = None  # the outline is the body's: the radius is read from the shape (`_arm_shade`)
+            tube = shrink(tapered[window]) & hole
+            if half_width is not None:
+                tube_radius = cv2.resize(np.ascontiguousarray(half_width[window]), size, interpolation=cv2.INTER_NEAREST) * (size[0] / crop.shape[1])
+            along = cv2.resize(np.ascontiguousarray(along_full[window]), size, interpolation=cv2.INTER_NEAREST)
         inside = shrink(body[window]) | tube if body is not None else np.ones_like(hole)
 
         ny, nx = self._nearest_source(sources)
@@ -697,7 +969,15 @@ class ClothingRemover:
         # body is, and the bare skin of the neck above it stays out of it
         inner = sources & np.isin(labels_small, (4, 7))
         has_inner = int(inner.sum()) > self.LABEL_MIN_INNER
-        is_skin = hole & (tube | (inside & nearest_skin & skin_source.any() & ~has_inner))
+        # skin continues from the visible skin only SKIN_REACH px (half scale) into a hole pixel the
+        # parser does not call clothing: the strokes and the dilation reach past a thin arm, and
+        # skin there drew a skin-coloured halo round it. Under the garment (clothing) it runs on.
+        if self.KEEP_REAL_SKIN:
+            yy, xx = np.mgrid[: hole.shape[0], : hole.shape[1]]
+            reach = (np.hypot(ny - yy, nx - xx) <= self.SKIN_REACH) | (shrink(clothing[window]) if clothing is not None else True)
+        else:
+            reach = True
+        is_skin = hole & (tube | (inside & nearest_skin & skin_source.any() & ~has_inner & reach))
         # "other" everywhere in the hole: the nearest NON-skin source, softened
         other_sources = sources & ~skin_pixel
         if other_sources.any():
@@ -718,14 +998,26 @@ class ClothingRemover:
             lower = np.isin(labels_small[ny, nx], LOWER_BODY_CLASSES)
             out = np.where((hole & inside & ~tube & near_inner & ~lower)[..., None], soft, out)
         if is_skin.any():
-            field, density = self._smooth(small, skin_source.astype(np.float32), self.SKIN_FIELD_SIGMA)
-            global_skin = np.asarray(skin_bgr, np.float32) if skin_bgr is not None else small[skin_source].mean(axis=0)
+            arm_source = skin_source & np.isin(labels_small, SKIN_CLASSES)
+            face_source = skin_source & (labels_small == self.FACE_CLASS)
+            # the torso and neck are the FACE's colour, not the arm's (an arm in the sun, or
+            # a tan line, made 00170_upper's chest brown beside a pale face); a limb is its own visible skin
+            if self.TORSO_FROM_FACE and face_source.sum() >= 20:
+                body_skin = np.median(small[face_source], axis=0)
+            elif self.TORSO_FROM_FACE and arm_source.any():
+                body_skin = small[arm_source].mean(axis=0)
+            else:
+                body_skin = np.asarray(skin_bgr, np.float32) if skin_bgr is not None else small[skin_source].mean(axis=0)
+            field, density = self._smooth(small, (arm_source if self.SKIN_MODEL else skin_source).astype(np.float32), self.SKIN_FIELD_SIGMA)
             confidence = np.clip(density * 4.0, 0.0, 1.0)[..., None] * float(self.SKIN_MODEL)
-            colour = confidence * field + (1.0 - confidence) * global_skin
+            limb = confidence * field + (1.0 - confidence) * body_skin
             depth = cv2.distanceTransform(tube.astype(np.uint8), cv2.DIST_L2, 3)
-            radius = max(float(depth.max()), 1.0)
-            shade = 1.0 - self.TUBE_SHADE * float(self.SKIN_MODEL) * (1.0 - np.sqrt(np.clip(depth / radius, 0.0, 1.0)))
-            colour = np.where(tube[..., None], colour * shade[..., None], colour)
+            if self.ARM_LAMBERT or self.ARM_RIM > 0 or self.ARM_WARM > 0 or self.ARM_HAND_BLEND > 0 or tube_radius is None and self.ARM_FROM_BODY:
+                shade = self._arm_shade(small, tube, depth, tube_radius, along, face_source, skin_source & ~face_source)
+            else:
+                local = np.maximum(tube_radius, 1.0) if tube_radius is not None else max(float(depth.max()), 1.0)
+                shade = (1.0 - self.TUBE_SHADE * float(self.SKIN_MODEL) * (1.0 - np.sqrt(np.clip(depth / local, 0.0, 1.0))))[..., None]
+            colour = np.where(tube[..., None], limb * shade, body_skin[None, None, :] if self.SKIN_MODEL else limb)
             # a soft edge between the two kinds (the known skin counts as skin, so the
             # fill meets it at full strength)
             alpha = cv2.GaussianBlur((is_skin | (sources & skin_pixel)).astype(np.float32), (0, 0), 1.5)[..., None]
@@ -740,6 +1032,86 @@ class ClothingRemover:
         ring = mask & ~cv2.erode(mask.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
         return self._inpaint_ring(result, ring)
 
+    def _limb_tube(self, points, shape, narrow, limb, window):
+        """`narrow` (the keypoint tube) where the fitted body's limb disagrees with it, else the part of a wider
+        tube (`ARM_WIDE` times) that lies inside the body's silhouette: the arm's real outline (upper arm wider than
+        the forearm, the elbow, the wrist). Decided per arm (connected piece of `narrow`) within `window`."""
+        wide, _, _ = arm_limb(points, shape, self.ARM_TUBE_WIDTH * self.ARM_WIDE, self.ARM_MUSCLE)
+        inside = cv2.dilate(np.ascontiguousarray(limb[window]).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+        n_crop, w_crop = narrow[window], wide[window]
+        count, pieces = cv2.connectedComponents(n_crop.astype(np.uint8), connectivity=8)
+        out = n_crop.copy()
+        reach = max(int(round(self.ARM_TUBE_WIDTH * (self.ARM_WIDE - 1.0) * 60)), 3)
+        grown = None
+        for k in range(1, count):
+            piece = pieces == k
+            if (inside & piece).sum() < self.ARM_BODY_COVER * piece.sum():
+                continue
+            grown = cv2.dilate(piece.astype(np.uint8), np.ones((reach, reach), np.uint8)).astype(bool)
+            out |= w_crop & inside & grown
+            out &= ~(piece & ~inside) | ~grown  # the body's outline, not the keypoint tube, where it is narrower
+        full = narrow.copy()
+        full[window] = out
+        return full
+
+    def _light_direction(self, small, face):
+        """(unit 2-D direction the light comes from in the image, lateral share) of the same wearer's face: the
+        brightness gradient of the plane fitted to the face's luminance. The weakly lit or flat face gives the
+        minimum lateral share, from above."""
+        lateral = self.ARM_LIGHT_MIN
+        ys, xs = np.nonzero(face)
+        if ys.size < 40:
+            return np.array([0.0, -1.0], np.float32), lateral
+        luma = small[ys, xs] @ np.array([0.114, 0.587, 0.299], np.float32)
+        design = np.stack([np.ones(ys.size), xs - xs.mean(), ys - ys.mean()], axis=1).astype(np.float32)
+        coef = np.linalg.lstsq(design, luma, rcond=None)[0]
+        gradient = np.array([coef[1], coef[2]], np.float32)
+        norm = float(np.hypot(*gradient))
+        if norm < 1e-4:
+            return np.array([0.0, -1.0], np.float32), lateral
+        radius = np.sqrt(ys.size / np.pi)
+        lateral = float(np.clip(2.0 * norm * radius / max(float(luma.mean()), 1.0), self.ARM_LIGHT_MIN, self.ARM_LIGHT_MAX))
+        return gradient / norm, lateral
+
+    def _arm_shade(self, small, tube, depth, tube_radius, along, face, arm_skin):
+        """(H, W, 3) multiplier of the arm tube's skin colour (1 outside the tube): the constant cylinder darkening, or
+        (`ARM_LAMBERT`) a Lambertian cylinder lit as the face is, plus (`ARM_WARM`) a redder elbow and hand, (`ARM_RIM`)
+        a darker edge, (`ARM_HAND_BLEND`) no shading next to the kept hand. Everything at LABEL_SCALE."""
+        if tube_radius is not None:
+            local = np.maximum(tube_radius, 1.0)
+        else:  # the radius of the shape itself: the ridge of the depth around each pixel
+            ridge = cv2.dilate(depth, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)))
+            local = np.maximum(cv2.GaussianBlur(ridge, (0, 0), 3.0), 1.0)
+        u = 1.0 - np.sqrt(np.clip(depth / local, 0.0, 1.0))  # 0 on the axis, 1 at the edge
+        if self.ARM_LAMBERT:
+            light, lateral = self._light_direction(small, face)
+            smooth = cv2.GaussianBlur(depth, (0, 0), 1.2)
+            gx, gy = cv2.Sobel(smooth, cv2.CV_32F, 1, 0, ksize=3), cv2.Sobel(smooth, cv2.CV_32F, 0, 1, ksize=3)
+            norm = np.maximum(np.hypot(gx, gy), 1e-4)
+            outward_x, outward_y = -gx / norm, -gy / norm
+            tilt = np.clip(u, 0.0, 1.0)
+            nz = np.sqrt(np.clip(1.0 - tilt * tilt, 0.0, 1.0))
+            lz = 1.0 / np.sqrt(1.0 + lateral * lateral)
+            lx, ly = light[0] * lateral * lz, light[1] * lateral * lz
+            lit = np.maximum(outward_x * tilt * lx + outward_y * tilt * ly + nz * lz, 0.0)
+            ambient = self.ARM_AMBIENT
+            shade = (ambient + (1.0 - ambient) * lit) / (ambient + (1.0 - ambient) * lz)
+        else:
+            shade = 1.0 - self.TUBE_SHADE * float(self.SKIN_MODEL) * u
+        shade = shade[..., None] * np.ones(3, np.float32)
+        if self.ARM_WARM > 0 and along is not None:
+            bump = np.exp(-(((along - 0.5) / 0.1) ** 2)) + 1.3 * np.exp(-(((along - 1.0) / 0.12) ** 2))
+            bump = (bump * self.ARM_WARM)[..., None]
+            shade = shade * (1.0 - bump * np.array([0.9, 0.6, -0.5], np.float32))  # B, G down, R up
+        if self.ARM_RIM > 0:
+            rim = np.clip(1.0 - (depth - 1.0) / max(self.ARM_RIM_WIDTH, 0.5), 0.0, 1.0)
+            shade = shade * (1.0 - self.ARM_RIM * rim)[..., None]
+        if self.ARM_HAND_BLEND > 0 and arm_skin.any():
+            near = cv2.distanceTransform((~arm_skin).astype(np.uint8), cv2.DIST_L2, 3)
+            ease = np.clip(near / self.ARM_HAND_BLEND, 0.0, 1.0)[..., None]
+            shade = 1.0 + (shade - 1.0) * ease
+        return np.where(tube[..., None], shade, 1.0).astype(np.float32)
+
     def _grain(self, crop, skin):
         """Luminance noise at the level of the visible skin's own grain (std of gray - its blur over the
         `skin` pixels), the same value on all channels; none when no skin is visible."""
@@ -748,10 +1120,35 @@ class ClothingRemover:
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY).astype(np.float32)
         detail = gray - cv2.GaussianBlur(gray, (0, 0), 1.0)
         level = min(float(detail[skin].std()), 6.0)
+        if self.ARM_SKIN_TEXTURE:
+            tiled = self._skin_tile(gray, skin)
+            if tiled is not None:
+                return (tiled * (level * 1.6 / max(float(tiled.std()), 1e-3)))[..., None]
         if ClothingRemover._rng is None:
             ClothingRemover._rng = np.random.default_rng(0)
         noise = ClothingRemover._rng.standard_normal(gray.shape).astype(np.float32)
         return (cv2.GaussianBlur(noise, (0, 0), 0.7) * (level * 1.6))[..., None]
+
+    def _skin_tile(self, gray, skin):
+        """(H, W) zero-mean high-pass luminance of the most skin-covered `TEXTURE_PATCH` square of `skin`, mirror-tiled
+        to the shape of `gray`; None when no square is `TEXTURE_COVER` skin."""
+        side = self.TEXTURE_PATCH
+        if skin.shape[0] < side or skin.shape[1] < side:
+            return None
+        cover = cv2.boxFilter(skin.astype(np.float32), -1, (side, side), normalize=True, borderType=cv2.BORDER_CONSTANT)
+        half = side // 2
+        cover[:half], cover[-half:], cover[:, :half], cover[:, -half:] = 0, 0, 0, 0
+        cy, cx = np.unravel_index(int(cover.argmax()), cover.shape)
+        if cover[cy, cx] < self.TEXTURE_COVER:
+            return None
+        y0, x0 = cy - half, cx - half
+        patch = gray[y0:y0 + side, x0:x0 + side]
+        patch = patch - cv2.GaussianBlur(patch, (0, 0), 1.5)
+        patch = patch - patch.mean()
+        reps = (-(-gray.shape[0] // side) + 1, -(-gray.shape[1] // side) + 1)
+        mirrored = np.block([[patch, patch[:, ::-1]], [patch[::-1], patch[::-1, ::-1]]])
+        tiled = np.tile(mirrored, (-(-reps[0] // 2), -(-reps[1] // 2)))
+        return np.ascontiguousarray(tiled[: gray.shape[0], : gray.shape[1]])
 
     SEAM_RADIUS = 3
     # Telea reads `SEAM_RADIUS` px around a pixel: a crop this far past the

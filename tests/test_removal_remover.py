@@ -411,6 +411,93 @@ class HemLeakTest(unittest.TestCase):
         keypoints[[23, 24], 1] = 10.0  # visibility 0: ignored
         self.assertFalse(hem_leak(self._labels(), keypoints)[:56].any())
 
+    def _long_shirt(self):
+        """A long shirt over shorts: upper clothes to row 60, its hem labelled dress down to row
+        78 at the torso's full width, the shorts and legs beside and below it."""
+        labels = np.zeros((120, 60), np.uint8)
+        labels[20:60, 15:45] = 4
+        labels[60:78, 15:45] = 7  # the hem, below the hip line (row 60)
+        labels[60:90, 10:15] = 6  # shorts either side of it, and below
+        labels[60:90, 45:50] = 6
+        labels[78:90, 15:45] = 6
+        labels[90:120, 20:40] = 12
+        return labels
+
+    def test_a_long_shirt_hem_below_the_hips_is_not_a_leak(self):
+        from tryon.removal.remover import hem_leak
+
+        keypoints = np.zeros((33, 3))
+        keypoints[[23, 24], 1] = 60.0
+        keypoints[[23, 24], 2] = 1.0
+        labels = self._long_shirt()
+        leak = hem_leak(labels, keypoints)
+        self.assertFalse(leak[labels == 7].any(), "the hem hangs from the torso: it is erased")
+        self.assertTrue((labels[61:78, 15:45] == 7).all())
+        self.assertTrue(leak[78:90, 15:45].all(), "the shorts below it still are not")
+        self.assertTrue(hem_leak(labels, keypoints, hanging=False)[61:78, 15:45].all(), "the rule without the exception drops the hem")
+
+    def test_a_narrow_blob_joined_to_the_torso_is_still_a_leak(self):
+        from tryon.removal.remover import hem_leak
+
+        keypoints = np.zeros((33, 3))
+        keypoints[[23, 24], 1] = 60.0
+        keypoints[[23, 24], 2] = 1.0
+        labels = self._labels(dress_blob=False)
+        labels[58:75, 27:33] = 7  # a 6 px tail: a fifth of the torso's width
+        labels[58:60, 27:33] = 4
+        leak = hem_leak(labels, keypoints)
+        self.assertTrue(leak[62:75, 27:33].all())
+
+
+class HemRescueTest(unittest.TestCase):
+    """`hem_rescue`: a long shirt's hem the parser labels as LEG (measured on 00152_outer: 4-9k px a
+    frame) is given back to the erase by its colour, a real trouser blob under a short jacket (camera 0076) is not."""
+
+    RED, GREY = (30, 30, 200), (150, 140, 130)
+
+    def scene(self, hem_colour):
+        frame = np.full((120, 60, 3), (60, 180, 60), np.uint8)
+        labels = np.zeros((120, 60), np.uint8)
+        frame[20:60, 15:45], labels[20:60, 15:45] = self.RED, 4  # the shirt to the hips (row 60)
+        frame[60:85, 15:45] = hem_colour  # below the hip line: parsed as the wearer's legs
+        labels[60:85, 15:45] = 12
+        mask = np.zeros((120, 60), bool)
+        mask[20:85, 12:48] = True
+        leak = np.zeros_like(mask)
+        leak[61:, :] = np.isin(labels, (12, 13))[61:, :]
+        return frame, labels, mask, leak
+
+    def test_a_hem_of_the_garments_colour_below_the_hips_is_given_back(self):
+        from tryon.removal.remover import hem_rescue
+
+        frame, labels, mask, leak = self.scene(self.RED)
+        rescued = hem_rescue(frame, mask, leak, labels == 4, 60.0)
+        self.assertTrue(rescued[62:84, 16:44].all())
+        self.assertFalse(rescued[:61].any())
+
+    def test_trousers_under_a_jacket_stay_a_leak(self):
+        from tryon.removal.remover import hem_rescue
+
+        frame, labels, mask, leak = self.scene(self.GREY)
+        self.assertFalse(hem_rescue(frame, mask, leak, labels == 4, 60.0).any())
+
+    def test_a_match_that_does_not_hang_from_the_mask_stays_a_leak(self):
+        from tryon.removal.remover import hem_rescue
+
+        frame, labels, mask, leak = self.scene(self.GREY)
+        frame[100:110, 5:15] = self.RED  # red like the shirt, but far from the part of the mask that stays
+        labels[100:110, 5:15] = 12
+        mask[100:110, 5:15] = True
+        leak[100:110, 5:15] = True
+        rescued = hem_rescue(frame, mask, leak, labels == 4, 60.0)
+        self.assertFalse(rescued[100:110, 5:15].any())
+
+    def test_no_garment_above_the_hips_rescues_nothing(self):
+        from tryon.removal.remover import hem_rescue
+
+        frame, labels, mask, leak = self.scene(self.RED)
+        self.assertFalse(hem_rescue(frame, mask, leak, np.zeros_like(mask), 60.0).any())
+
 
 class SkinFillTest(unittest.TestCase):
     """The removed region is filled toward the wearer's skin colour."""
@@ -764,6 +851,59 @@ class LabelFillTest(unittest.TestCase):
         out = self.fill(frame, labels, mask, body=body).astype(float)
         np.testing.assert_allclose(out[32:40, 70:90].reshape(-1, 3).mean(axis=0), (240, 240, 240), atol=30)
 
+    def test_the_arm_tube_narrows_from_the_shoulder_to_the_wrist(self):
+        from tryon.removal.remover import arm_tube
+
+        keypoints = np.zeros((33, 3))
+        keypoints[11] = (150, 20, 1)
+        keypoints[12] = (50, 20, 1)  # shoulder width 100
+        keypoints[13] = (150, 90, 1)
+        keypoints[15] = (150, 160, 1)
+        keypoints[[14, 16], 2] = 0.0  # the other arm is not seen: no tube
+        mask, radius = arm_tube(keypoints, (200, 200), width_fraction=0.3)
+        self.assertFalse(mask[:, :100].any(), "an arm that is not seen has no tube")
+        near_shoulder, near_wrist = mask[30, :].sum(), mask[155, :].sum()
+        self.assertGreater(near_shoulder, 1.25 * near_wrist)
+        self.assertAlmostEqual(float(radius[30, 150]), 15.0 * (1 - 0.1 * 10 / 70), delta=1.5)
+
+    def test_the_parsers_real_arm_skin_is_not_refilled_but_a_white_cuff_labelled_arm_is(self):
+        frame, labels, mask = self.scene()
+        frame[:] = self.GREEN
+        labels[:] = 0
+        face = np.zeros_like(mask)
+        face[2:16, 70:90] = True
+        frame[face], labels[face] = self.SKIN, 11
+        skin = np.zeros_like(mask)
+        skin[40:50, 52:80] = True  # real arm skin, inside the hole
+        cuff = np.zeros_like(mask)
+        cuff[70:80, 52:80] = True  # a white cuff the parser called arm
+        frame[skin], labels[skin] = (110, 140, 200), 14
+        frame[cuff], labels[cuff] = (240, 240, 240), 15
+        labels[mask & ~skin & ~cuff] = 4
+        from tryon.removal.remover import ClothingParse
+
+        clothing = mask & ~skin & ~cuff
+        out = self.remover.remove(frame, mask, parse=ClothingParse(mask, labels, clothing))
+        np.testing.assert_array_equal(out[43:47, 58:74], frame[43:47, 58:74])
+        self.assertTrue((np.abs(out[73:77, 58:74].astype(int) - (240, 240, 240)).sum(axis=-1) > 60).all(), "the white cuff stays erased")
+
+    def test_the_torso_is_the_faces_colour_not_the_arms(self):
+        frame, labels, mask = self.scene()
+        frame[:] = self.GREEN
+        labels[:] = 0
+        face = np.zeros_like(mask)
+        face[10:30, 70:90] = True
+        arm = np.zeros_like(mask)
+        arm[30:90, 38:49] = True  # a browner arm beside the torso
+        pale, brown = (150, 170, 220), (70, 110, 160)
+        frame[face], labels[face] = pale, 11
+        frame[arm], labels[arm] = brown, 14
+        labels[mask] = 4
+        body = np.zeros_like(mask)
+        body[20:100, 45:115] = True
+        out = self.fill(frame, labels, mask, body=body).astype(float)
+        np.testing.assert_allclose(out[32:38, 72:88].reshape(-1, 3).mean(axis=0), pale, atol=25)
+
     def test_nearest_source_matches_brute_force(self):
         rng = np.random.default_rng(3)
         sources = rng.random((40, 50)) > 0.97
@@ -783,6 +923,125 @@ class LabelFillTest(unittest.TestCase):
         b = off.remove(frame, mask)
         np.testing.assert_array_equal(a, b)
 
+
+class ArmModelTest(unittest.TestCase):
+    """The fully erased arm drawn as an arm (`ARM_*` switches): body outline, light, warmth, rim, hand blend."""
+
+    SKIN = (120, 150, 210)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.remover = bare_remover()
+        cls.remover.LABEL_FILL = True
+
+    def setUp(self):
+        from tryon.removal.remover import ClothingRemover
+
+        ClothingRemover._rng = None
+        self.keypoints = np.zeros((33, 3))
+        self.keypoints[11] = (150, 30, 1)
+        self.keypoints[12] = (50, 30, 1)
+        self.keypoints[13] = (150, 100, 1)
+        self.keypoints[15] = (150, 170, 1)
+        self.keypoints[[14, 16], 2] = 0.0
+        self.shape = (220, 200)
+
+    def scene(self, face_gradient=0.0):
+        """Room, a face (label 11) whose luminance rises to the right by `face_gradient`, the left arm erased."""
+        frame = np.zeros(self.shape + (3,), np.uint8)
+        frame[:] = (60, 180, 60)
+        labels = np.zeros(self.shape, np.uint8)
+        face = np.zeros(self.shape, bool)
+        face[2:26, 80:120] = True
+        ramp = np.linspace(-face_gradient, face_gradient, 40)[None, :]
+        frame[face] = np.clip(np.array(self.SKIN)[None, :] + ramp.repeat(24, 0).reshape(-1, 1), 0, 255).astype(np.uint8)
+        labels[face] = 11
+        hole = np.zeros(self.shape, bool)
+        hole[20:200, 120:180] = True
+        return frame, labels, hole
+
+    def erase(self, frame, labels, hole, **kwargs):
+        from tryon.removal.remover import ClothingParse, arm_strokes
+
+        tube = arm_strokes(self.keypoints, self.shape, width_fraction=0.22)
+        parse = ClothingParse(hole, labels, hole.copy(), self.keypoints)
+        return self.remover.remove(frame, hole, arms=tube, parse=parse, **kwargs)
+
+    def with_switches(self, **switches):
+        from contextlib import contextmanager
+
+        @contextmanager
+        def scope():
+            old = {k: getattr(self.remover, k) for k in switches}
+            for k, v in switches.items():
+                setattr(self.remover, k, v)
+            try:
+                yield
+            finally:
+                for k, v in old.items():
+                    setattr(self.remover, k, v)
+
+        return scope()
+
+    def test_arm_limb_runs_from_the_shoulder_to_the_hand_and_muscle_swells_the_upper_arm(self):
+        from tryon.removal.remover import arm_limb, arm_tube
+
+        flat, radius, along = arm_limb(self.keypoints, self.shape, 0.3)
+        self.assertLess(float(along[40, 150]), 0.2)
+        self.assertGreater(float(along[160, 150]), 0.8)
+        np.testing.assert_array_equal(arm_tube(self.keypoints, self.shape, 0.3)[0], flat)
+        swollen, _, _ = arm_limb(self.keypoints, self.shape, 0.3, muscle=1.0)
+        self.assertGreater(int(swollen[65, :].sum()), int(flat[65, :].sum()))
+        self.assertEqual(int(swollen[32, :].sum()), int(flat[32, :].sum()))  # the shoulder end is not swollen
+
+    def test_the_switches_off_leave_the_fill_as_it_was(self):
+        frame, labels, hole = self.scene()
+        base = self.erase(frame, labels, hole)
+        with self.with_switches(ARM_LAMBERT=True, ARM_RIM=0.0):
+            ClothingRemover = type(self.remover)
+            ClothingRemover._rng = None
+            lit = self.erase(frame, labels, hole)
+        self.assertFalse(np.array_equal(base, lit))
+        type(self.remover)._rng = None
+        np.testing.assert_array_equal(base, self.erase(frame, labels, hole))
+
+    @staticmethod
+    def arm_columns(out, row):
+        """Columns of `row` in the hole's span that are not the room's green: the drawn arm."""
+        away = np.abs(out[row, 120:180].astype(int) - np.array((60, 180, 60))).sum(axis=1) > 100
+        return 120 + np.flatnonzero(away)
+
+    def test_the_arm_is_lit_from_the_side_the_face_is_brighter_from(self):
+        frame, labels, hole = self.scene(face_gradient=40.0)
+        with self.with_switches(ARM_LAMBERT=True, GRAIN=0.0):
+            out = self.erase(frame, labels, hole).astype(float).sum(axis=2)
+        columns = self.arm_columns(self.erase(frame, labels, hole), 100)
+        self.assertGreater(len(columns), 10)
+        left, right = out[100, columns[1] : columns[1] + 3].mean(), out[100, columns[-1] - 3 : columns[-1]].mean()
+        self.assertGreater(right, left + 5, "the face is brighter on the right: so is the right edge of the arm")
+
+    def test_the_rim_darkens_the_arms_edge(self):
+        frame, labels, hole = self.scene()
+        with self.with_switches(GRAIN=0.0):
+            plain = self.erase(frame, labels, hole)
+            type(self.remover)._rng = None
+            with self.with_switches(ARM_RIM=0.3):
+                rimmed = self.erase(frame, labels, hole)
+        edge = self.arm_columns(plain, 100)[2]
+        self.assertLess(rimmed[100, edge].astype(int).sum(), plain[100, edge].astype(int).sum() - 15)
+        self.assertAlmostEqual(float(rimmed[100, 150].astype(int).sum()), float(plain[100, 150].astype(int).sum()), delta=4)
+
+    def test_the_body_outline_cuts_the_arm_where_it_is_narrower_and_a_misfit_body_is_ignored(self):
+        frame, labels, hole = self.scene()
+        limb = np.zeros(self.shape, bool)
+        limb[:, 144:156] = True  # a body arm narrower than the tube
+        with self.with_switches(ARM_FROM_BODY=True, ARM_WIDE=1.2, GRAIN=0.0):
+            cut = self.erase(frame, labels, hole, limb=limb)
+            type(self.remover)._rng = None
+            ignored = self.erase(frame, labels, hole, limb=np.zeros(self.shape, bool))
+        plain = self.erase(frame, labels, hole)
+        self.assertLess(len(self.arm_columns(cut, 100)), len(self.arm_columns(plain, 100)) - 3)
+        self.assertLessEqual(abs(len(self.arm_columns(ignored, 100)) - len(self.arm_columns(plain, 100))), 1)
 
 if __name__ == "__main__":
     unittest.main()

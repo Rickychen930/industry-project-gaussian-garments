@@ -38,6 +38,7 @@ from tryon.body.landmarks import (
     _IDS,
     _TORSO,
     JOINT_MAP,
+    VISIBILITY_FLOOR,
     _all_depth_bones,
     _scaled_points,
     landmark_yaw,
@@ -112,6 +113,13 @@ class BodyFitter:
     # photos, threshold 25), so 400 is the compromise: near-average girth
     # (chest 30 cm, betas within 0.7) at 10 px on camera 0004.
     SHAPE_PRIOR = 400.0
+    # Arm-only refinement of a regressed pose toward MediaPipe's 2D elbows and wrists
+    # (`_refine_arms`, tools/evaluate/arm_pose.py); off until it is measured.
+    ARM_REFINE = False
+    ARM_GATE = 0.12  # torso lengths of elbow / wrist disagreement before an arm is touched
+    ARM_VISIBILITY = 0.5  # MediaPipe visibility of a landmark worth following
+    ARM_BLEND = 1.0  # how far toward MediaPipe's point the target sits (1: on it)
+    ARM_PRIORS = (0.3, 1.0, 0.1)  # per rad: shoulder, elbow non-hinge, elbow flexion
     POSE_PRIOR = 60.0
     # Centre of the pose prior (1, 63): None = rest; `fit_from_regression`
     # sets it to the image regressor's pose, so the keypoint term refines
@@ -506,6 +514,7 @@ class BodyFitter:
         REGRESSION_CAMERA.
         """
         camera = REGRESSION_CAMERA if camera is None else camera
+        landmarks = points
         if points is None:
             # MediaPipe lost the wearer (e.g. an arm or object across the
             # torso); the regressor still saw them. No landmark is used.
@@ -560,6 +569,8 @@ class BodyFitter:
             with torch.no_grad():
                 self.scale.copy_(torch.tensor([s], dtype=torch.float32))
                 self.translation.copy_(torch.tensor(wanted_in.mean(axis=0) - s * ours_in.mean(axis=0), dtype=torch.float32)[None])
+            if self.ARM_REFINE and landmarks is not None:
+                self._refine_arms(np.asarray(landmarks, np.float64))
             return float(((s * ours_in + self.translation.detach().numpy() - wanted_in) ** 2).sum(axis=1).mean())
         self._fit_camera(target_tensor, weight_tensor, torso_weights, camera_iterations)
         # Root and camera only: releasing the pose (or shape) to the
@@ -579,6 +590,58 @@ class BodyFitter:
         self._optimiser = None
         self._rescale_camera(1.0 / factor)
         return loss / factor**2
+
+    def _refine_arms(self, landmarks):
+        """Move each arm's shoulder and elbow rotations toward MediaPipe's visible elbow and wrist
+        where the fitted ones disagree by more than `ARM_GATE` torso lengths (camera already placed).
+        Returns the arms touched."""
+        from tryon.body.regressor import ARM_JOINTS, refine_arm
+
+        if min(landmarks[i, 2] for i in (11, 12, 23, 24)) < VISIBILITY_FLOOR:
+            return []
+        length = 0.5 * float(np.linalg.norm(landmarks[11, :2] - landmarks[23, :2]) + np.linalg.norm(landmarks[12, :2] - landmarks[24, :2]))
+        if length < 1.0:
+            return []
+        with torch.no_grad():
+            posed, transforms = self._chain()
+            offset = torch.zeros(3) if self.mesh_offset is None else self.mesh_offset[0]
+            posed = (posed[0, :22] + offset).double().numpy()
+            rotations = transforms[0, :22, :3, :3].double().numpy()
+            camera = (float(self.scale), self.translation.detach().double().numpy().reshape(2))
+        shoulder_prior, twist_prior, flexion_prior = self.ARM_PRIORS
+        flipped = False
+        touched = []
+        if min(landmarks[15, 2], landmarks[16, 2]) >= self.ARM_VISIBILITY:
+            # MediaPipe's left / right wrists nearer the other way round than NLF's: whose labels hold is unknown
+            keep = np.linalg.norm(self._pixels(posed[20], camera) - landmarks[15, :2]) + np.linalg.norm(self._pixels(posed[21], camera) - landmarks[16, :2])
+            swap = np.linalg.norm(self._pixels(posed[21], camera) - landmarks[15, :2]) + np.linalg.norm(self._pixels(posed[20], camera) - landmarks[16, :2])
+            flipped = swap < 0.5 * keep
+        if flipped:
+            return []
+        for name, (collar, shoulder, elbow, wrist, sign), (mp_elbow, mp_wrist) in zip(ARM_JOINTS, ARM_JOINTS.values(), ((13, 15), (14, 16))):
+            targets = {key: landmarks[m, :2] if landmarks[m, 2] >= self.ARM_VISIBILITY else None for key, m in (("elbow", mp_elbow), ("wrist", mp_wrist))}
+            seen = {"elbow": elbow, "wrist": wrist}
+            gap = [np.linalg.norm(self._pixels(posed[seen[k]], camera) - xy) / length for k, xy in targets.items() if xy is not None]
+            if not gap or max(gap) < self.ARM_GATE:
+                continue
+            if self.ARM_BLEND < 1.0:
+                targets = {k: None if xy is None else (lambda here: here + self.ARM_BLEND * (xy - here))(self._pixels(posed[seen[k]], camera)) for k, xy in targets.items()}
+            a_sh = self.body_pose[0, (shoulder - 1) * 3: shoulder * 3].detach().double().numpy()
+            a_el = self.body_pose[0, (elbow - 1) * 3: elbow * 3].detach().double().numpy()
+            frames = {"R_collar": rotations[collar], "shoulder": posed[shoulder], "a_shoulder": a_sh, "a_elbow": a_el,
+                      "o_elbow": rotations[shoulder].T @ (posed[elbow] - posed[shoulder]),
+                      "o_wrist": rotations[elbow].T @ (posed[wrist] - posed[elbow])}
+            new_sh, new_el, before, after = refine_arm(frames, targets, length, camera, sign, shoulder_prior, twist_prior, flexion_prior)
+            if after < before:
+                with torch.no_grad():
+                    self.body_pose[0, (shoulder - 1) * 3: shoulder * 3] = torch.tensor(new_sh, dtype=torch.float32)
+                    self.body_pose[0, (elbow - 1) * 3: elbow * 3] = torch.tensor(new_el, dtype=torch.float32)
+                touched.append(name)
+        return touched
+
+    @staticmethod
+    def _pixels(joint, camera):
+        return joint[:2] * (1.0, -1.0) * camera[0] + camera[1]
 
     def refit(self, points, extra_hypotheses=(), prefer_yaw=None):
         """Cold fit that may only improve on the current pose.

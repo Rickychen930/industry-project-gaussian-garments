@@ -62,12 +62,30 @@ MIN_SKIN = 150  # px of visible skin a reference needs
 # What a variant changes: ClothingRemover class attributes (see the remover's docstrings).
 VARIANTS = {
     "baseline": {"LABEL_FILL": False},  # the committed fill before the label-aware one
+    "prev": {"LABEL_FILL": True, "KEEP_REAL_SKIN": False, "TAPER_TUBE": False, "TORSO_FROM_FACE": False},  # the label fill before the arm study
+    "keepskin": {"LABEL_FILL": True, "KEEP_REAL_SKIN": True, "TAPER_TUBE": False, "TORSO_FROM_FACE": False},
+    "taper": {"LABEL_FILL": True, "KEEP_REAL_SKIN": True, "TAPER_TUBE": True, "TORSO_FROM_FACE": False},
+    "new": {"LABEL_FILL": True, "KEEP_REAL_SKIN": True, "TAPER_TUBE": True, "TORSO_FROM_FACE": True},
     "labels_flat": {"LABEL_FILL": True, "SKIN_MODEL": False, "GRAIN": 0.0},
     "labels": {"LABEL_FILL": True},
     "labels_nograin": {"LABEL_FILL": True, "GRAIN": 0.0},
     "labels_w18": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.18},
     "labels_w26": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.26},
     "labels_w30": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.30},
+    # the arm study of 9 Oct (3): the arm drawn as an arm. `cur` is the fill before it (every switch off)
+    "cur": {"LABEL_FILL": True, "ARM_FROM_BODY": False, "ARM_MUSCLE": 0.0, "ARM_LAMBERT": False, "ARM_WARM": 0.0, "ARM_RIM": 0.0, "ARM_HAND_BLEND": 0.0},
+    "arm_muscle": {"ARM_MUSCLE": 1.0},
+    "arm_lambert": {"ARM_LAMBERT": True},
+    "arm_warm": {"ARM_WARM": 0.04},
+    "arm_rim": {"ARM_RIM": 0.12},
+    "arm_hand": {"ARM_HAND_BLEND": 3.0},
+    "arm_body": {"ARM_FROM_BODY": True, "_limb": True},
+    "arm_body12": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.2},
+    "arm_body10": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.0},
+    "arm_new": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.2, "ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
+    "arm_shading": {"ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
+    "arm_all": {"ARM_FROM_BODY": True, "_limb": True, "ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
+    "arm_texture": {"ARM_SKIN_TEXTURE": True},
     "baseline_tubebody": {"_body": "tube"},
     "labels_tubebody": {"LABEL_FILL": True, "_body": "tube"},
 }
@@ -199,6 +217,25 @@ def one_arm(points, arm):
     return out
 
 
+def bare_share(sample, region):
+    """Share of the parser's arm pixels in `region` whose colour is the face's skin chroma (CIELAB a, b within
+    `ClothingRemover.SKIN_CHROMA`): a white long sleeve the parser calls "arm" is not a bare arm. 1.0 without a face."""
+    from tryon.removal.remover import ClothingRemover
+
+    labels, image = sample["labels"], sample["image"]
+    arm = np.isin(labels, (14, 15)) & region
+    face = labels == 11
+    if arm.sum() < 20 or face.sum() < 50:
+        return 1.0
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32)
+    reference = np.median(lab[face][::5][:, 1:], axis=0)
+    distance = np.hypot(lab[arm][:, 1] - reference[0], lab[arm][:, 2] - reference[1])
+    return float((distance < ClothingRemover.SKIN_CHROMA).mean())
+
+
+MIN_BARE = 0.7  # an arm case needs this share of skin-coloured arm pixels: its truth must be a bare arm
+
+
 def arm_cases(sample, tube_width):
     """Holes shaped as one arm's live stroke, on arms that wear nothing: [(name, hole, arm tube, keep)]. The
     tube (`ARM_TUBE_WIDTH` strokes, what the fill dresses in skin) is for `tube_width`."""
@@ -214,9 +251,9 @@ def arm_cases(sample, tube_width):
         q = one_arm(p, arm)
         stroke = arm_strokes(q, shape) & ~clothed  # the part clear of the real shirt: its truth is known
         tube = arm_strokes(q, shape, width_fraction=tube_width) & stroke
-        if stroke.sum() < MIN_HOLE or (arm_strokes(q, shape, width_fraction=0.22) & stroke & skin).sum() < 0.25 * max(tube.sum(), 1):
+        if stroke.sum() < MIN_HOLE or bare_share(sample, stroke) < MIN_BARE or (arm_strokes(q, shape, width_fraction=0.22) & stroke & skin).sum() < 0.25 * max(tube.sum(), 1):
             continue
-        out.append((f"arm{arm}", stroke, tube, keep))
+        out.append((f"arm{arm}", stroke, tube, keep, q))
     return out
 
 
@@ -275,37 +312,45 @@ def reset_variant(remover):
             delattr(remover, key)
 
 
-def run_fill(remover, sample, hole, arms, keep, variant="baseline"):
+def run_fill(remover, sample, hole, arms, keep, variant="baseline", points=None):
     """The live `LiveSession._erase` call, for `hole`. `_body: tube` hands the plate the fitted body plus
     the narrow arm tube instead of the body plus the 0.45-wide strokes (what `LiveSession._erase` builds)."""
     from tryon.removal.remover import ClothingParse
 
-    parse = ClothingParse(hole, sample["labels"], sample["clothing"])
+    parse = ClothingParse(hole, sample["labels"], sample["clothing"], points)
     plate = plate_of(sample["plate"])
     body = sample["body"]
     if VARIANTS[variant].get("_body") == "tube" and arms is not None:
         body = sample["silhouette"] | np.asarray(arms, bool)
-    return remover.remove(sample["image"], hole, arms=arms, keep=keep, plate=plate, body=body, parse=parse)
+    limb = sample["silhouette"] if VARIANTS[variant].get("_limb") else None  # the fitted body's own outline, as the pipeline would pass it
+    return remover.remove(sample["image"], hole, arms=arms, keep=keep, plate=plate, body=body, parse=parse, limb=limb)
 
 
 def synthetic_rows(remover, samples, variants):
     rows = []
     for sample in samples:
         # grafted holes: no strokes, no tint
-        grafts = [(name, hole, None, None) for name, hole in graft_cases(sample)]
+        grafts = [(name, hole, None, None, None) for name, hole in graft_cases(sample)]
+        spared = _eroded(np.isin(sample["labels"], (14, 15)) & ~sample["clothing"], 5)
         for variant in variants:
             reset_variant(remover)
             apply_variant(remover, variant)
             cases = arm_cases(sample, remover.ARM_TUBE_WIDTH) + grafts
-            for name, hole, tube, keep in cases:
+            for name, hole, tube, keep, points in cases:
                 started = time.perf_counter()
-                out = run_fill(remover, sample, hole, tube, keep, variant)
+                out = run_fill(remover, sample, hole, tube, keep, variant, points)
                 took = (time.perf_counter() - started) * 1000
                 truth_hole = hole & ~(keep if keep is not None else np.zeros_like(hole))
                 if truth_hole.sum() < MIN_HOLE:
                     continue
-                rows.append({"t": sample["t"], "case": name, "kind": "arm" if name.startswith("arm") else "graft", "variant": variant,
+                is_arm = name.startswith("arm")
+                rows.append({"t": sample["t"], "case": name, "kind": "armfull" if is_arm else "graft", "variant": variant,
                              "pixels": int(truth_hole.sum()), "ms": took, **hole_scores(sample["image"], out, truth_hole)})
+                if is_arm:  # the same arm, scored only where a fill is needed (the parser's own arm skin is kept by every variant)
+                    fill_hole = truth_hole & ~spared
+                    if fill_hole.sum() >= MIN_HOLE:
+                        rows.append({"t": sample["t"], "case": name, "kind": "arm", "variant": variant, "pixels": int(fill_hole.sum()),
+                                     "ms": took, **hole_scores(sample["image"], out, fill_hole)})
         reset_variant(remover)
     return rows
 
@@ -332,16 +377,22 @@ def real_rows(remover, samples, variants):
         rows_below = np.arange(shape[0])[:, None] > p[[23, 24], 1].mean() if min(p[23, 2], p[24, 2]) > 0.5 else None
         gray = cv2.cvtColor(sample["image"], cv2.COLOR_BGR2GRAY)
         skin_texture = laplacian_variance(gray, reference)
+        hip = float(p[[23, 24], 1].mean()) if min(p[23, 2], p[24, 2]) > 0.5 else shape[0] * 0.6
+        chest = _eroded(mask & sample["silhouette"] & ~arm_strokes(p, shape) & (np.arange(shape[0])[:, None] < hip), 5)
+        face_ok = face.sum() >= MIN_SKIN and chest.sum() >= MIN_HOLE // 2
         for variant in variants:
             reset_variant(remover)
             apply_variant(remover, variant)
             live_tube = arm_strokes(p, shape, width_fraction=remover.ARM_TUBE_WIDTH)
-            out = run_fill(remover, sample, mask, live_tube, keep, variant)
+            out = run_fill(remover, sample, mask, live_tube, keep, variant, p)
             out_gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
             row = {"t": sample["t"], "variant": variant, "pixels": int(under.sum()),
                    "skin_de": mean_lab_distance(out[under], sample["image"][reference]),
                    "texture": laplacian_variance(out_gray, under) / max(skin_texture, 1e-6),
                    }
+            if face_ok:  # the torso fill (skin or the undershirt it continues) against the same frame's face
+                row["torso_face_de"] = mean_lab_distance(out[chest], sample["image"][face])
+                row["torso_pixels"] = int(chest.sum())
             if lower.sum() > 0 and rows_below is not None:
                 below = lower & rows_below
                 row["lower_erased"] = float((mask & below).sum() / max(below.sum(), 1)) if below.sum() > 200 else float("nan")
@@ -361,11 +412,11 @@ def summarise(rows):
     out = {}
     for variant in sorted({r["variant"] for r in rows}):
         entry = {}
-        for kind in ("arm", "graft"):
+        for kind in ("arm", "armfull", "graft"):
             for key in ("psnr", "ssim", "de76", "seam"):
                 entry[f"{kind}_{key}"] = mean_of(rows, key, variant=variant, kind=kind)
         entry["ms"] = float(np.mean([r["ms"] for r in rows if r["variant"] == variant and "ms" in r]))
-        for key in ("skin_de", "texture", "lower_erased"):
+        for key in ("skin_de", "texture", "lower_erased", "torso_face_de"):
             entry[key] = mean_of(rows, key, variant=variant, kind=None)
         out[variant] = entry
     return out
@@ -400,7 +451,7 @@ def erased_crop(remover, sample, variant):
     tube = arm_strokes(sample["points"], sample["image"].shape, width_fraction=remover.ARM_TUBE_WIDTH)
     reset_variant(remover)
     apply_variant(remover, variant)
-    out = run_fill(remover, sample, sample["mask"], tube, hand_discs(sample["points"], sample["image"].shape), variant)
+    out = run_fill(remover, sample, sample["mask"], tube, hand_discs(sample["points"], sample["image"].shape), variant, sample["points"])
     reset_variant(remover)
     return out
 
@@ -442,6 +493,9 @@ def main():
     parser.add_argument("command", choices=["prepare", "score", "report", "figure"])
     parser.add_argument("video", nargs="?")
     parser.add_argument("--variants", default=",".join(VARIANTS))
+    parser.add_argument("--json", default="fill-quality.json", help="report file name under docs/baseline")
+    parser.add_argument("--videos", default=",".join(CORE))
+    parser.add_argument("--out", default="fill-quality.jpg", help="figure file name under docs/figures")
     args = parser.parse_args()
     if args.command == "prepare":
         samples = prepare(args.video)
@@ -452,16 +506,16 @@ def main():
         (CACHE / f"score_{args.video}.json").write_text(json.dumps(result))
         print(json.dumps(summarise(result["synthetic"] + result["real"]), indent=1))
     elif args.command == "figure":
-        print(figure(args.variants.split(","), REPO_ROOT / "docs" / "figures" / "fill-quality.jpg"))
+        print(figure(args.variants.split(","), REPO_ROOT / "docs" / "figures" / args.out))
     elif args.command == "report":
         rows = []
-        for video in CORE:
+        for video in args.videos.split(","):
             path = CACHE / f"score_{video}.json"
             if path.exists():
                 data = json.loads(path.read_text())
                 rows += data["synthetic"] + data["real"]
         table = summarise(rows)
-        write_json(BASELINE / "fill-quality.json", table)
+        write_json(BASELINE / args.json, table)
         keys = list(next(iter(table.values())))
         print(f"{'variant':20s}" + "".join(f"{k:>11s}" for k in keys))
         for variant, entry in table.items():

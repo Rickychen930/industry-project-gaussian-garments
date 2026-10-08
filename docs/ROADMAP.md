@@ -87,13 +87,14 @@ pose-dependent shading from a distilled student · code audit and refactor
    (`tools/evaluate/reference_frame.py` splits the loss level by level).
 2. **Scene lighting on the garment**: light estimated from the face; the
    garments carry studio light (`--harmonize` is the stop-gap).
-3. **The erased clothing** (the weakest thing on the fit-audit sheets after the 8 Oct fill: arm tubes read as sausages, a flat torso skin, a pale halo on 00122_outer) and **loose shirts** (the long hem and wide torso of 00152_outer; closed-worn jackets against open templates). The open-front 'floating panel' was a sleeve on a wrong scan pose, fixed 8 Oct (`LOG.md`).
-4. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth + posed mesh ~54 ms of which `push_out_of_body` 22; `render_splats_gl` ~59 ms of which `_instances` 26; MediaPipe for the next frame could run beside the render): each needs to be bit-identical and >= 3 ms.
-5. **Shading refresh rate**: the student updates every 0.7 s on a worker
+3. **Hem and the closed jacket** are done as far as measured (9 Oct, `LOG.md`): the hem hangs low because the sleeves carry the real shirt up at the armhole, fixed by a sleeve-anchored long-range attachment plus a gentle narrowing (loose-garment mean IoU +0.015); the closed-worn 00136_outer is a per-garment flag (`assets/closed_front/`, +0.038). What is left: the lower front of loose open shirts hangs open about 30 % of the width in the real video and is nearly closed in ours (the 'torso 13-16 % too wide' of earlier entries was a hole in the real mask, not an excess of width: `LOG.md` 9 Oct), and fully erased arms that still read as sticks (a learned limb inpainting, not shading).
+4. **The erased clothing** (the arm study of 9 Oct says the arm fill is seen on 7-20 % of its area on most garments, 48 % on a T-shirt, and that no shading, texture or general inpainter makes it read as an arm: a person-aware learned inpainter is the only real fix, not downloaded) (the weakest thing on the fit-audit sheets after the 8 Oct fill: arm tubes read as sausages, a flat torso skin, a pale halo on 00122_outer) and **loose shirts** (the long hem and wide torso of 00152_outer; closed-worn jackets against open templates). The open-front 'floating panel' was a sleeve on a wrong scan pose, fixed 8 Oct (`LOG.md`).
+5. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth + posed mesh ~54 ms of which `push_out_of_body` 22; `render_splats_gl` ~59 ms of which `_instances` 26; MediaPipe for the next frame could run beside the render): each needs to be bit-identical and >= 3 ms.
+6. **Shading refresh rate**: the student updates every 0.7 s on a worker
    thread; test 0.35 s with the GPU free and keep it only if fps holds.
-6. **AnyWear / Decart comparison**: possible only with the user's own API
+7. **AnyWear / Decart comparison**: possible only with the user's own API
    key and their approval to upload the release videos.
-7. **4D-DRESS**: its access request was archived (the data cannot be
+8. **4D-DRESS**: its access request was archived (the data cannot be
    redistributed, so no copies are used); see [`DATASETS.md`](DATASETS.md).
 
 ## Tried and dropped

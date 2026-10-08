@@ -173,6 +173,153 @@ class GarmentBinding:
 
 
 
+def piece_labels(faces, count):
+    """Connected component (0..k-1) of every vertex over the mesh's faces."""
+    import scipy.sparse as sp
+    from scipy.sparse.csgraph import connected_components
+
+    faces = np.asarray(faces)
+    both = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]]])
+    graph = sp.coo_matrix((np.ones(len(both)), (both[:, 0], both[:, 1])), shape=(count, count))
+    return connected_components(graph, directed=False)[1]
+
+
+def _edge_profile(y, x, rows, bin_height):
+    """The smallest x (per height) of a panel's vertices: its inner edge as a function of height `rows`.
+    Bins of `bin_height` with a vertex, the gaps interpolated, a min over the neighbouring bins."""
+    bins = np.floor((y - y.min()) / bin_height).astype(int)
+    lowest = np.full(bins.max() + 1, np.inf)
+    np.minimum.at(lowest, bins, x)
+    filled = np.isfinite(lowest)
+    centres = (np.arange(len(lowest)) + 0.5) * bin_height + y.min()
+    lowest = np.interp(centres, centres[filled], lowest[filled])
+    lowest = np.minimum(lowest, np.minimum(np.r_[lowest[1:], lowest[-1]], np.r_[lowest[0], lowest[:-1]]))
+    return np.interp(rows, centres, lowest)
+
+
+def front_closure(rest, faces, seam=0.01, blend=0.2, bin_height=0.01, max_gap=0.15):
+    """Displacement (N, 3) that brings the two front panels of an open-front garment together.
+
+    `rest` is the garment in the body's zero-pose frame (x lateral, midline x = 0). The front panels are the
+    connected components of the mesh other than the largest (back and sleeves), one on each side of the midline,
+    that border an opening: the inner edge of a panel is within `max_gap` of the midline. A panel's inner edge
+    (its smallest |x| at each height) is moved to the midline, a `seam` apart from the other panel's, and the
+    move fades out by a smoothstep over `blend` metres of lateral distance from the edge, so the panel stays on
+    the side seams and the sleeves do not move. Zero displacement (the identity) when the mesh does not have two
+    such panels."""
+    rest = np.asarray(rest, np.float64)
+    out = np.zeros_like(rest)
+    labels = piece_labels(faces, len(rest))
+    sizes = np.bincount(labels)
+    if len(sizes) < 3:
+        return out
+    pieces = [p for p in np.argsort(-sizes)[1:] if sizes[p] >= 0.05 * len(rest)]
+    side = {sign: [p for p in pieces if np.sign(rest[labels == p, 0].mean()) == sign] for sign in (1.0, -1.0)}
+    if not side[1.0] or not side[-1.0]:
+        return out
+    for sign, candidates in side.items():
+        piece = candidates[0]
+        members = np.flatnonzero(labels == piece)
+        lateral = sign * rest[members, 0]  # distance from the midline on the panel's own side
+        edge = _edge_profile(rest[members, 1], lateral, rest[members, 1], bin_height)
+        if lateral.min() > max_gap:
+            continue
+        shift = np.maximum(edge - 0.5 * seam, 0.0)
+        distance = np.maximum(lateral - edge, 0.0)
+        t = np.clip(1.0 - distance / max(blend, 1e-9), 0.0, 1.0)
+        out[members, 0] = -sign * shift * t * t * (3.0 - 2.0 * t)
+    return out
+
+
+def front_opening(rest, faces, sleeve, fraction, start=0.35, span=0.4, bin_height=0.01, max_gap=0.15):
+    """Displacement (N, 3), along x only, that opens the lower front of an open-front garment.
+
+    The real shirt hangs open below the chest (its two panels leave a gap of 20 to 35 % of the torso width at the
+    hem, wider still with the arms raised); the scanned panels meet or nearly meet. `rest` is the zero-pose
+    frame (midline x = 0). Each front panel (as in `front_closure`) has its inner edge e(y) and its side seam
+    s(y), per height; below `start` of the way from the garment's top to its hem (a smoothstep over `span`) the
+    panel's inner edge is moved out to `fraction` x s(y) x that weight if it is nearer the midline, and the
+    panel between edge and seam is compressed onto what is left, so the side seam stays. Sleeves do not move.
+    Zero displacement when the mesh does not have two front panels."""
+    rest = np.asarray(rest, np.float64)
+    out = np.zeros_like(rest)
+    labels = piece_labels(faces, len(rest))
+    sizes = np.bincount(labels)
+    body = ~np.asarray(sleeve, bool)
+    if len(sizes) < 3 or not body.any():
+        return out
+    top, bottom = float(np.percentile(rest[body, 1], 98)), float(np.percentile(rest[body, 1], 2))
+    pieces = [p for p in np.argsort(-sizes)[1:] if sizes[p] >= 0.05 * len(rest)]
+    side = {sign: [p for p in pieces if np.sign(rest[labels == p, 0].mean()) == sign] for sign in (1.0, -1.0)}
+    if not side[1.0] or not side[-1.0]:
+        return out
+    for sign, candidates in side.items():
+        members = np.flatnonzero((labels == candidates[0]) & body)
+        if len(members) == 0:
+            continue
+        lateral, y = sign * rest[members, 0], rest[members, 1]
+        if lateral.min() > max_gap:
+            continue
+        edge = _edge_profile(y, lateral, y, bin_height)
+        seam = -_edge_profile(y, -lateral, y, bin_height)
+        t = np.clip((top - y) / max(top - bottom, 1e-9), 0.0, 1.0)
+        h = np.clip((t - start) / max(span, 1e-9), 0.0, 1.0)
+        h = h * h * (3.0 - 2.0 * h)
+        wanted = np.maximum(fraction * h * seam, edge)
+        scale = np.clip((seam - wanted) / np.maximum(seam - edge, 1e-6), 0.0, 1.0)
+        out[members, 0] = sign * (wanted + (lateral - edge) * scale - lateral)
+    return out
+
+
+def drape_narrowing(rest, distance, sleeve, strength, loose_from=0.01, loose_span=0.06, start=0.3, span=0.4):
+    """Displacement (N, 3), along x only, that narrows the loose lower torso toward the body's centre line.
+
+    A loose shirt hangs in folds: its silhouette is narrower than the flat panel the scan holds. `rest` is the
+    garment in the zero-pose frame (centre line x = 0), `distance` each vertex's distance to the body at the bind
+    pose, `sleeve` the sleeve mask. A vertex moves by `strength` x its looseness (0 at `loose_from` metres off the
+    body, 1 at `loose_from + loose_span`) x a height weight (0 down to `start` of the way from the garment's top
+    to its hem, a smoothstep up to 1 over the next `span`) x its distance from the centre line. Sleeves do not
+    move."""
+    rest = np.asarray(rest, np.float64)
+    out = np.zeros_like(rest)
+    body = ~np.asarray(sleeve, bool)
+    if not body.any():
+        return out
+    top, bottom = float(np.percentile(rest[body, 1], 98)), float(np.percentile(rest[body, 1], 2))
+    t = np.clip((top - rest[:, 1]) / max(top - bottom, 1e-9), 0.0, 1.0)
+    h = np.clip((t - start) / max(span, 1e-9), 0.0, 1.0)
+    h = h * h * (3.0 - 2.0 * h)
+    loose = np.clip((np.asarray(distance, np.float64) - loose_from) / loose_span, 0.0, 1.0)
+    out[:, 0] = -strength * loose * h * rest[:, 0] * body
+    return out
+
+
+def closed_front_flag(checkpoint_dir):
+    """Whether the garment's wearer wears it closed: `assets/closed_front/<garment>.json` in the repository
+    (it wins), else `stage1/closed_front.json` next to the checkpoint, holds `true` or `{"closed": true}`.
+    No file is False (the default: worn as scanned); a file that is not valid JSON of that shape raises
+    ValueError (a typo must not silently turn the closure off)."""
+    import json
+    from pathlib import Path
+
+    from tryon.paths import CLOSED_FRONT
+
+    path = CLOSED_FRONT / f"{Path(checkpoint_dir).name}.json"
+    if not path.exists():
+        path = Path(checkpoint_dir) / "stage1" / "closed_front.json"
+    if not path.exists():
+        return False
+    try:
+        value = json.loads(path.read_text())
+    except json.JSONDecodeError as error:
+        raise ValueError(f"{path} is not valid JSON: {error}") from error
+    if isinstance(value, dict):
+        value = value.get("closed")
+    if not isinstance(value, bool):
+        raise ValueError(f'{path} must hold true/false or {{"closed": true/false}}')
+    return value
+
+
 def _vertex_normals(vertices, faces):
     face_normals = _face_normals(vertices, faces)
     normals = np.zeros_like(vertices)
@@ -206,6 +353,10 @@ class SkinnedGarment:
     faces 331 -> 2 at 200 neighbours; the wide neighbourhood is what makes
     the weights vary smoothly across a joint instead of jumping bone to bone.
     """
+
+    # (N, 3, 3) linear part of each vertex's blended bind transform (zero-pose frame -> scan pose); set by
+    # `build_in_pose`, None = identity. `moved` carries a zero-pose displacement into the physical rest with it.
+    bind_linear = None
 
     def __init__(self, rest_vertices, weights, physical_rest=None):
         # `rest` is in the body model's ZERO-pose frame (what the joint
@@ -328,7 +479,22 @@ class SkinnedGarment:
         per_vertex = np.einsum("nj,jab->nab", skinned.weights, transforms)
         homogeneous = np.concatenate([garment, np.ones((len(garment), 1))], axis=1)
         zero_frame = np.einsum("nab,nb->na", np.linalg.inv(per_vertex), homogeneous)[:, :3]
-        return cls(zero_frame, skinned.weights, physical_rest=garment)
+        built = cls(zero_frame, skinned.weights, physical_rest=garment)
+        built.bind_linear = per_vertex[:, :3, :3]
+        return built
+
+    def moved(self, offset):
+        """A copy whose rest is displaced by `offset` ((N, 3), zero-pose frame, at the scan subject's size) and
+        whose physical rest by the same displacement carried to the scan pose, so strain limiting and the
+        torn-face test measure the moved garment's own edge lengths (`front_closure`). A zero offset is the
+        identity."""
+        offset = np.asarray(offset, np.float64)
+        if offset.shape != self.rest.shape:
+            raise ValueError(f"offset {offset.shape} does not match the garment's {self.rest.shape}")
+        carried = offset if self.bind_linear is None else np.einsum("nij,nj->ni", self.bind_linear, offset)
+        moved = SkinnedGarment(self.rest + offset, self.weights, physical_rest=self.physical_rest + carried)
+        moved.bind_linear = self.bind_linear
+        return moved
 
     def relaxed(self, offset):
         """A copy whose rest is displaced by `offset` ((N, 3), the zero-pose

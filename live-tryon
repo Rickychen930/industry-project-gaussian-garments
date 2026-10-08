@@ -100,6 +100,16 @@ case "${1:-menu}" in
     show_garments
     [[ -f "$ROOT/docs/figures/garments.jpg" ]] && { echo "pictures: docs/figures/garments.jpg"; command -v open >/dev/null && open "$ROOT/docs/figures/garments.jpg"; }
     exit 0 ;;
+  bench)  # ./live-tryon bench [N|name] [frames=120] [camera=0]: time the live pipeline on a camera or a video
+    shift; garment="${1:-$DEFAULT}"; [[ $# -gt 0 ]] && shift
+    frames="${1:-120}"; [[ $# -gt 0 ]] && shift
+    source="${1:-0}"
+    out="$(PYTHONPATH="$ROOT" "$PY" -c 'from tryon.paths import CAPTURES; print(CAPTURES)')"; mkdir -p "$out"
+    video="$out/bench-$(date +%Y%m%d-%H%M%S).mp4"
+    echo "Benchmark: garment $garment, $frames frames from source $source (stand in view; no window opens)."
+    echo "Load average now: $(uptime | awk -F'averages: ' '{print $2}')  (above ~4 on 8 cores the numbers are not clean)"
+    run_tryon "$garment" --source "$source" --headless --max-frames "$frames" --profile --output-video "$video"
+    ;;
   pipeline) shift; exec env PYTHONPATH="$ROOT" "$PY" -m tryon.app "$@" ;;
   test)     exec "$PY" -m unittest discover -s "$ROOT/tests" -v ;;
   doctor)   shift; exec "$PY" "$ROOT/doctor.py" "$@" ;;
@@ -133,6 +143,9 @@ Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
                                  --delayed: --smooth shown ~1 s late, garment from the nearest pipeline frame
                                  other flags pass through: --harmonize, --source video.mp4, --max-width 720, ...
   ./live-tryon garments          list the garments (numbered) and open their pictures
+  ./live-tryon bench [N|name] [frames] [source]
+                                 time the pipeline on the camera (source 0) or a video file and save the
+                                 output to the data root's captures/ folder; prints the median ms of each stage
   ./live-tryon pipeline ...      the pipeline (python -m tryon.app) with every flag spelled out
 
   ./live-tryon doctor            check the environment, including which GPU each stage uses
