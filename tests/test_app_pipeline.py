@@ -131,6 +131,60 @@ class FramingHintTest(unittest.TestCase):
         self.assertIn("shoulders", framing_hint(points))
 
 
+class RefindLimitTest(unittest.TestCase):
+    """MediaPipe blind: the regressor may dress the wearer for REFIND_LIMIT
+    frames in a row (an arm across the torso), not for as long as a camera
+    stays pointed at part of a body."""
+
+    def _session(self):
+        import collections
+        from unittest import mock
+
+        from tryon.app.pipeline import LiveSession
+
+        class Fitter:
+            def fit_from_regression(self, points, prediction):
+                pass
+
+        class Regression:
+            def predict(self, frame, box=None, keypoints=None):
+                return {"joints_2d": np.zeros((4, 2))}
+
+        session = LiveSession.__new__(LiveSession)
+        session.remover, session.regression, session.regressor_name = EarlyMaskTest.Remover(), Regression(), "nlf"
+        session.renderer, session.fitter, session.plate = object(), Fitter(), None
+        session._early, session._last_job, session.last_parse = collections.OrderedDict(), None, None
+        session.last_box, session.held, session.refound = (0, 0, 8, 8), 0, 0
+        patches = (mock.patch("tryon.app.pipeline.box_from_joints", return_value=(0, 0, 8, 8)),
+                   mock.patch("tryon.app.pipeline.person_in_box", return_value=True))
+        for patch in patches:
+            patch.start()
+            self.addCleanup(patch.stop)
+        return session
+
+    def test_the_regressor_alone_dresses_a_blind_frame_only_a_few_times_in_a_row(self):
+        from tryon.app.pipeline import REFIND_LIMIT
+
+        session = self._session()
+        frame = np.full((16, 16, 3), 1, np.uint8)
+        statuses = [session._handle_loss(frame, None, "no person")[0] for _ in range(REFIND_LIMIT + 3)]
+        self.assertEqual(statuses[:REFIND_LIMIT], ["re-found"] * REFIND_LIMIT)
+        self.assertNotIn("re-found", statuses[REFIND_LIMIT:])
+
+    def test_seeing_the_wearer_again_gives_the_allowance_back(self):
+        from tryon.app.pipeline import REFIND_LIMIT
+
+        session = self._session()
+        frame = np.full((16, 16, 3), 1, np.uint8)
+        for _ in range(REFIND_LIMIT):
+            session._handle_loss(frame, None, "no person")
+        points = np.zeros((33, 5), np.float32)
+        points[:, 2] = 1.0
+        session._handle_loss(frame, points, "regressed")
+        self.assertEqual(session.refound, 0)
+        self.assertEqual(session._handle_loss(frame, None, "no person")[0], "re-found")
+
+
 class EarlyMaskTest(unittest.TestCase):
     """The clothing parse of frame t+1 starts in `prefetch`, while frame t is
     still being erased and shown; each frame must get its own parse."""

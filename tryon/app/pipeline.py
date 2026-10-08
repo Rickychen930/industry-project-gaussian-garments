@@ -34,7 +34,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from tryon.app.compositing import composite_garment, draw_body, keep_in_front
+from tryon.app.compositing import composite_garment, draw_body, keep_in_front, repair_collar
 from tryon.app.person import (
     LANDMARK_FILTER,
     dressable,
@@ -57,6 +57,12 @@ HOLD_FRAMES = 8
 # as person to keep holding (an empty room measured 0 %; a torso behind a
 # bar 1-3 %).
 REFIND_GLIMPSE = 0.005
+# Consecutive frames the regressor may dress a wearer MediaPipe cannot see
+# (a bar or an arm across the torso is a frame or two). A camera being moved
+# or pointed at part of a body kept the guess for 64 frames of a recorded
+# session: an oversized, tilted garment over unerased skin and shirt. Past
+# the limit the frame is left as it is until MediaPipe finds the person.
+REFIND_LIMIT = 4
 # Input size of the --body-regressor on the live path (see run()).
 LIVE_REGRESSOR_SIZE = 518
 # Read the next frame and send it to NLF before this one is rendered, so
@@ -179,6 +185,9 @@ ERASE_BESIDE_RENDER = True
 # Clothing is erased only within this fraction of the frame height around
 # the fitted body (and on the arms); 0 turns the limit off.
 ERASE_NEAR_BODY = 0.08
+
+# Blend the wearer's own collar, left below the chin, into the neck (compositing.repair_collar).
+REPAIR_COLLAR = True
 
 
 # ---------------------------------------------------------------------------
@@ -318,6 +327,7 @@ class LiveSession:
         self.errors = collections.deque(maxlen=10)  # recent reprojection errors, for refit spikes
         self.frames_since_orientation_check = 0
         self.held = 0  # frames the garment has been held on a lost person
+        self.refound = 0  # consecutive frames dressed from the regressor alone (MediaPipe blind)
         self.last_box = None  # the wearer's box from the regressor, to re-find them
         self._early = collections.OrderedDict()  # id(frame) -> its MaskJob, started by `prefetch`
         self._last_job = None  # the newest mask job: the next one waits for it
@@ -489,7 +499,7 @@ class LiveSession:
         few frames. Returns (status, whether the person counts as visible)."""
         rescued, glimpsed = False, False
         if (status == "no person" and self.fitter is not None and self.regressor_name == "nlf"
-                and self.remover is not None and self.last_box is not None):
+                and self.remover is not None and self.last_box is not None and self.refound < REFIND_LIMIT):
             # MediaPipe lost the wearer outright (a bar or an arm across the
             # torso: no landmarks, no mask) while they are still there. The
             # clothing parser often still sees them in the last box: then
@@ -505,8 +515,11 @@ class LiveSession:
                         self.fitter.fit_from_regression(None, prediction)
                         self.last_box = box_from_joints(prediction["joints_2d"], frame.shape)
                         status, rescued = "re-found", True
+                        self.refound += 1
                 glimpsed = person_in_box(labels != 0, self.last_box, fraction=REFIND_GLIMPSE)
         visible = rescued or dressable(points, self.fitter is not None, self.regression is not None)
+        if dressable(points, self.fitter is not None, self.regression is not None):
+            self.refound = 0  # MediaPipe sees the wearer again
         if visible:
             self.held = 0
         elif self.fitter is not None and (points is not None or glimpsed) and self.held < HOLD_FRAMES:
@@ -558,6 +571,8 @@ class LiveSession:
             frame[:] = erased
             composite_garment(frame, rgba)
             keep_in_front(frame, original, parse.labels, points)
+            if REPAIR_COLLAR:
+                repair_collar(frame, rgba[..., 3], parse.labels, points)
             stage("composite")
         else:
             composite_garment(frame, rgba)
@@ -728,6 +743,7 @@ def run(
     profile=False,
     max_width=960,
     channel=None,
+    record_input=None,
 ):
     """The synchronous live loop: every shown frame carries the garment drawn
     for it. `channel`: a `smooth_display.Channel` when the loop runs behind
@@ -735,7 +751,10 @@ def run(
     frame) and every finished frame is published to it instead of shown.
 
     With PREFETCH the next frame is read, its landmarks found and its body
-    regression sent before this frame is drawn (`LiveSession.prefetch`)."""
+    regression sent before this frame is drawn (`LiveSession.prefetch`).
+
+    `record_input`: write every frame as read (before any processing) to this
+    .mp4, so a session can be replayed with `--source` and measured."""
     import mediapipe as mp
 
     session = LiveSession(garment, garment_subsample, orientation_regressor, remove_clothing, parser, fill, appearance,
@@ -749,6 +768,7 @@ def run(
     # that returned nothing on its first read - which ended the session.
     with mp.solutions.pose.Pose(static_image_mode=False, model_complexity=POSE_COMPLEXITY) as pose:
         frames_in = FrameSource(source, max_width)
+        recorder = []  # the writer, made on the first frame (its size is known then)
 
         def next_frame():
             """(frame, points, stamp, stage, source_frame) of the next frame,
@@ -757,6 +777,10 @@ def run(
             frame = frames_in.read()
             if frame is None:
                 return None
+            if record_input is not None:
+                if not recorder:
+                    recorder.append(cv2.VideoWriter(str(record_input), cv2.VideoWriter_fourcc(*"mp4v"), 10.0, (frame.shape[1], frame.shape[0])))
+                recorder[0].write(frame)
             source_frame = frame.copy() if channel is not None else None
             stage = StageTimer(stage_times)
             height, width = frame.shape[:2]
@@ -797,6 +821,8 @@ def run(
             if max_frames and frames >= max_frames:
                 break
         frames_in.release()
+        for writer in recorder:
+            writer.release()
     session.finish()
     out.close(still=output)
     print(f"{frames} frames  last: {hud}")

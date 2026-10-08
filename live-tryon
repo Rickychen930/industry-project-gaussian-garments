@@ -108,8 +108,11 @@ case "${1:-menu}" in
     video="$out/bench-$(date +%Y%m%d-%H%M%S).mp4"
     echo "Benchmark: garment $garment, $frames frames from source $source (stand in view; no window opens)."
     echo "Load average now: $(uptime | awk -F'averages: ' '{print $2}')  (above ~4 on 8 cores the numbers are not clean)"
-    run_tryon "$garment" --source "$source" --headless --max-frames "$frames" --profile --output-video "$video"
+    echo "The camera frames as read are saved too: ${video%.mp4}-input.mp4 (to replay this session)"
+    run_tryon "$garment" --source "$source" --headless --max-frames "$frames" --profile --output-video "$video" --record-input "${video%.mp4}-input.mp4"
     ;;
+  record)  # ./live-tryon record [seconds-per-pose=5]: a guided camera recording (cues printed and spoken) to replay and measure
+    shift; exec env PYTHONPATH="$ROOT" "$PY" "$ROOT/tools/record_session.py" "$@" ;;
   pipeline) shift; exec env PYTHONPATH="$ROOT" "$PY" -m tryon.app "$@" ;;
   test)     exec "$PY" -m unittest discover -s "$ROOT/tests" -v ;;
   doctor)   shift; exec "$PY" "$ROOT/doctor.py" "$@" ;;
@@ -146,6 +149,8 @@ Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
   ./live-tryon bench [N|name] [frames] [source]
                                  time the pipeline on the camera (source 0) or a video file and save the
                                  output to the data root's captures/ folder; prints the median ms of each stage
+  ./live-tryon record [seconds]  record the camera while it tells you which pose to take (12 poses, 5 s each by
+                                 default); replay it with ./live-tryon run NAME --source FILE
   ./live-tryon pipeline ...      the pipeline (python -m tryon.app) with every flag spelled out
 
   ./live-tryon doctor            check the environment, including which GPU each stage uses

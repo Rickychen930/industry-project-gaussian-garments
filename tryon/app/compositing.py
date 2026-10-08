@@ -2,6 +2,7 @@
 
     composite_garment   alpha-blend the garment (BGRA) over the frame
     keep_in_front       restore the wearer's face, hair and hands on top
+    repair_collar       blend the wearer's own collar left below the chin into the neck
     draw_body           draw the fitted skeleton (no garment: debugging)
 """
 
@@ -103,6 +104,56 @@ def keep_in_front(frame, original, labels, points=None):
     cols = np.flatnonzero(front.any(axis=0))
     window = (slice(rows[0], rows[-1] + 1), slice(cols[0], cols[-1] + 1))
     np.copyto(frame[window], original[window], where=front[window][..., None])
+
+
+COLLAR_CHIN = 1.3  # the chin is this many nose-to-mouth distances below the mouth
+COLLAR_DISTANCE = 12.0  # Lab distance from the face's skin that marks a pixel as collar
+COLLAR_GROW = 4  # px the marked pixels grow by before they are repainted
+COLLAR_RADIUS = 6  # inpainting radius
+
+
+def repair_collar(frame, garment_alpha, labels, points):
+    """Blend the wearer's own collar into the neck, in place, after the
+    garment is composited. SCHP labels the dark stripe or band of the shirt
+    under the chin "face", so it is not erased, and `keep_in_front` restores
+    it; it then showed above the new neckline (a recorded session, 9 Oct).
+    The face-labelled pixels below the chin that no garment covers and whose
+    Lab colour is far from the face's skin are inpainted from the skin above
+    and the garment below (filling them with a flat colour, or erasing them
+    with the general fill, left blocks that read worse than the line)."""
+    if labels is None or points is None or labels.shape != frame.shape[:2]:
+        return
+    nose, mouth = points[0], 0.5 * (points[9] + points[10])
+    if min(points[0, 2], points[9, 2], points[10, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
+        return
+    gap = float(mouth[1] - nose[1])
+    chin, mouth_row, nose_row = int(mouth[1] + COLLAR_CHIN * gap), int(mouth[1]), int(nose[1])
+    if gap < 2 or chin >= frame.shape[0] - 1 or mouth_row <= nose_row:
+        return
+    below = labels[chin + 1 :] == 11
+    rows = np.flatnonzero(below.any(axis=1))
+    if rows.size == 0:
+        return
+    cols = np.flatnonzero(below.any(axis=0))
+    grow = COLLAR_GROW + COLLAR_RADIUS
+    r0, r1 = chin + 1 + int(rows[0]), chin + 1 + int(rows[-1]) + 1
+    c0, c1 = int(cols[0]), int(cols[-1]) + 1
+    window = (slice(max(r0 - grow, 0), min(r1 + grow, frame.shape[0])), slice(max(c0 - grow, 0), min(c1 + grow, frame.shape[1])))
+    face_rows = labels[nose_row:mouth_row] == 11
+    if face_rows.sum() < 50:
+        return
+    skin_bgr = frame[nose_row:mouth_row][face_rows].reshape(-1, 1, 3)
+    skin = np.median(cv2.cvtColor(skin_bgr, cv2.COLOR_BGR2LAB).reshape(-1, 3).astype(np.float32), axis=0)
+    neck = np.zeros(frame.shape[:2], bool)
+    neck[chin + 1 :] = below
+    lab = cv2.cvtColor(frame[window], cv2.COLOR_BGR2LAB).astype(np.float32)
+    weights = np.array([0.5, 1.0, 1.0], np.float32)  # shade on the neck is lightness: weigh it less
+    far = np.sqrt((((lab - skin) * weights) ** 2).sum(axis=2)) > COLLAR_DISTANCE
+    marked = (neck[window] & far & (garment_alpha[window] < 25)).astype(np.uint8)
+    if not marked.any():
+        return
+    marked = cv2.dilate(marked, np.ones((2 * COLLAR_GROW + 1,) * 2, np.uint8)) & (garment_alpha[window] < 25) & (labels[window] == 11)
+    frame[window] = cv2.inpaint(np.ascontiguousarray(frame[window]), marked * 255, COLLAR_RADIUS, cv2.INPAINT_TELEA)
 
 
 def composite_garment(frame, bgra):

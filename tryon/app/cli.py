@@ -25,6 +25,7 @@ def build_parser():
     io.add_argument("--headless", action="store_true", help="no window")
     io.add_argument("--output", help="write the last frame here (synchronous display)")
     io.add_argument("--output-video", help="write every shown frame (with the HUD) to this .mp4")
+    io.add_argument("--record-input", help="write every frame as read from the source (before any processing) to this .mp4, to replay a session")
     io.add_argument("--profile", action="store_true", help="print the median time of each stage at the end")
 
     garment = parser.add_argument_group("garment")
@@ -102,4 +103,4 @@ def main(argv=None):
         return smooth_display(args.source, max_width=args.max_width, headless=args.headless, output_video=args.output_video,
                               max_frames=args.max_frames, dump_alpha=args.dump_alpha, delayed=args.delayed_sync, **pipeline_options(args))
     return run(args.source, max_frames=args.max_frames, headless=args.headless, output=args.output, output_video=args.output_video,
-               max_width=args.max_width, **pipeline_options(args))
+               max_width=args.max_width, record_input=args.record_input, **pipeline_options(args))

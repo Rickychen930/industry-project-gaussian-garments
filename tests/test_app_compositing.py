@@ -71,5 +71,60 @@ class KeepInFrontTest(unittest.TestCase):
         self.assertTrue(np.array_equal(frame, before))
 
 
+class RepairCollarTest(unittest.TestCase):
+    """The collar the parser called neck is blended into the neck."""
+
+    SKIN = (90, 120, 170)  # BGR
+    COLLAR = (20, 20, 20)
+
+    def _scene(self):
+        frame = np.zeros((200, 200, 3), np.uint8)
+        frame[:] = self.SKIN
+        labels = np.zeros((200, 200), np.uint8)
+        labels[20:130, 60:140] = 11  # face and neck
+        frame[110:116, 70:130] = self.COLLAR  # a dark stripe under the chin
+        points = np.zeros((33, 5), np.float32)
+        points[:, 2] = 1.0
+        points[0, :2] = (100, 50)  # nose
+        points[9, :2] = (95, 80)  # mouth (each test sets its row, which sets the chin line)
+        points[10, :2] = (105, 80)
+        return frame, labels, points
+
+    def test_the_stripe_below_the_chin_is_blended_toward_the_skin(self):
+        from tryon.app.compositing import repair_collar
+
+        frame, labels, points = self._scene()
+        points[9, 1] = points[10, 1] = 70  # chin line at 70 + 1.3 * 20 = 96: the stripe at 110 is below it
+        repair_collar(frame, np.zeros((200, 200), np.uint8), labels, points)
+        self.assertLess(abs(int(frame[112, 100, 0]) - self.SKIN[0]), 25)
+
+    def test_a_stripe_above_the_chin_line_is_left_alone(self):
+        from tryon.app.compositing import repair_collar
+
+        frame, labels, points = self._scene()
+        points[9, 1] = points[10, 1] = 100  # chin line at 100 + 1.3 * 50 = 165: the stripe is on the face
+        before = frame.copy()
+        repair_collar(frame, np.zeros((200, 200), np.uint8), labels, points)
+        self.assertTrue(np.array_equal(frame, before))
+
+    def test_pixels_under_the_garment_are_not_touched(self):
+        from tryon.app.compositing import repair_collar
+
+        frame, labels, points = self._scene()
+        points[9, 1] = points[10, 1] = 70
+        alpha = np.full((200, 200), 255, np.uint8)
+        before = frame.copy()
+        repair_collar(frame, alpha, labels, points)
+        self.assertTrue(np.array_equal(frame, before))
+
+    def test_no_landmarks_changes_nothing(self):
+        from tryon.app.compositing import repair_collar
+
+        frame, labels, _ = self._scene()
+        before = frame.copy()
+        repair_collar(frame, np.zeros((200, 200), np.uint8), labels, None)
+        self.assertTrue(np.array_equal(frame, before))
+
+
 if __name__ == "__main__":
     unittest.main()
