@@ -131,6 +131,83 @@ class FramingHintTest(unittest.TestCase):
         self.assertIn("shoulders", framing_hint(points))
 
 
+class ShoulderWidthTest(unittest.TestCase):
+    """A regressed body whose shoulders are far wider or narrower than MediaPipe's is rescaled."""
+
+    class Fitter:
+        """The projection of 22 joints: pixels = scale * (x, y) + translation (the shoulders are joints 16 and 17)."""
+
+        def __init__(self, half_width, scale=100.0, translation=(300.0, 200.0)):
+            import torch
+
+            joints = torch.zeros(1, 22, 3)
+            joints[0, 16, 0], joints[0, 17, 0] = -half_width, half_width
+            self._joints = joints
+            self.scale = torch.tensor([scale])
+            self.translation = torch.tensor([list(translation)])
+
+        def _forward(self):
+            import types
+
+            return types.SimpleNamespace(joints=self._joints)
+
+        def _project(self, joints):
+            return joints[:, :2] * self.scale + self.translation
+
+    @staticmethod
+    def _points(width, facing=True):
+        points = np.zeros((33, 5), np.float32)
+        points[:, 2] = 1.0
+        points[11, :2], points[12, :2] = (300 - width / 2, 200), (300 + width / 2, 200)
+        points[11, 3:5] = (0.0, 0.2) if facing else (0.2, 0.0)  # world z, x of the left shoulder
+        points[12, 3:5] = (0.0, -0.2) if facing else (-0.2, 0.0)
+        return points
+
+    def _width(self, fitter):
+        pixels = fitter._project(fitter._forward().joints[0, 16:18]).numpy()
+        return float(np.linalg.norm(pixels[0] - pixels[1]))
+
+    def test_a_far_too_wide_fit_is_brought_to_mediapipes_width_about_the_shoulder_midpoint(self):
+        from tryon.app.person import match_shoulder_width
+
+        fitter = self.Fitter(half_width=1.0)  # 200 px against MediaPipe's 80
+        ratio = match_shoulder_width(fitter, self._points(80))
+        self.assertAlmostEqual(ratio, 2.5, places=3)
+        self.assertAlmostEqual(self._width(fitter), 80.0, places=2)
+        midpoint = fitter._project(fitter._forward().joints[0, 16:18]).numpy().mean(axis=0)
+        self.assertTrue(np.allclose(midpoint, (300.0, 200.0), atol=1e-3))
+
+    def test_a_fit_within_the_band_is_left_alone(self):
+        from tryon.app.person import match_shoulder_width
+
+        fitter = self.Fitter(half_width=1.0)  # 200 px against 180: ratio 1.11
+        self.assertIsNone(match_shoulder_width(fitter, self._points(180)))
+        self.assertAlmostEqual(self._width(fitter), 200.0, places=3)
+
+    def test_a_profile_is_left_alone(self):
+        from tryon.app.person import match_shoulder_width
+
+        fitter = self.Fitter(half_width=1.0)
+        self.assertIsNone(match_shoulder_width(fitter, self._points(80, facing=False)))
+        self.assertAlmostEqual(self._width(fitter), 200.0, places=3)
+
+    def test_a_too_narrow_fit_is_widened(self):
+        from tryon.app.person import match_shoulder_width
+
+        fitter = self.Fitter(half_width=0.5)  # 100 px against MediaPipe's 200
+        self.assertAlmostEqual(match_shoulder_width(fitter, self._points(200)), 0.5, places=3)
+        self.assertAlmostEqual(self._width(fitter), 200.0, places=2)
+
+    def test_hidden_shoulders_change_nothing(self):
+        from tryon.app.person import match_shoulder_width
+
+        fitter = self.Fitter(half_width=1.0)
+        points = self._points(80)
+        points[11, 2] = 0.1
+        self.assertIsNone(match_shoulder_width(fitter, points))
+        self.assertIsNone(match_shoulder_width(fitter, None))
+
+
 class RefindLimitTest(unittest.TestCase):
     """MediaPipe blind: the regressor may dress the wearer for REFIND_LIMIT
     frames in a row (an arm across the torso), not for as long as a camera

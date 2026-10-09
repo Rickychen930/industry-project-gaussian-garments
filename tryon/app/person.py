@@ -5,6 +5,7 @@ fitted body.
     landmarks_from   MediaPipe's result as a (33, 5) array
     dressable        can this frame's person be dressed?
     track_step       warm-track the body; refit it on a reprojection spike
+    match_shoulder_width  the regressed body's shoulders as wide as MediaPipe's, front and back views
 """
 
 from __future__ import annotations
@@ -98,6 +99,57 @@ def track_step(fitter, points, errors, height, regressor=None, raw_points=None):
             fitter._yaw_cooldown = YAW_COOLDOWN
     errors.append(error)
     return status
+
+
+# A regressed fit's shoulders, projected, against MediaPipe's: the regressor has no
+# metric anchor for a wearer far from the camera or cut off below the chest, and drew
+# a garment 1.8-2.5 times as wide as its wearer for the first 14 frames of a recorded
+# session (and 4-6 % of the front and back frames of two sessions are off by more
+# than 1.5). Corrected only when the wearer faces the camera or turns their back to
+# it (a profile's shoulders overlap and say nothing about the width).
+SHOULDER_RATIO_HIGH = 1.35
+SHOULDER_RATIO_LOW = 0.74
+SHOULDER_FRONT_BACK_DEG = 35.0
+SHOULDER_VISIBILITY = 0.5
+
+
+def rescaled_camera(scale, translation, anchor, ratio):
+    """(scale, translation) of the weak-perspective camera with every pixel's distance
+    from `anchor` divided by `ratio`, `anchor` itself staying where it is."""
+    new_scale = scale / ratio
+    new_translation = np.asarray(anchor, np.float64) - (new_scale / scale) * (np.asarray(anchor, np.float64) - np.asarray(translation, np.float64))
+    return new_scale, new_translation
+
+
+def match_shoulder_width(fitter, points):
+    """Rescale `fitter`'s camera so its shoulders are as wide, in pixels, as MediaPipe's, about
+    their midpoint, when they differ by more than SHOULDER_RATIO_HIGH / _LOW and the wearer
+    faces the camera or away from it. Returns the ratio that was undone, or None."""
+    import torch
+
+    from tryon.body.landmarks import landmark_yaw
+
+    if points is None or min(points[11, 2], points[12, 2]) < SHOULDER_VISIBILITY:
+        return None
+    yaw = landmark_yaw(points)
+    if yaw is None:
+        return None
+    away = abs((np.degrees(yaw) + 180.0) % 360.0 - 180.0)  # 0 facing the camera, 180 away from it
+    if min(away, 180.0 - away) > SHOULDER_FRONT_BACK_DEG:
+        return None
+    wanted = float(np.linalg.norm(points[11, :2] - points[12, :2]))
+    if wanted < 4.0:
+        return None
+    with torch.no_grad():
+        pixels = fitter._project(fitter._forward().joints[0, 16:18]).numpy()
+    ratio = float(np.linalg.norm(pixels[0] - pixels[1])) / wanted
+    if SHOULDER_RATIO_LOW <= ratio <= SHOULDER_RATIO_HIGH:
+        return None
+    scale, translation = rescaled_camera(float(fitter.scale), fitter.translation.detach().numpy().reshape(2), 0.5 * (pixels[0] + pixels[1]), ratio)
+    with torch.no_grad():
+        fitter.scale.copy_(torch.tensor([scale], dtype=torch.float32))
+        fitter.translation.copy_(torch.tensor(translation, dtype=torch.float32).reshape(fitter.translation.shape))
+    return ratio
 
 
 def landmarks_from(result, width, height):

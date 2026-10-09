@@ -34,12 +34,13 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from tryon.app.compositing import composite_garment, draw_body, keep_in_front, repair_collar
+from tryon.app.compositing import composite_garment, draw_body, keep_in_front, repair_collar, restore_below_hem, restore_collar_layer, restore_inside_garment
 from tryon.app.person import (
     LANDMARK_FILTER,
     dressable,
     framing_hint,
     landmarks_from,
+    match_shoulder_width,
     torso_visible,
     track_step,
 )
@@ -188,6 +189,19 @@ ERASE_NEAR_BODY = 0.08
 
 # Blend the wearer's own collar, left below the chin, into the neck (compositing.repair_collar).
 REPAIR_COLLAR = True
+
+# Show the wearer's own pixels in the gaps of the garment (lace, open knit) instead of the filled background (compositing.restore_inside_garment).
+RESTORE_INSIDE = True
+
+# Rescale a regressed body whose shoulders are far from MediaPipe's in width, front and back views (person.match_shoulder_width).
+MATCH_SHOULDERS = True
+
+# Instead of blending it away, leave the wearer's own collar visible in the new neckline as a layer (compositing.restore_collar_layer);
+# False: blend it into the neck (compositing.repair_collar).
+LAYER_COLLAR = True
+
+# Leave the wearer's own shirt under a shorter garment's hem instead of the filled background (compositing.restore_below_hem).
+RESTORE_BELOW_HEM = True
 
 
 # ---------------------------------------------------------------------------
@@ -441,6 +455,8 @@ class LiveSession:
             fresh = self.fitter is None
             self.fitter = self.fitter or BodyFitter()
             self.fitter.fit_from_regression(fit_points, prediction)
+            if MATCH_SHOULDERS:
+                match_shoulder_width(self.fitter, points)
             if prediction.get("joints_2d") is not None:
                 self.last_box = box_from_joints(prediction["joints_2d"], frame.shape)
             if fresh:
@@ -571,8 +587,14 @@ class LiveSession:
             frame[:] = erased
             composite_garment(frame, rgba)
             keep_in_front(frame, original, parse.labels, points)
-            if REPAIR_COLLAR:
+            if RESTORE_INSIDE:
+                restore_inside_garment(frame, original, rgba[..., 3])
+            if LAYER_COLLAR:
+                restore_collar_layer(frame, original, rgba[..., 3], parse.labels, points)
+            elif REPAIR_COLLAR:
                 repair_collar(frame, rgba[..., 3], parse.labels, points)
+            if RESTORE_BELOW_HEM:
+                restore_below_hem(frame, original, rgba[..., 3])
             stage("composite")
         else:
             composite_garment(frame, rgba)

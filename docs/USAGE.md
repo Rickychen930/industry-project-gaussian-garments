@@ -49,7 +49,8 @@ garment is ready the window shows the camera with "starting ...".
 | `./live-tryon --source video.mp4` | Run on a recorded video instead of the camera. |
 | `./live-tryon run [N or name] [flags]` | The same without the menu, e.g. `./live-tryon run 13`. |
 | `./live-tryon bench [N\|name] [frames] [source]` | Time the pipeline on the camera (source 0) or a video; prints the median ms of each stage, saves the output and the camera frames as read (`captures/bench-<time>[-input].mp4`). Run it in your own terminal (the camera permission) with nothing else busy. |
-| `./live-tryon record [seconds]` | Film yourself while it says which pose to take (12 poses, 5 s each); replay with `./live-tryon run NAME --source FILE`. |
+| `./live-tryon record [seconds] [basic\|extended]` | Film yourself while it says which pose to take (basic: 12 poses, 5 s each; extended: 31 poses, `record 8 extended` is ~4 min); replay with `./live-tryon run NAME --source FILE`. |
+| `python -m tools.evaluate.session_benchmark FILE --garment NAME --out docs/baseline/session-X.json` | One recording through the live pipeline, with numbers (dressed share, reprojection, shoulder ratio, uncovered clothing, stage times): the same recording before and after a change says whether it helped. |
 | `./live-tryon garments` | List the garments by number and open `docs/figures/garments.jpg` (a picture of each). |
 | `./live-tryon compare <branch> [video] [frames]` | Measure any branch or tag on a release video (see `BRANCHES.md`). |
 | `./live-tryon test` | Run the test suite (`unittest`). |

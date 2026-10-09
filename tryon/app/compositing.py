@@ -2,6 +2,9 @@
 
     composite_garment   alpha-blend the garment (BGRA) over the frame
     keep_in_front       restore the wearer's face, hair and hands on top
+    restore_inside_garment the wearer's own pixels back in the garment's gaps (lace, open knit)
+    restore_collar_layer the wearer's own collar left above the neckline
+    restore_below_hem   the wearer's own shirt back under a shorter garment's hem
     repair_collar       blend the wearer's own collar left below the chin into the neck
     draw_body           draw the fitted skeleton (no garment: debugging)
 """
@@ -183,16 +186,147 @@ def repair_collar(frame, garment_alpha, labels, points):
         return
     skin_bgr = frame[nose_row:mouth_row][face_rows].reshape(-1, 1, 3)
     skin = np.median(cv2.cvtColor(skin_bgr, cv2.COLOR_BGR2LAB).reshape(-1, 3).astype(np.float32), axis=0)
-    neck = np.zeros(frame.shape[:2], bool)
-    neck[chin + 1 :] = below
+    window_labels = labels[window]
+    neck = window_labels == 11
+    neck[: max(chin + 1 - window[0].start, 0)] = False  # nothing above the chin line
     lab = cv2.cvtColor(frame[window], cv2.COLOR_BGR2LAB).astype(np.float32)
     weights = np.array([0.5, 1.0, 1.0], np.float32)  # shade on the neck is lightness: weigh it less
     far = np.sqrt((((lab - skin) * weights) ** 2).sum(axis=2)) > COLLAR_DISTANCE
-    marked = (neck[window] & far & (garment_alpha[window] < 25)).astype(np.uint8)
+    open_air = garment_alpha[window] < 25
+    marked = (neck & far & open_air).astype(np.uint8)
     if not marked.any():
         return
-    marked = cv2.dilate(marked, np.ones((2 * COLLAR_GROW + 1,) * 2, np.uint8)) & (garment_alpha[window] < 25) & (labels[window] == 11)
-    frame[window] = cv2.inpaint(np.ascontiguousarray(frame[window]), marked * 255, COLLAR_RADIUS, cv2.INPAINT_TELEA)
+    # the grow and the inpainting only reach COLLAR_GROW / COLLAR_RADIUS px from a marked pixel: work in that box
+    x, y, w, h = cv2.boundingRect(marked)
+    reach = COLLAR_GROW + COLLAR_RADIUS + 1
+    y0, y1 = max(y - reach, 0), min(y + h + reach, marked.shape[0])
+    x0, x1 = max(x - reach, 0), min(x + w + reach, marked.shape[1])
+    box = (slice(y0, y1), slice(x0, x1))
+    grown = cv2.dilate(marked[box], np.ones((2 * COLLAR_GROW + 1,) * 2, np.uint8)) & open_air[box] & (window_labels[box] == 11)
+    patch = frame[window][box]
+    patch[:] = cv2.inpaint(np.ascontiguousarray(patch), grown * 255, COLLAR_RADIUS, cv2.INPAINT_TELEA)
+
+
+INSIDE_CLOSE = 21  # px: gaps up to this wide between garment pixels count as inside the garment
+INSIDE_MAX_SHARE = 0.25  # an enclosed hole bigger than this share of the garment is not a lace gap (a loop made by an arm)
+
+
+def restore_inside_garment(frame, original, garment_alpha):
+    """The wearer's own pixels back wherever the garment has a gap inside its own outline, in place.
+    A lace or open-knit panel, a hole the splats leave, the opening of a collar: the pixels behind
+    them were erased and filled from the room's learned background (beige wall and brown patches
+    through the lace of a sweater, 10 Oct); what lies under a layer is the wearer's shirt, which
+    is what `restore_collar_layer` and `restore_below_hem` already show at the neck and under the
+    hem. Gaps are the pixels with no garment inside the outline's closing (`INSIDE_CLOSE` px) whose
+    hole does not reach the image border, each at most INSIDE_MAX_SHARE of the garment's area."""
+    import cv2
+
+    covered = (garment_alpha >= 25).astype(np.uint8)
+    area = int(covered.sum())
+    if area == 0:
+        return
+    x, y, w, h = cv2.boundingRect(covered)
+    pad = INSIDE_CLOSE + 2
+    y0, y1 = max(y - pad, 0), min(y + h + pad, covered.shape[0])
+    x0, x1 = max(x - pad, 0), min(x + w + pad, covered.shape[1])
+    window = (slice(y0, y1), slice(x0, x1))
+    solid = covered[window]
+    closed = cv2.morphologyEx(solid, cv2.MORPH_CLOSE, np.ones((INSIDE_CLOSE, INSIDE_CLOSE), np.uint8))
+    # holes of `closed` = what flood filling the outside leaves unreached
+    flood = np.pad((closed == 0).astype(np.uint8), 1, constant_values=1)
+    mask = np.zeros((flood.shape[0] + 2, flood.shape[1] + 2), np.uint8)
+    cv2.floodFill(flood, mask, (0, 0), 2)
+    inside = (flood[1:-1, 1:-1] != 2) | (closed > 0)
+    gaps = inside & (solid == 0)
+    if not gaps.any():
+        return
+    # a closed region of gaps this big is something else (two arms making a loop)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(gaps.astype(np.uint8), connectivity=8)
+    keep = np.zeros(count, bool)
+    keep[1:] = stats[1:, cv2.CC_STAT_AREA] <= INSIDE_MAX_SHARE * area
+    gaps = keep[labels]
+    changed = (frame[window] != original[window]).any(axis=2)
+    restore = gaps & changed
+    if restore.any():
+        part = frame[window]
+        part[restore] = original[window][restore]
+
+
+LAYER_SPAN = 0.15  # shoulder widths either side of the neck the collar layer reaches
+LAYER_DEPTH = 0.45  # shoulder widths below the chin line it reaches
+LAYER_FEATHER = 14  # px over which the collar fades out at either end of its columns
+
+
+def restore_collar_layer(frame, original, garment_alpha, labels, points):
+    """The wearer's own collar left visible in the new neckline, in place: the
+    pixels of the neck window the erase changed, that no garment covers and that
+    are not hair, go back to the frame as read. A crew neck under a sweater reads as
+    a layer; blending it into the neck's skin (`repair_collar`) or filling it from
+    the room smeared it (a dark T-shirt under a pale sweater, a striped one under a
+    pale one, 10 Oct). The window: below the chin line (mouth + `COLLAR_CHIN` nose-to-
+    mouth distances) down `LAYER_DEPTH` shoulder widths, in the columns of the neck
+    (the face-labelled pixels below the chin, `LAYER_SPAN` shoulder widths either
+    side), fading out over `LAYER_FEATHER` px at both ends of the columns. Not
+    'above the garment's top edge': a thick collar close to the camera encloses the
+    opening from three sides."""
+    if labels is None or points is None or labels.shape != frame.shape[:2]:
+        return
+    nose, mouth = points[0], 0.5 * (points[9] + points[10])
+    if min(points[0, 2], points[9, 2], points[10, 2], points[11, 2], points[12, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
+        return
+    gap = float(mouth[1] - nose[1])
+    chin = int(mouth[1] + COLLAR_CHIN * gap)
+    shoulder_width = float(np.linalg.norm(points[11, :2] - points[12, :2]))
+    if gap < 2 or chin >= frame.shape[0] - 1 or shoulder_width < 8:
+        return
+    r0, r1 = chin + 1, min(chin + 1 + int(LAYER_DEPTH * shoulder_width), frame.shape[0])
+    below = labels[r0:] == 11
+    cols = np.flatnonzero(below.any(axis=0))
+    if cols.size == 0:
+        return
+    reach = int(LAYER_SPAN * shoulder_width)
+    c0, c1 = max(int(cols[0]) - reach, 0), min(int(cols[-1]) + 1 + reach, frame.shape[1])
+    window = (slice(r0, r1), slice(c0, c1))
+    band = (garment_alpha[window] < 25) & (labels[window] != 2)  # hair stays
+    band &= (frame[window] != original[window]).any(axis=2)
+    if not band.any():
+        return
+    across = np.arange(c1 - c0)
+    ramp = np.clip(np.minimum(across + 1, c1 - c0 - across) / float(LAYER_FEATHER), 0.0, 1.0)
+    weight = band * ramp[None, :]
+    part = frame[window]
+    blended = part.astype(np.float32) * (1.0 - weight[..., None]) + original[window].astype(np.float32) * weight[..., None]
+    part[band] = (blended[band] + 0.5).astype(np.uint8)
+
+
+def restore_below_hem(frame, original, garment_alpha, margin=0):
+    """Put the wearer's own pixels back below the garment's lower edge, in place.
+    A wearer whose shirt is longer than the garment (a T-shirt under a cropped
+    sweater) had everything under the hem erased and filled from the room's
+    learned background, which came out as grey, green and purple blocks (a
+    recorded session, arms raised, 9 Oct); the real shirt continuing under the
+    hem reads as a layer. Only the columns the garment covers, only below its
+    lowest covered row in that column, only the pixels the erase changed.
+    Worked out in the window under the garment's lowest row only."""
+    covered = garment_alpha >= 25
+    x, y, w, h = cv2.boundingRect(covered.view(np.uint8))
+    if w == 0 or h == 0:
+        return
+    rows = covered.shape[0]
+    columns = covered[:, x : x + w]
+    bottom = rows - 1 - np.argmax(columns[::-1], axis=0)  # last covered row per column (every column here has one or more)
+    has = columns.any(axis=0)
+    bottom = np.where(has, bottom, rows)
+    first = int(bottom[has].min()) + margin + 1
+    if first >= rows:
+        return
+    window = (slice(first, rows), slice(x, x + w))
+    below = np.arange(first, rows)[:, None] > (bottom[None, :] + margin)
+    changed = (frame[window] != original[window]).any(axis=2)
+    restore = below & changed & has[None, :] & ~columns[first:rows]
+    if restore.any():
+        part = frame[window]
+        part[restore] = original[window][restore]
 
 
 def composite_garment(frame, bgra):

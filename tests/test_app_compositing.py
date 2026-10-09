@@ -170,5 +170,164 @@ class CollarPixelsTest(unittest.TestCase):
         self.assertTrue((frame[50, 100] == original[50, 100]).all())  # the face comes back
 
 
+class RestoreBelowHemTest(unittest.TestCase):
+    """The wearer's own shirt stays under a shorter garment's hem."""
+
+    def _scene(self):
+        original = np.full((100, 100, 3), 200, np.uint8)
+        erased = original.copy()
+        erased[60:, :] = 30  # everything under row 60 was erased and filled dark
+        frame = erased.copy()
+        alpha = np.zeros((100, 100), np.uint8)
+        alpha[20:60, 30:70] = 255  # the garment: columns 30-69, hem at row 59
+        frame[20:60, 30:70] = (0, 0, 255)
+        return frame, original, alpha
+
+    def test_the_erased_pixels_under_the_hem_come_back_in_the_garments_columns(self):
+        from tryon.app.compositing import restore_below_hem
+
+        frame, original, alpha = self._scene()
+        restore_below_hem(frame, original, alpha)
+        self.assertTrue((frame[80, 50] == 200).all())  # under the hem, in the garment's columns
+        self.assertTrue((frame[80, 10] == 30).all())  # beside the garment: still the fill
+        self.assertTrue((frame[40, 50] == (0, 0, 255)).all())  # the garment itself
+
+    def test_nothing_changes_without_a_garment(self):
+        from tryon.app.compositing import restore_below_hem
+
+        frame, original, _ = self._scene()
+        before = frame.copy()
+        restore_below_hem(frame, original, np.zeros((100, 100), np.uint8))
+        self.assertTrue(np.array_equal(frame, before))
+
+    def test_pixels_the_erase_did_not_touch_are_left_alone(self):
+        from tryon.app.compositing import restore_below_hem
+
+        frame, original, alpha = self._scene()
+        frame[80, 50] = (1, 2, 3)  # a pixel something else painted
+        original[80, 50] = (1, 2, 3)  # ... equal to the original: not changed by the erase
+        restore_below_hem(frame, original, alpha)
+        self.assertTrue((frame[80, 50] == (1, 2, 3)).all())
+
+
+class RestoreCollarLayerTest(unittest.TestCase):
+    """The wearer's own collar stays visible in the neckline."""
+
+    SKIN = (90, 120, 170)
+    COLLAR = (20, 20, 20)
+
+    def _scene(self):
+        original = np.zeros((200, 200, 3), np.uint8)
+        original[:] = self.SKIN
+        original[100:115, 70:130] = self.COLLAR  # the real collar, below the chin
+        labels = np.zeros((200, 200), np.uint8)
+        labels[20:130, 60:140] = 11
+        frame = original.copy()
+        frame[100:115, 70:130] = (200, 200, 200)  # the erase filled it pale
+        alpha = np.zeros((200, 200), np.uint8)
+        alpha[120:, 40:160] = 255  # the garment starts below the collar
+        points = np.zeros((33, 5), np.float32)
+        points[:, 2] = 1.0
+        points[[0, 2, 5, 7, 8], :2] = (100, 40)
+        points[9, :2] = (95, 60)
+        points[10, :2] = (105, 60)  # chin line at 60 + 1.3 * 20 = 86
+        points[11, :2], points[12, :2] = (40, 150), (160, 150)
+        return frame, original, alpha, labels, points
+
+    def test_the_erased_collar_comes_back_in_the_neck_columns(self):
+        from tryon.app.compositing import restore_collar_layer
+
+        frame, original, alpha, labels, points = self._scene()
+        restore_collar_layer(frame, original, alpha, labels, points)
+        self.assertTrue((frame[108, 100] == self.COLLAR).all())
+
+    def test_pixels_under_the_garment_and_above_the_chin_are_left_alone(self):
+        from tryon.app.compositing import restore_collar_layer
+
+        frame, original, alpha, labels, points = self._scene()
+        frame[50, 100] = (1, 1, 1)  # above the chin line, the erase changed it (it must not come back)
+        covered = frame[130, 100].copy()
+        frame[130, 100] = (9, 9, 9)
+        restore_collar_layer(frame, original, alpha, labels, points)
+        self.assertTrue((frame[50, 100] == (1, 1, 1)).all())
+        self.assertTrue((frame[130, 100] == (9, 9, 9)).all())
+
+    def test_hair_is_not_restored(self):
+        from tryon.app.compositing import restore_collar_layer
+
+        frame, original, alpha, labels, points = self._scene()
+        labels[100:115, 70:130] = 2
+        restore_collar_layer(frame, original, alpha, labels, points)
+        self.assertTrue((frame[108, 100] == (200, 200, 200)).all())
+
+    def test_the_collar_fades_out_at_the_ends_of_its_columns(self):
+        from tryon.app.compositing import LAYER_FEATHER, restore_collar_layer
+
+        frame, original, alpha, labels, points = self._scene()
+        frame[:] = (200, 200, 200)  # everything changed
+        restore_collar_layer(frame, original, alpha, labels, points)
+        middle = int(frame[108, 100, 0])
+        edge = [int(frame[108, x, 0]) for x in range(40, 60)]
+        self.assertTrue(LAYER_FEATHER > 1)
+        self.assertLess(min(edge), 200)  # something comes back at the edge
+        self.assertTrue(max(edge) >= min(edge))
+        self.assertLessEqual(middle, 200)
+
+    def test_nothing_without_landmarks(self):
+        from tryon.app.compositing import restore_collar_layer
+
+        frame, original, alpha, labels, _ = self._scene()
+        before = frame.copy()
+        restore_collar_layer(frame, original, alpha, labels, None)
+        self.assertTrue(np.array_equal(frame, before))
+
+
+class RestoreInsideGarmentTest(unittest.TestCase):
+    """The wearer's own pixels show in the gaps of the garment, not the filled background."""
+
+    def _scene(self):
+        original = np.full((120, 120, 3), 200, np.uint8)
+        frame = original.copy()
+        frame[:] = 30  # the erase filled everything dark
+        alpha = np.zeros((120, 120), np.uint8)
+        alpha[20:100, 20:100] = 255  # the garment
+        alpha[55:62, 50:58] = 0  # a small gap inside (lace)
+        return frame, original, alpha
+
+    def test_a_gap_inside_the_outline_gets_the_original_pixels_back(self):
+        from tryon.app.compositing import restore_inside_garment
+
+        frame, original, alpha = self._scene()
+        restore_inside_garment(frame, original, alpha)
+        self.assertTrue((frame[58, 53] == 200).all())
+
+    def test_the_outside_is_left_alone(self):
+        from tryon.app.compositing import restore_inside_garment
+
+        frame, original, alpha = self._scene()
+        restore_inside_garment(frame, original, alpha)
+        self.assertTrue((frame[5, 5] == 30).all())
+        self.assertTrue((frame[110, 60] == 30).all())
+
+    def test_nothing_changes_without_a_garment(self):
+        from tryon.app.compositing import restore_inside_garment
+
+        frame, original, _ = self._scene()
+        before = frame.copy()
+        restore_inside_garment(frame, original, np.zeros((120, 120), np.uint8))
+        self.assertTrue(np.array_equal(frame, before))
+
+    def test_a_loop_bigger_than_the_share_limit_is_not_a_gap(self):
+        from tryon.app.compositing import restore_inside_garment
+
+        frame, original, alpha = self._scene()
+        alpha[:] = 0
+        alpha[20:100, 20:100] = 255
+        alpha[35:85, 35:85] = 0  # a hole of 2,500 of 6,400 px (39 %): an arm loop, not lace
+        before = frame.copy()
+        restore_inside_garment(frame, original, alpha)
+        self.assertTrue(np.array_equal(frame, before))
+
+
 if __name__ == "__main__":
     unittest.main()
