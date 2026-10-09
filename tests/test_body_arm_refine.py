@@ -65,6 +65,7 @@ class RefineArmsTest(unittest.TestCase):
         truth = {16: [0.1, 0.3, -0.6], 18: [0.0, -1.5, 0.0], 17: [0.0, 0.0, 0.3], 19: [0.0, 1.0, 0.0]}
         wanted, pixels = _landmarks(_posed(truth))
         perturbed = _posed({**truth, 18: [0.0, -0.3, 0.0], 16: [0.1, 0.9, 0.3]})
+        perturbed.ARM_GATE = 0.12  # this perturbation is a small one
         before = float(np.linalg.norm(_landmarks(perturbed)[1][20] - pixels[20]))
         touched = perturbed._refine_arms(wanted)
         after = float(np.linalg.norm(_landmarks(perturbed)[1][20] - pixels[20]))
@@ -87,8 +88,21 @@ class RefineArmsTest(unittest.TestCase):
         self.assertEqual(fitter._refine_arms(wanted), [])
         self.assertTrue(torch.equal(pose, fitter.body_pose))
 
-    def test_off_by_default(self):
-        self.assertFalse(BodyFitter.ARM_REFINE)
+    def test_a_large_disagreement_is_fixed_with_the_hips_out_of_the_frame(self):
+        truth = {16: [0.1, 0.3, -0.6], 18: [0.0, -1.5, 0.0], 17: [0.0, 0.0, 0.3], 19: [0.0, 1.0, 0.0]}
+        wanted, pixels = _landmarks(_posed(truth))
+        wanted = wanted.copy()
+        wanted[[23, 24], 2] = 0.0  # the hips below the frame
+        perturbed = _posed({**truth, 18: [0.0, -0.3, 0.0], 16: [0.1, 0.9, 0.3]})
+        before = float(np.linalg.norm(_landmarks(perturbed)[1][20] - pixels[20]))
+        touched = perturbed._refine_arms(wanted)
+        after = float(np.linalg.norm(_landmarks(perturbed)[1][20] - pixels[20]))
+        self.assertEqual(touched, ["left"])
+        self.assertLess(after, 0.25 * before)
+
+    def test_on_by_default_with_a_gate_that_leaves_small_disagreements_alone(self):
+        self.assertTrue(BodyFitter.ARM_REFINE)
+        self.assertGreaterEqual(BodyFitter.ARM_GATE, 0.3)
 
 
 if __name__ == "__main__":

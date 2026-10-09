@@ -114,9 +114,16 @@ class BodyFitter:
     # (chest 30 cm, betas within 0.7) at 10 px on camera 0004.
     SHAPE_PRIOR = 400.0
     # Arm-only refinement of a regressed pose toward MediaPipe's 2D elbows and wrists
-    # (`_refine_arms`, tools/evaluate/arm_pose.py); off until it is measured.
-    ARM_REFINE = False
-    ARM_GATE = 0.12  # torso lengths of elbow / wrist disagreement before an arm is touched
+    # (`_refine_arms`, tools/evaluate/arm_pose.py). At a gate of 0.12 torso lengths it
+    # touched most arms and lowered the garment IoU (docs/LOG.md, 9 Oct); at 0.4 it only
+    # acts where NLF is badly wrong: an arm reaching toward the camera, whose wrist it
+    # put 100-180 px from MediaPipe's (recorded session, 9 Oct) and the garment's sleeve
+    # with it.
+    ARM_REFINE = True
+    ARM_GATE = 0.4  # torso lengths of elbow / wrist disagreement before an arm is touched
+    # Torso length (shoulder to hip) in shoulder widths, for a wearer whose hips are out of
+    # the frame (the length the gate is counted in).
+    TORSO_PER_SHOULDER_WIDTH = 1.3
     ARM_VISIBILITY = 0.5  # MediaPipe visibility of a landmark worth following
     ARM_BLEND = 1.0  # how far toward MediaPipe's point the target sits (1: on it)
     ARM_PRIORS = (0.3, 1.0, 0.1)  # per rad: shoulder, elbow non-hinge, elbow flexion
@@ -597,9 +604,12 @@ class BodyFitter:
         Returns the arms touched."""
         from tryon.body.regressor import ARM_JOINTS, refine_arm
 
-        if min(landmarks[i, 2] for i in (11, 12, 23, 24)) < VISIBILITY_FLOOR:
+        if min(landmarks[i, 2] for i in (11, 12)) < VISIBILITY_FLOOR:
             return []
-        length = 0.5 * float(np.linalg.norm(landmarks[11, :2] - landmarks[23, :2]) + np.linalg.norm(landmarks[12, :2] - landmarks[24, :2]))
+        if min(landmarks[i, 2] for i in (23, 24)) >= VISIBILITY_FLOOR:
+            length = 0.5 * float(np.linalg.norm(landmarks[11, :2] - landmarks[23, :2]) + np.linalg.norm(landmarks[12, :2] - landmarks[24, :2]))
+        else:
+            length = self.TORSO_PER_SHOULDER_WIDTH * float(np.linalg.norm(landmarks[11, :2] - landmarks[12, :2]))
         if length < 1.0:
             return []
         with torch.no_grad():

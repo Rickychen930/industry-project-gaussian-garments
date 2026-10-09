@@ -126,5 +126,49 @@ class RepairCollarTest(unittest.TestCase):
         self.assertTrue(np.array_equal(frame, before))
 
 
+class CollarPixelsTest(unittest.TestCase):
+    """`keep_in_front` leaves the collar the parser called face on the garment."""
+
+    SKIN = (90, 120, 170)  # BGR
+    STRIPE = (230, 230, 230)
+
+    def _scene(self, mouth_row):
+        original = np.zeros((200, 200, 3), np.uint8)
+        original[:] = self.SKIN
+        labels = np.zeros((200, 200), np.uint8)
+        labels[20:130, 60:140] = 11  # face and neck
+        original[110:116, 70:130] = self.STRIPE  # a pale stripe under the chin
+        points = np.zeros((33, 5), np.float32)
+        points[:, 2] = 1.0
+        points[[0, 2, 5, 7, 8], :2] = (100, 40)  # the head landmarks
+        points[13:17, 2] = 0.0  # no arms in this scene
+        points[9, :2] = (95, mouth_row)
+        points[10, :2] = (105, mouth_row)
+        return original, labels, points
+
+    def test_a_stripe_below_the_chin_is_found_and_the_skin_is_not(self):
+        from tryon.app.compositing import collar_pixels
+
+        original, labels, points = self._scene(mouth_row=60)  # chin at 60 + 1.3 * 20 = 86
+        collar = collar_pixels(original, labels, points)
+        self.assertTrue(collar[112, 100])
+        self.assertFalse(collar[100, 100])  # skin below the chin
+        self.assertFalse(collar[50, 100])  # the face
+
+    def test_nothing_above_the_chin_line_is_found(self):
+        from tryon.app.compositing import collar_pixels
+
+        original, labels, points = self._scene(mouth_row=100)  # chin at 100 + 1.3 * 60 = 178
+        self.assertIsNone(collar_pixels(original, labels, points))
+
+    def test_keep_in_front_does_not_paste_the_stripe_over_the_garment(self):
+        original, labels, points = self._scene(mouth_row=60)
+        frame = np.full_like(original, 7)
+        points[11, :2], points[12, :2] = (20, 150), (180, 150)  # wide shoulders: the head disc (radius 96) reaches the stripe
+        keep_in_front(frame, original, labels, points)
+        self.assertTrue((frame[112, 100] == 7).all())  # the garment stays
+        self.assertTrue((frame[50, 100] == original[50, 100]).all())  # the face comes back
+
+
 if __name__ == "__main__":
     unittest.main()

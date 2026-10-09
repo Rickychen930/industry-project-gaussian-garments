@@ -42,6 +42,9 @@ def draw_body(frame, fitter, colour=(60, 220, 60)):
 # a shirt collar is the physical order anyway.
 IN_FRONT_CLASSES = (1, 2, 3, 11)
 
+COLLAR_CHIN = 1.3  # the chin is this many nose-to-mouth distances below the mouth
+COLLAR_DISTANCE = 12.0  # Lab distance from the face's skin that marks a pixel as collar
+
 
 def _in_classes(labels, classes):
     """`np.isin(labels, classes)`; a 256-entry lookup for 8-bit labels
@@ -51,6 +54,41 @@ def _in_classes(labels, classes):
     table = np.zeros(256, bool)
     table[[c for c in classes if 0 <= c < 256]] = True
     return table[labels]
+
+
+def collar_pixels(original, labels, points):
+    """The face-labelled pixels below the chin whose colour is far from the
+    face's skin: the wearer's own collar stripes, which SCHP calls "face".
+    `keep_in_front` must not restore them over the new garment: the disc it
+    restores a face in reaches below the chin for a close camera, and they
+    came back as hard-edged pale shards in the neckline (a recorded session,
+    9 Oct). A boolean mask of the frame, or None (no face found, or none)."""
+    nose, mouth = points[0], 0.5 * (points[9] + points[10])
+    if min(points[0, 2], points[9, 2], points[10, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
+        return None
+    gap = float(mouth[1] - nose[1])
+    nose_row, mouth_row = int(nose[1]), int(mouth[1])
+    chin = int(mouth[1] + COLLAR_CHIN * gap)
+    if gap < 2 or mouth_row <= nose_row or chin >= original.shape[0] - 1 or nose_row < 0:
+        return None
+    below = labels[chin + 1 :] == 11
+    rows = np.flatnonzero(below.any(axis=1))
+    if rows.size == 0:
+        return None
+    cols = np.flatnonzero(below.any(axis=0))
+    window = (slice(chin + 1 + int(rows[0]), chin + 1 + int(rows[-1]) + 1), slice(int(cols[0]), int(cols[-1]) + 1))
+    face = labels[nose_row:mouth_row] == 11
+    if face.sum() < 50:
+        return None
+    skin = np.median(cv2.cvtColor(original[nose_row:mouth_row][face].reshape(-1, 1, 3), cv2.COLOR_BGR2LAB).reshape(-1, 3).astype(np.float32), axis=0)
+    lab = cv2.cvtColor(np.ascontiguousarray(original[window]), cv2.COLOR_BGR2LAB).astype(np.float32)
+    weights = np.array([0.5, 1.0, 1.0], np.float32)
+    far = np.sqrt((((lab - skin) * weights) ** 2).sum(axis=2)) > COLLAR_DISTANCE
+    collar = np.zeros(labels.shape, bool)
+    below_window = np.zeros(labels.shape, bool)
+    below_window[chin + 1 :] = labels[chin + 1 :] == 11
+    collar[window] = below_window[window] & far
+    return collar if collar.any() else None
 
 
 def keep_in_front(frame, original, labels, points=None):
@@ -94,6 +132,9 @@ def keep_in_front(frame, original, labels, points=None):
         # was painted back over the new garment. Nothing inside the arm
         # strokes is restored as face or hair.
         front &= ~arm_strokes(points, frame.shape)
+        collar = collar_pixels(original, labels, points)
+        if collar is not None:
+            front &= ~collar
         hands = hand_discs(points, frame.shape, hand_fraction=0.25) & _in_classes(labels, (14, 15))
         front |= hands
     # only inside the restored pixels' bounding box (they are a face and
@@ -106,8 +147,6 @@ def keep_in_front(frame, original, labels, points=None):
     np.copyto(frame[window], original[window], where=front[window][..., None])
 
 
-COLLAR_CHIN = 1.3  # the chin is this many nose-to-mouth distances below the mouth
-COLLAR_DISTANCE = 12.0  # Lab distance from the face's skin that marks a pixel as collar
 COLLAR_GROW = 4  # px the marked pixels grow by before they are repainted
 COLLAR_RADIUS = 6  # inpainting radius
 
