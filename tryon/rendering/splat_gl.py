@@ -60,6 +60,24 @@ def _instances(out, order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, 
         out[i, 15] = 0.0
 
 
+def far_to_near(depth):
+    """Indices that order `depth` farthest first: a least-significant-digit radix sort on a 32-bit key of the
+    depth (two stable passes on 16 bits, numpy's O(n) radix sort), 8.8 ms -> ~2 ms for 121k splats
+    against `np.argsort(-depth)`. The key spans the depths' own range at 2^-32 of it (metres at 1e-10: far
+    below a float32's step), so the order is the float one except for depths closer than that, whose order
+    on the screen is not visible."""
+    count = depth.shape[0]
+    if count < 2048:
+        return np.argsort(-depth)
+    low, high = float(depth.min()), float(depth.max())
+    span = high - low
+    if not np.isfinite(span) or span <= 0.0:
+        return np.arange(count)
+    key = ((high - depth) * (4294967295.0 / span)).astype(np.uint32)  # 0 at the farthest
+    low_order = np.argsort((key & 0xFFFF).astype(np.uint16), kind="stable")
+    return low_order[np.argsort((key[low_order] >> 16).astype(np.uint16), kind="stable")]
+
+
 _INSTANCE_ROWS = []  # one entry: the (capacity, 16) float32 array every frame fills a prefix of
 
 
@@ -311,9 +329,7 @@ def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occl
     keep = np.flatnonzero(valid)
     if keep.size == 0:
         return empty if bgra8 else (image, alpha)
-    # farthest first; float64 depths practically never tie, so the unstable
-    # sort gives the same order at half the cost (8.8 vs 16.6 ms, 121k)
-    keep = keep[np.argsort(-depth[keep])]
+    keep = keep[far_to_near(depth[keep])]
     view64 = np.asarray(view, np.float64)
     instances = _instance_rows(len(keep))
     _instances(instances, keep, x0, y0, x1, y1, np.ascontiguousarray(pixels, np.float64), np.ascontiguousarray(cov2d, np.float64),

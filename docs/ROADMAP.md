@@ -100,6 +100,8 @@ pose-dependent shading from a distilled student · code audit and refactor
 
 ## Tried and dropped
 
+Switches that measured no gain were removed from the code on 10 Oct (tag `archive/pre-cleanup-2026-10-10` has them): the arm shading model, skin texture transfer and body-outline tube of the fill; importance subsampling; the relaxed rest; the front opening; ride-up; neighbour coupling, wrap, target filter, velocity inheritance and the vertical attachment of the cloth; the fitter's skin term; and the studies that only measured them.
+
 Each row was measured; the entry in [`LOG.md`](LOG.md) has the numbers.
 
 | idea | why not |
@@ -119,6 +121,6 @@ Each row was measured; the entry in [`LOG.md`](LOG.md) has the numbers.
 | diffusion try-on (ViViD, CatVTON, FASHN, VTON360, FitMe360) | tens of seconds to 30 minutes a frame on the M1 ([`REFERENCE_RUNS.md`](REFERENCE_RUNS.md)) |
 | neighbour coupling of the cloth, velocity inheritance, One Euro filter on the cloth target, long-range-attachment clamp, low-dimensional pose residual | each measured against the authors' simulation: no distance gain (the cloth is not what separates us from the registration); the One Euro filter lags (IoU 0.7277 vs 0.7282) |
 | garment size variants, per-video calibration of the placement | see "Where the IoU gap is" |
-| a relaxed rest shape learned from the authors' simulation (`GarmentRenderer.RELAXED_REST`) | 17 % closer to the simulation on unseen motions, but IoU against the real shirt 0.7283 -> 0.6328 (0.7198 even at a quarter of the offset): the simulation's garment is shorter and tighter than the real one |
+| a relaxed rest shape learned from the authors' simulation (`GarmentRenderer.RELAXED_REST`, removed 10 Oct) | 17 % closer to the simulation on unseen motions, but IoU against the real shirt 0.7283 -> 0.6328 (0.7198 even at a quarter of the offset): the simulation's garment is shorter and tighter than the real one |
 | splat footprint, opacity sharpening, floater removal, alpha threshold | the over-drawing is ~80 % solid geometry; held-out gain -0.00025 (`docs/baseline/silhouette-study.json`) |
 | ContourCraft cloth | 2.2-2.6 s a step on the M1; driven by our tracked bodies it billows (IoU 0.476 against 0.600) |

@@ -160,7 +160,7 @@ class SCHPParser:
 
     def fast_clothing_reference(self, frame_bgr, classes):
         """The original `fast_clothing` (the oracle `fast_clothing` is tested
-        equal to, and the baseline of tools/evaluate/parser_study.py)."""
+        equal to, and the baseline of the parser study of 9 Oct, docs/LOG.md)."""
         logits, inverse = self._square_logits(frame_bgr)
         height, width = frame_bgr.shape[:2]
         shifted = np.exp(logits - logits.max(axis=0, keepdims=True))

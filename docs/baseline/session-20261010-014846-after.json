@@ -1,0 +1,39 @@
+{
+ "frames": 2862,
+ "dressed_share": 0.985,
+ "status_counts": {
+  "no person": 43,
+  "regressed": 2808,
+  "re-found": 11
+ },
+ "reprojection_px": {
+  "p50": 30.12,
+  "p90": 67.25,
+  "p95": 108.61,
+  "p99": 365.92
+ },
+ "front_or_back_frames": 2194,
+ "shoulder_ratio_outside_band": 0,
+ "shoulder_band": [
+  0.74,
+  1.35
+ ],
+ "uncovered_clothing_share": {
+  "p50": 0.07,
+  "p90": 0.16
+ },
+ "garment_pixels_median": 130342,
+ "stage_median_ms": {
+  "mediapipe": 20.0,
+  "total": 286.0,
+  "regressor": 1.0,
+  "fit": 20.0,
+  "erase start": 5.0,
+  "render": 156.0,
+  "erase wait": 0.0,
+  "composite": 37.0
+ },
+ "wall_seconds": 1210.3,
+ "source": "session-20261010-014846-input.mp4",
+ "garment": "00190_upper"
+}

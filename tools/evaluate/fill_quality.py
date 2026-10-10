@@ -72,20 +72,6 @@ VARIANTS = {
     "labels_w18": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.18},
     "labels_w26": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.26},
     "labels_w30": {"LABEL_FILL": True, "ARM_TUBE_WIDTH": 0.30},
-    # the arm study of 9 Oct (3): the arm drawn as an arm. `cur` is the fill before it (every switch off)
-    "cur": {"LABEL_FILL": True, "ARM_FROM_BODY": False, "ARM_MUSCLE": 0.0, "ARM_LAMBERT": False, "ARM_WARM": 0.0, "ARM_RIM": 0.0, "ARM_HAND_BLEND": 0.0},
-    "arm_muscle": {"ARM_MUSCLE": 1.0},
-    "arm_lambert": {"ARM_LAMBERT": True},
-    "arm_warm": {"ARM_WARM": 0.04},
-    "arm_rim": {"ARM_RIM": 0.12},
-    "arm_hand": {"ARM_HAND_BLEND": 3.0},
-    "arm_body": {"ARM_FROM_BODY": True, "_limb": True},
-    "arm_body12": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.2},
-    "arm_body10": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.0},
-    "arm_new": {"ARM_FROM_BODY": True, "_limb": True, "ARM_WIDE": 1.2, "ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
-    "arm_shading": {"ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
-    "arm_all": {"ARM_FROM_BODY": True, "_limb": True, "ARM_MUSCLE": 1.0, "ARM_LAMBERT": True, "ARM_WARM": 0.04, "ARM_RIM": 0.12, "ARM_HAND_BLEND": 3.0},
-    "arm_texture": {"ARM_SKIN_TEXTURE": True},
     "baseline_tubebody": {"_body": "tube"},
     "labels_tubebody": {"LABEL_FILL": True, "_body": "tube"},
 }
@@ -322,8 +308,7 @@ def run_fill(remover, sample, hole, arms, keep, variant="baseline", points=None)
     body = sample["body"]
     if VARIANTS[variant].get("_body") == "tube" and arms is not None:
         body = sample["silhouette"] | np.asarray(arms, bool)
-    limb = sample["silhouette"] if VARIANTS[variant].get("_limb") else None  # the fitted body's own outline, as the pipeline would pass it
-    return remover.remove(sample["image"], hole, arms=arms, keep=keep, plate=plate, body=body, parse=parse, limb=limb)
+    return remover.remove(sample["image"], hole, arms=arms, keep=keep, plate=plate, body=body, parse=parse)
 
 
 def synthetic_rows(remover, samples, variants):

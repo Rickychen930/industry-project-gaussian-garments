@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from tryon.garment.cloth import LightCloth, _long_range, _long_range_vertical, geodesic_from
+from tryon.garment.cloth import LightCloth, _long_range, geodesic_from
 from tryon.garment.renderer import GarmentRenderer
 from tryon.garment.skinning import SkinnedGarment, closed_front_flag, front_closure, piece_labels
 
@@ -65,21 +65,6 @@ class LongRangeTest(unittest.TestCase):
         out = _long_range(raised, anchor_of, distance)
         self.assertGreater(out[3, 1], raised[3, 1])  # the hem was pulled up
         self.assertAlmostEqual(float(np.linalg.norm(out[3] - out[0])), distance[3])
-
-    def test_the_vertical_form_only_lifts_and_restores_the_bound(self):
-        rest, edges = _chain(4)
-        distance, anchor_of = geodesic_from(4, edges, rest, [0])
-        x = rest.copy()
-        x[:, 0] += 0.3 * np.arange(4)  # shear sideways: the straight distance grows past the path
-        x[0, 1] += 1.0  # the anchor rises
-        out = _long_range_vertical(x, anchor_of, distance)
-        np.testing.assert_array_equal(out[:, [0, 2]], x[:, [0, 2]])  # x and z untouched
-        self.assertTrue(np.all(out[:, 1] >= x[:, 1]))  # only lifted
-        for p in (1, 2, 3):
-            self.assertLessEqual(np.linalg.norm(out[p] - out[0]), distance[p] + 1e-9)
-        lowered = x.copy()
-        lowered[0, 1] -= 3.0  # an anchor below its vertices pulls nothing
-        np.testing.assert_array_equal(_long_range_vertical(lowered, anchor_of, distance), lowered)
 
     def test_the_cloth_applies_it_only_when_lra_is_set(self):
         rest, edges = _chain(4)

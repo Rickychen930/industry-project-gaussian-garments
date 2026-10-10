@@ -22,6 +22,7 @@ correct binding. It could not be added on top of the 2D warp at all.
 from __future__ import annotations
 
 import numpy as np
+from numba import njit
 from scipy.spatial import cKDTree
 
 DEFAULT_NEIGHBOURS = 6
@@ -231,46 +232,6 @@ def front_closure(rest, faces, seam=0.01, blend=0.2, bin_height=0.01, max_gap=0.
     return out
 
 
-def front_opening(rest, faces, sleeve, fraction, start=0.35, span=0.4, bin_height=0.01, max_gap=0.15):
-    """Displacement (N, 3), along x only, that opens the lower front of an open-front garment.
-
-    The real shirt hangs open below the chest (its two panels leave a gap of 20 to 35 % of the torso width at the
-    hem, wider still with the arms raised); the scanned panels meet or nearly meet. `rest` is the zero-pose
-    frame (midline x = 0). Each front panel (as in `front_closure`) has its inner edge e(y) and its side seam
-    s(y), per height; below `start` of the way from the garment's top to its hem (a smoothstep over `span`) the
-    panel's inner edge is moved out to `fraction` x s(y) x that weight if it is nearer the midline, and the
-    panel between edge and seam is compressed onto what is left, so the side seam stays. Sleeves do not move.
-    Zero displacement when the mesh does not have two front panels."""
-    rest = np.asarray(rest, np.float64)
-    out = np.zeros_like(rest)
-    labels = piece_labels(faces, len(rest))
-    sizes = np.bincount(labels)
-    body = ~np.asarray(sleeve, bool)
-    if len(sizes) < 3 or not body.any():
-        return out
-    top, bottom = float(np.percentile(rest[body, 1], 98)), float(np.percentile(rest[body, 1], 2))
-    pieces = [p for p in np.argsort(-sizes)[1:] if sizes[p] >= 0.05 * len(rest)]
-    side = {sign: [p for p in pieces if np.sign(rest[labels == p, 0].mean()) == sign] for sign in (1.0, -1.0)}
-    if not side[1.0] or not side[-1.0]:
-        return out
-    for sign, candidates in side.items():
-        members = np.flatnonzero((labels == candidates[0]) & body)
-        if len(members) == 0:
-            continue
-        lateral, y = sign * rest[members, 0], rest[members, 1]
-        if lateral.min() > max_gap:
-            continue
-        edge = _edge_profile(y, lateral, y, bin_height)
-        seam = -_edge_profile(y, -lateral, y, bin_height)
-        t = np.clip((top - y) / max(top - bottom, 1e-9), 0.0, 1.0)
-        h = np.clip((t - start) / max(span, 1e-9), 0.0, 1.0)
-        h = h * h * (3.0 - 2.0 * h)
-        wanted = np.maximum(fraction * h * seam, edge)
-        scale = np.clip((seam - wanted) / np.maximum(seam - edge, 1e-6), 0.0, 1.0)
-        out[members, 0] = sign * (wanted + (lateral - edge) * scale - lateral)
-    return out
-
-
 def drape_narrowing(rest, distance, sleeve, strength, loose_from=0.01, loose_span=0.06, start=0.3, span=0.4):
     """Displacement (N, 3), along x only, that narrows the loose lower torso toward the body's centre line.
 
@@ -334,6 +295,22 @@ def _face_normals(vertices, faces):
     return normal / np.maximum(np.linalg.norm(normal, axis=1, keepdims=True), 1e-12)
 
 
+@njit(cache=True)
+def _skin(ptr, joints, values, transforms, rest_h):
+    """Linear blend skinning over the non-zero weights: the vertex is `sum_j w_j (T_j @ rest_h)` over its own
+    joints. Serial (a numba parallel region must not meet another thread's)."""
+    out = np.zeros((ptr.shape[0] - 1, 3))
+    for n in range(ptr.shape[0] - 1):
+        x, y, z, one = rest_h[n, 0], rest_h[n, 1], rest_h[n, 2], rest_h[n, 3]
+        for k in range(ptr[n], ptr[n + 1]):
+            t = transforms[joints[k]]
+            w = values[k]
+            out[n, 0] += w * (t[0, 0] * x + t[0, 1] * y + t[0, 2] * z + t[0, 3] * one)
+            out[n, 1] += w * (t[1, 0] * x + t[1, 1] * y + t[1, 2] * z + t[1, 3] * one)
+            out[n, 2] += w * (t[2, 0] * x + t[2, 1] * y + t[2, 2] * z + t[2, 3] * one)
+    return out
+
+
 class SkinnedGarment:
     """A garment skinned by the body's own joint transforms.
 
@@ -357,6 +334,8 @@ class SkinnedGarment:
     # (N, 3, 3) linear part of each vertex's blended bind transform (zero-pose frame -> scan pose); set by
     # `build_in_pose`, None = identity. `moved` carries a zero-pose displacement into the physical rest with it.
     bind_linear = None
+    # (weights, ptr, joints, values) of `apply`: the non-zero weights as CSR, built on first use
+    _csr = None
 
     def __init__(self, rest_vertices, weights, physical_rest=None):
         # `rest` is in the body model's ZERO-pose frame (what the joint
@@ -496,25 +475,18 @@ class SkinnedGarment:
         moved.bind_linear = self.bind_linear
         return moved
 
-    def relaxed(self, offset):
-        """A copy whose rest is displaced by `offset` ((N, 3), the zero-pose
-        frame at the scan subject's size, i.e. before `scale`): the garment's
-        RELAXED rest shape, how the worn fabric hangs rather than how the scan
-        captured it (`tools/evaluate/relaxed_rest.py`). The physical rest stays
-        the template's: strain limiting and the torn-face test keep measuring
-        against the fabric's own edge lengths (moving it too measured the same
-        distance to the simulation, and would let a stretched relaxed face go
-        undetected). A zero offset is the identity."""
-        offset = np.asarray(offset, np.float64)
-        if offset.shape != self.rest.shape:
-            raise ValueError(f"offset {offset.shape} does not match the garment's {self.rest.shape}")
-        return SkinnedGarment(self.rest + offset, self.weights, physical_rest=self.physical_rest)
-
     def apply(self, fitter):
-        """Where the garment sits in the fitter's current pose."""
-        transforms = fitter.joint_transforms().detach().numpy().astype(np.float64)
-        per_vertex = np.einsum("nj,jab->nab", self.weights, transforms)
-        return np.einsum("nab,nb->na", per_vertex, self._rest_h)[:, :3]
+        """Where the garment sits in the fitter's current pose: linear blend skinning over the non-zero
+        weights only (CSR: ~15 of the 55 joints a vertex, `_skin`), 3.7 -> ~1 ms for 8,241 vertices."""
+        transforms = np.ascontiguousarray(fitter.joint_transforms().detach().numpy().astype(np.float64))
+        if self._csr is None or self._csr[0] is not self.weights:
+            counts = (self.weights != 0.0).sum(axis=1)
+            ptr = np.zeros(len(self.weights) + 1, np.int64)
+            np.cumsum(counts, out=ptr[1:])
+            rows, joints = np.nonzero(self.weights)  # row-major: grouped by vertex, ascending joint
+            self._csr = (self.weights, ptr, joints.astype(np.int64), np.ascontiguousarray(self.weights[rows, joints]))
+        _, ptr, joints, values = self._csr
+        return _skin(ptr, joints, values, transforms, np.ascontiguousarray(self._rest_h))
 
     def save(self, path):
         np.savez_compressed(path, rest=self.rest, weights=self.weights, physical_rest=self.physical_rest)

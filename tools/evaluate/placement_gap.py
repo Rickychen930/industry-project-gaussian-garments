@@ -45,13 +45,12 @@ class _Capture(list):
         self.theirs.append(self.last)
 
 
-def collect(name, every=5, size_mode="current", relaxed_rest=False):
+def collect(name, every=5, size_mode="current"):
     from tools.evaluate import vs_registration as vr
     from tryon.garment.renderer import GarmentRenderer
 
     GarmentRenderer.GPU_RASTER = True
     GarmentRenderer.SIZE_MODE = size_mode
-    GarmentRenderer.RELAXED_REST = "mean" if relaxed_rest else None
     binds = []
     original_bind = GarmentRenderer.bind
 
@@ -325,13 +324,12 @@ def main():
     parser.add_argument("--cache", default=str(CACHE))
     parser.add_argument("--out", default=None)
     parser.add_argument("--size-mode", default="current", help="GarmentRenderer.SIZE_MODE of the collected run")
-    parser.add_argument("--relaxed-rest", action="store_true", help="collect with GarmentRenderer.RELAXED_REST='mean'")
     args = parser.parse_args()
     CACHE = Path(args.cache)
     names = args.videos.split(",")
     if args.command == "collect":
         for name in names:
-            collect(name, args.every, args.size_mode, args.relaxed_rest)
+            collect(name, args.every, args.size_mode)
         return
     results = [analyse_video(n) for n in names]
     for r in results:

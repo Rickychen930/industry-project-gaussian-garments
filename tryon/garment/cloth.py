@@ -112,27 +112,6 @@ def _long_range(x, anchor_of, limit):
     return out
 
 
-@njit(cache=True)
-def _long_range_vertical(x, anchor_of, limit):
-    """`_long_range`, but a vertex only moves along y (up, toward its anchor), by as much as restores the
-    distance to the anchor: a hem hangs by gravity, it is lifted and never dragged sideways. A vertex already
-    inside its limit, or not below its anchor, stays."""
-    out = x.copy()
-    for p in range(len(x)):
-        a = anchor_of[p]
-        if a < 0 or a == p:
-            continue
-        d0 = x[a, 0] - x[p, 0]
-        d1 = x[a, 1] - x[p, 1]
-        d2 = x[a, 2] - x[p, 2]
-        lateral2 = d0 * d0 + d2 * d2
-        if lateral2 + d1 * d1 <= limit[p] * limit[p] or d1 <= 0.0:
-            continue
-        room = limit[p] * limit[p] - lateral2
-        out[p, 1] = x[p, 1] + d1 - (np.sqrt(room) if room > 0.0 else 0.0)
-    return out
-
-
 class LightCloth:
     """Per-vertex damped springs toward the skinned garment, a looseness
     map from how far each vertex hangs off the body at rest, and a hard
@@ -144,85 +123,16 @@ class LightCloth:
     LOOSE_FROM, LOOSE_SPAN = 0.01, 0.06  # m off the body at rest: where looseness starts / saturates
     MARGIN = 0.01  # m: collision clearance (the fitted body is ~1.2 cm off the true one; 2 / 1 / 0.5 / 0 cm gave garment IoU 0.647 / 0.659 / 0.664 / 0.666 with sleeves inside the body 0.1 / 2.6 / 5.6 / 8.1 %)
     PASSES = 3
-    # Neighbour coupling of the displacement d = x - skinned target after the
-    # springs (the springs are per vertex, so d is spatially noisy). None = off
-    # (the original). "laplacian": COUPLING_ITERATIONS Jacobi steps of
-    # d += COUPLING_RATE * (1 - stiffness weight) * (mean of neighbours' d - d).
-    COUPLING = None
-    COUPLING_RATE, COUPLING_ITERATIONS = 0.5, 3
-
-    # One-sided horizontal wrap: a vertex further than distance d from the
-    # tangent plane of its nearest body vertex is pulled toward the body by
-    # `rate` of the excess, along the plane normal's HORIZONTAL part (a coat
-    # hangs by gravity along the torso: the pull narrows it and never lifts
-    # the hem). None = off (the original); else (d m, rate).
-    WRAP = None
-
-    # One Euro filter (Casiez et al. 2012) on the skinned target, per vertex,
-    # before the springs: the body regressor's per-frame pose noise passes
-    # straight into the cloth otherwise. None = off (the original); else
-    # (min_cutoff Hz, beta s/m): the cutoff is min_cutoff + beta * speed.
-    TARGET_FILTER = None
-    # Fraction of the previous frame's skinned velocity the springs start the
-    # frame with (feed-forward: a swinging sleeve keeps swinging). 0 = off.
-    VELOCITY_INHERIT = 0.0
-
     # Long-range attachment from the garment's top ring (`set_long_range`): after the springs, a vertex is no
     # farther from its anchor than its rest path along the mesh times (1 + LRA); a hem is pulled up when the
     # shoulders rise and nothing happens when they do not. None = off. Default on since 9 Oct (anchors: the sleeve's border, `GarmentRenderer.LRA_ANCHORS`): loose-garment IoU +0.015 with `DRAPE_NARROW`, see docs/LOG.md.
     LRA = 0.03
-    LRA_VERTICAL = False  # True: the attachment only lifts (along y), never drags a vertex sideways
     LRA_MARGIN = 0.06  # m: added to the limit (without it the vertices next to an anchor are tied to it and the panel narrows)
 
-    def __init__(self, edges=None):
+    def __init__(self):
         self._long_range_state = None
         self.x = self.v = self.target = None
         self.looseness = None
-        self.edges = edges  # (E, 2) mesh edges, needed by COUPLING
-        self._mean_neighbours = None
-        self._filtered = self._filtered_rate = None
-
-    def _filter_target(self, target, dt):
-        """The One Euro filter of `TARGET_FILTER`, state kept in `_filtered`."""
-        if self.TARGET_FILTER is None:
-            return target
-        if self._filtered is None or len(self._filtered) != len(target):
-            self._filtered, self._filtered_rate = target.copy(), np.zeros_like(target)
-            return target
-        min_cutoff, beta = self.TARGET_FILTER
-
-        def alpha(cutoff):
-            return 1.0 / (1.0 + 1.0 / (2.0 * np.pi * cutoff * dt))
-
-        rate = (target - self._filtered) / dt
-        a_rate = alpha(1.0)
-        self._filtered_rate = self._filtered_rate + a_rate * (rate - self._filtered_rate)
-        speed = np.linalg.norm(self._filtered_rate, axis=1, keepdims=True)
-        a = alpha(min_cutoff + beta * speed)
-        self._filtered = self._filtered + a * (target - self._filtered)
-        return self._filtered.copy()
-
-    def _neighbour_mean(self, n):
-        if self._mean_neighbours is None or self._mean_neighbours.shape[0] != n:
-            import scipy.sparse as sp
-
-            e = np.asarray(self.edges)
-            a = sp.coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(n, n)).tocsr()
-            a = ((a + a.T) > 0).astype(np.float64)
-            degree = np.maximum(np.asarray(a.sum(axis=1)).ravel(), 1.0)
-            self._mean_neighbours = (sp.diags(1.0 / degree) @ a).tocsr()
-        return self._mean_neighbours
-
-    def _couple(self, x, target):
-        """Smooth the displacement over the mesh, loose vertices most."""
-        if self.COUPLING is None or self.edges is None:
-            return x
-        mean = self._neighbour_mean(len(x))
-        rate = (self.COUPLING_RATE * self.looseness)[:, None]
-        d = x - target
-        for _ in range(int(self.COUPLING_ITERATIONS)):
-            d = d + rate * (mean @ d - d)
-        return target + d
 
     def set_long_range(self, anchor_of, geodesic):
         """Install the attachment (`geodesic_from` of the rest mesh); `LRA` says whether it is applied."""
@@ -233,8 +143,7 @@ class LightCloth:
         if self.LRA is None or self._long_range_state is None or len(self._long_range_state[0]) != len(x):
             return x
         anchor_of, limit = self._long_range_state
-        kernel = _long_range_vertical if self.LRA_VERTICAL else _long_range
-        return kernel(np.ascontiguousarray(x, np.float64), anchor_of, limit * (1.0 + self.LRA) + self.LRA_MARGIN)
+        return _long_range(np.ascontiguousarray(x, np.float64), anchor_of, limit * (1.0 + self.LRA) + self.LRA_MARGIN)
 
     def _looseness(self, target, body_vertices):
         distance, _ = cKDTree(body_vertices).query(target, k=1)
@@ -244,8 +153,6 @@ class LightCloth:
         self.x = np.array(target, np.float64)
         self.v = np.zeros_like(self.x)
         self.target = self.x.copy()
-        self._filtered, self._filtered_rate = None, None
-        self._skin_velocity = np.zeros_like(self.x)
         # the looseness map is the garment's (how far each vertex hangs off
         # the body), kept across resets: a frame longer than MAX_DT resets, and
         # rebuilding this KD-tree query each time cost ~10 ms for nothing
@@ -284,37 +191,18 @@ class LightCloth:
         else:
             if self.looseness is None:
                 self.looseness = self._looseness(target, body_vertices)
-            target = self._filter_target(target, dt)
             n = max(1, int(np.ceil(dt / SUBSTEP)))
             h = dt / n
             v = self.v
-            if self.VELOCITY_INHERIT:
-                v = v + self.VELOCITY_INHERIT * (self._skin_velocity - v)
-                self._skin_velocity = (target - self.target) / dt
             x, v = _springs_serial(
                 self.x, v, self.target, target, np.ascontiguousarray(self.looseness, np.float64),
                 self.STIFF_OMEGA, self.LOOSE_OMEGA, self.STIFF_RADIUS, self.LOOSE_RADIUS, self.DAMPING_RATIO, n, h,
             )
             self.v = v
-        x = self._couple(x, target)
         x = self._attach(x)
-        surface = BodySurface(body_vertices, body_faces)
-        x = self._wrap(x, surface)
-        x = push_out_of_body(x, surface, self.MARGIN, self.PASSES)
+        x = push_out_of_body(x, BodySurface(body_vertices, body_faces), self.MARGIN, self.PASSES)
         self.x, self.target = x, target
         return x
-
-    def _wrap(self, x, surface):
-        """Pull vertices that hang far off the body toward it (`WRAP`)."""
-        if self.WRAP is None or len(x) == 0:
-            return x
-        distance, rate = self.WRAP
-        vertex, normal = surface.nearest(x)
-        excess = np.sum((x - vertex) * normal, axis=1) - distance
-        pull = np.where(excess > 0.0, rate * excess, 0.0)
-        horizontal = normal * np.array([1.0, 0.0, 1.0])
-        return x - pull[:, None] * horizontal
-
 
 class SmoothCloth(LightCloth):
     """`LightCloth` with the parameters of a 30-sample random search against

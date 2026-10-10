@@ -26,14 +26,14 @@ class PieceLabelsTest(unittest.TestCase):
 
 class SetAttributesTest(unittest.TestCase):
     def test_assignments_are_applied_and_undone(self):
-        original = LightCloth.WRAP
-        undo = open_front.set_attributes(["tryon.garment.cloth.LightCloth.WRAP=(0.02, 0.8)"])
+        original = LightCloth.PASSES
+        undo = open_front.set_attributes(["tryon.garment.cloth.LightCloth.PASSES=7"])
         try:
-            self.assertEqual(LightCloth.WRAP, (0.02, 0.8))
+            self.assertEqual(LightCloth.PASSES, 7)
         finally:
             for owner, attribute, old in reversed(undo):
                 setattr(owner, attribute, old)
-        self.assertEqual(LightCloth.WRAP, original)
+        self.assertEqual(LightCloth.PASSES, original)
 
     def test_none_and_strings_are_parsed(self):
         undo = open_front.set_attributes(["tryon.garment.scan_pose.ScanPoseBinder.REFINE_ARMS=None"])

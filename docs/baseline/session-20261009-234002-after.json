@@ -20,18 +20,18 @@
   "p50": 0.09,
   "p90": 0.4
  },
- "garment_pixels_median": 156880,
+ "garment_pixels_median": 156874,
  "stage_median_ms": {
-  "mediapipe": 18.0,
+  "mediapipe": 19.0,
   "regressor": 1.0,
-  "fit": 19.0,
+  "fit": 20.0,
   "erase start": 4.0,
-  "render": 129.0,
+  "render": 131.0,
   "erase wait": 0.0,
-  "composite": 28.0,
-  "total": 192.0
+  "composite": 31.0,
+  "total": 201.0
  },
- "wall_seconds": 177.3,
+ "wall_seconds": 181.9,
  "source": "session-20261009-234002-input.mp4",
  "garment": "00190_upper"
 }

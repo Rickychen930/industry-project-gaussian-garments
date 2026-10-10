@@ -76,7 +76,7 @@ display (each shown frame carries the garment drawn for it).
 | `--appearance --async-appearance` | The garment's own shading network (folds, shadows), updated on a worker thread. |
 | `--harmonize` | Match the garment's colours to the scene. |
 | `--classic-cloth` | The first cloth model (`LightCloth`) instead of the default `SmoothCloth` (same distance to the authors' simulation and the same IoU, about a third of the jitter). |
-| `--garment-subsample F` | Draw only a fraction F of the garment's Gaussians. Measured: F = 0.75 or an importance subset at 0.5 lose < 0.003 IoU; the default stays 1.0 (the speed gain was not cleanly measured). |
+| `--garment-subsample F` | Draw only a fraction F of the garment's Gaussians. Measured: F = 0.75 (a uniform random subset) loses < 0.003 IoU; the default stays 1.0 (the speed gain was not cleanly measured). |
 | `--max-width N` | Process frames at most N pixels wide (default 960; `0` = as captured). `720` is a speed mode: removal and compositing ~17 ms a frame cheaper, garment accuracy unchanged (0.7262 vs 0.7253 IoU on three release videos), a smaller picture. |
 | `--source 0 / 1 / file` | Camera index or a video file. |
 | `--headless --output-video out.mp4 --max-frames N` | Run without a window and save the result. |

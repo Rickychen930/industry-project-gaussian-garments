@@ -35,11 +35,11 @@ import numpy as np
 import torch
 from numba import njit, prange
 
-from tryon.garment.checkpoint import load_checkpoint, load_relaxed_rest, uv_binding
+from tryon.garment.checkpoint import load_checkpoint, uv_binding
 from tryon.garment.cloth import SmoothCloth, geodesic_from
 from tryon.garment.raycast import build_scene, hit_distance, occluded_from
 from tryon.garment.scan_pose import ScanPoseBinder
-from tryon.garment.skinning import SkinnedGarment, closed_front_flag, drape_narrowing, front_closure, front_opening
+from tryon.garment.skinning import SkinnedGarment, closed_front_flag, drape_narrowing, front_closure
 from tryon.rendering.splat_cpu import face_frame, face_frames, quaternion_to_rotation, render_splats, rotation_to_quaternion
 
 # Far enough that weak perspective and perspective agree to <2% over a
@@ -215,14 +215,7 @@ class GarmentRenderer:
             if not 0.0 < fraction < 1.0:
                 raise ValueError(f"subsample must be in (0, 1), got {fraction}")
             count = int(usable * fraction)
-            if self.SUBSAMPLE_BY_IMPORTANCE:
-                # the splats that cover the most opaque area first: opacity
-                # times the footprint (the two largest scales' product)
-                opacity = 1.0 / (1.0 + np.exp(-appearance["opacity"].ravel()))
-                widest = np.sort(np.exp(log_scaling), axis=1)[:, -2:]
-                keep = np.argsort(-(opacity * widest[:, 0] * widest[:, 1]), kind="stable")[:count]
-            else:
-                keep = np.random.default_rng(seed).choice(usable, count, replace=False)
+            keep = np.random.default_rng(seed).choice(usable, count, replace=False)
             keep.sort()
             self._subset = keep
             face_of = face_of[keep]
@@ -263,9 +256,6 @@ class GarmentRenderer:
         self._strain = None  # (key, edges, limit, count) of `_limit_strain`, per binding
         self._torn_limit = None  # (key, per-face-edge tear length) of `torn_faces`, per binding
 
-    # `subsample` keeps the splats with the largest opacity * footprint
-    # (True) or a uniform random subset (False).
-    SUBSAMPLE_BY_IMPORTANCE = False
     # the cloth model class: SmoothCloth (parameters searched against the authors' ContourCraft
     # simulation: same distance and IoU as LightCloth, about a third of the jitter), or LightCloth
     CLOTH = SmoothCloth
@@ -282,14 +272,6 @@ class GarmentRenderer:
     WIDEN_TO_WEARER = False
     # How the wearer's size ratios scale the garment: `ScanPoseBinder.SIZE_MODES`.
     SIZE_MODE = "current"
-    # Bind to the garment's RELAXED rest shape instead of the raw template:
-    # None (the template) or "mean" (template + the garment's stored offset,
-    # `stage1/relaxed_rest.npz`, silently the template when the file is
-    # absent). `relaxed_offset` set on an instance overrides the file.
-    RELAXED_REST = None
-    RELAXED_SCALE = 1.0  # fraction of the stored offset applied
-    relaxed_offset = None
-
     # Bring the two front panels of an open-front garment together at the body's midline
     # (`skinning.front_closure`, once at bind, in the zero-pose frame: skinning carries it). None = off (the
     # garment as scanned); "auto": only for a garment whose wearer wears it closed, which one frame cannot tell, so
@@ -304,14 +286,6 @@ class GarmentRenderer:
     DRAPE_NARROW = 0.08
     DRAPE_START = 0.3  # of the way from the top to the hem where the narrowing starts, and the span it ramps up over
     DRAPE_SPAN = 0.4
-
-    # Open the lower front of an open-front garment (`skinning.front_opening`): the inner edge of each front panel
-    # is moved out to this fraction of the half-width at its height, from `FRONT_OPEN_START` of the way from the
-    # top to the hem over `FRONT_OPEN_SPAN`. Measured: the real shirt's front gap is 0.3 of its width below the
-    # chest, ours 0.1-0.25 (docs/figures/torso-width.jpg). None = off; not applied to a garment worn closed.
-    FRONT_OPEN = None
-    FRONT_OPEN_START = 0.35
-    FRONT_OPEN_SPAN = 0.4
 
     def closes_front(self):
         if self.CLOSE_FRONT == "always":
@@ -358,16 +332,8 @@ class GarmentRenderer:
         bind_fitter, _, aligned, sleeve = self.scan_binder.bind(fitter)
         self.sleeve_vertices = sleeve
         self._binding = SkinnedGarment.build_in_pose(aligned, bind_fitter, sleeve=sleeve)
-        if self.RELAXED_REST:
-            offset = self.relaxed_offset
-            if offset is None:
-                offset = load_relaxed_rest(self.checkpoint_dir, len(self.rest_vertices))
-            if offset is not None:
-                self._binding = self._binding.relaxed(offset * self.RELAXED_SCALE)
         if self.closes_front():
             self._binding = self._binding.moved(front_closure(self._binding.rest, self.faces, self.CLOSE_SEAM, self.CLOSE_BLEND))
-        if self.FRONT_OPEN and not self.closes_front():
-            self._binding = self._binding.moved(front_opening(self._binding.rest, self.faces, sleeve, self.FRONT_OPEN, self.FRONT_OPEN_START, self.FRONT_OPEN_SPAN))
         if self.DRAPE_NARROW:
             from scipy.spatial import cKDTree
 
@@ -466,49 +432,6 @@ class GarmentRenderer:
         own frame interval."""
         return self._limit_strain(self._posed_mesh(fitter, dt))
 
-    # A shirt rides up when the arms rise (00152_outer: the hem is 10-12 % of
-    # the shirt's height too low on the frames with the hands above the
-    # shoulders, correlation 0.85 between the two over the clip; leg weights
-    # of the hem were not it). Lift the garment's body vertices along the
-    # spine by RIDE_UP x the garment's height x how far the arms are raised x
-    # how far down the garment the vertex hangs (0 at the collar, 1 at the
-    # hem). None = off. The arms' raise is the mean elevation angle of the
-    # shoulder-to-wrist directions, a smoothstep between RIDE_FROM and RIDE_TO
-    # degrees (-90 = hanging, 0 = horizontal, +90 = straight up).
-    RIDE_UP = None
-    RIDE_FROM, RIDE_TO = -20.0, 70.0
-    _RIDE_JOINTS = (0, 12, 16, 17, 20, 21)  # pelvis, neck, shoulders, wrists
-
-    def arm_raise(self, fitter):
-        """(raise in [0, 1], unit spine direction) of the fitter's current pose."""
-        joints = fitter.joints(indices=list(self._RIDE_JOINTS)).detach().numpy().astype(np.float64)
-        spine = joints[1] - joints[0]
-        up = spine / max(float(np.linalg.norm(spine)), 1e-9)
-        elevations = []
-        for shoulder, wrist in ((2, 4), (3, 5)):
-            arm = joints[wrist] - joints[shoulder]
-            elevations.append(np.degrees(np.arcsin(np.clip(float(arm @ up) / max(float(np.linalg.norm(arm)), 1e-9), -1.0, 1.0))))
-        t = np.clip((float(np.mean(elevations)) - self.RIDE_FROM) / (self.RIDE_TO - self.RIDE_FROM), 0.0, 1.0)
-        return float(t * t * (3.0 - 2.0 * t)), up
-
-    def _ride_weights(self):
-        """Per vertex: 0 at the garment's top, 1 at its hem, 0 on the sleeves (cached per binding)."""
-        key = id(self._binding)
-        if getattr(self, "_ride", None) is None or self._ride[0] != key:
-            rest = self._binding.physical_rest
-            body = ~np.asarray(self.sleeve_vertices, bool)
-            top, bottom = float(np.percentile(rest[body, 1], 98)), float(np.percentile(rest[body, 1], 2))
-            weight = np.clip((top - rest[:, 1]) / max(top - bottom, 1e-9), 0.0, 1.0) * body
-            self._ride = (key, weight, top - bottom)
-        return self._ride[1], self._ride[2]
-
-    def _ride_up(self, vertices, fitter):
-        raised, up = self.arm_raise(fitter)
-        if raised <= 0.0:
-            return vertices
-        weight, height = self._ride_weights()
-        return vertices + (self.RIDE_UP * height * raised * weight)[:, None] * up
-
     # What a long-range attachment (`LightCloth.LRA`) hangs the garment from: "top" the highest
     # TOP_RING_FRACTION of the body (non-sleeve) vertices at rest (measured: a hem never gets farther from them
     # than its rest path, 1.00-1.03, so it does nothing); "sleeve" the sleeve's border with the body panels
@@ -553,8 +476,6 @@ class GarmentRenderer:
             self.bind(fitter)
         self._freeze_size(fitter)
         skin_target = self._binding.apply(fitter)
-        if self.RIDE_UP:
-            skin_target = self._ride_up(skin_target, fitter)
         if not self.dynamics_enabled:
             return skin_target
         now = time.perf_counter()
@@ -562,7 +483,7 @@ class GarmentRenderer:
             dt = 0.0 if self._last_tick is None else now - self._last_tick
         self._last_tick = now
         if self._light is None:
-            self._light = self.CLOTH(self.scan_binder.edges)
+            self._light = self.CLOTH()
             if self.CLOTH.LRA is not None:
                 self._light.set_long_range(*self._long_range_anchors())
         return self._light.step(skin_target, dt, fitter.vertices(), fitter.faces)

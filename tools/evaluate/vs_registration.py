@@ -95,12 +95,10 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
 
     lip = SCHPParser(LIP_CHECKPOINT, size=473)
     renderer = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=subsample)
-    # `sweep`: more fractions to score on the very same fitted bodies, each
-    # "F" (uniform subset) or "Fi" (importance subset); see GarmentRenderer.subsample
+    # `sweep`: more fractions to score on the very same fitted bodies (a uniform subset each); see GarmentRenderer.subsample
     variants = {}
     for spec in sweep:
-        GarmentRenderer.SUBSAMPLE_BY_IMPORTANCE = spec.endswith("i")
-        fraction = float(spec.rstrip("i"))
+        fraction = float(spec)
         variants[spec] = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=fraction if fraction < 1.0 else None)
     # `export`: save every frame's fitted body (model space) and the frame-0
     # garment for an offline simulator (none in the repo now); `cloth`: an
@@ -122,7 +120,7 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
     filt = OneEuroFilter(**LANDMARK_FILTER)
     pending = None
     fitter, errors, box, similarity = None, collections.deque(maxlen=10), None, None
-    previous_person = previous_skin = None
+    previous_person = None
     rows, tiles = [], []
     with mp.solutions.pose.Pose(static_image_mode=False, model_complexity=POSE_COMPLEXITY) as pose:
         for t in range(frames):
@@ -143,7 +141,6 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
                 # live has the PREVIOUS frame's parse when it tracks (the
                 # mask runs on its own thread after), so that is what is used
                 fitter.set_silhouette(previous_person)
-                fitter.set_skin(previous_skin)
             if points is not None and torso_visible(points, tracking=fitter is not None):
                 prediction = None
                 if regressor is not None and (fitter is None or t % REGRESS_EVERY == 0) and pending is None:
@@ -172,8 +169,7 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
             if _bf.SILHOUETTE_WEIGHT > 0:
                 labels = parser.labels(panel)
                 previous_person = labels != 0
-                previous_skin = np.isin(labels, (11, 12, 13, 14, 15))
-            if t % every:
+                if t % every:
                 continue
             if _bf.SILHOUETTE_WEIGHT <= 0:
                 labels = parser.labels(panel)
@@ -259,24 +255,16 @@ def main():
     parser.add_argument("--regression-camera", choices=["regressor", "keypoints"], default=None)
     parser.add_argument("--cloth", default=None, help="npz with 'cloth' (T, V_ref, 3): render this garment sequence instead")
     parser.add_argument("--subsample", type=float, default=None, help="draw only this fraction of the garment's Gaussians (live: --garment-subsample)")
-    parser.add_argument("--importance", action="store_true", help="with --subsample: keep the splats with the largest opacity * footprint, not a uniform subset")
     parser.add_argument("--gpu-render", action="store_true", help="the live path's OpenGL splat renderer (the launcher's --gpu-render)")
     parser.add_argument("--size-mode", default=None, help="GarmentRenderer.SIZE_MODE: how the wearer's size ratios scale the garment (ScanPoseBinder.SIZE_MODES)")
     parser.add_argument("--classic-cloth", action="store_true", help="LightCloth instead of SmoothCloth (live: --classic-cloth)")
-    parser.add_argument("--relaxed-rest", action="store_true", help="GarmentRenderer.RELAXED_REST='mean': bind to the garment's relaxed rest shape (stage1/relaxed_rest.npz, tools/evaluate/relaxed_rest.py)")
-    parser.add_argument("--relaxed-scale", type=float, default=None, help="GarmentRenderer.RELAXED_SCALE: fraction of the relaxed-rest offset applied")
-    parser.add_argument("--sweep", default="", help="comma list of fractions scored on the same bodies: 0.5 uniform, 0.5i importance (1.0 = all)")
+    parser.add_argument("--sweep", default="", help="comma list of fractions scored on the same bodies (1.0 = all)")
     args = parser.parse_args()
     from tryon.garment.cloth import LightCloth
     from tryon.garment.renderer import GarmentRenderer
 
     if args.classic_cloth:
         GarmentRenderer.CLOTH = LightCloth
-    GarmentRenderer.SUBSAMPLE_BY_IMPORTANCE = args.importance
-    if args.relaxed_rest:
-        GarmentRenderer.RELAXED_REST = "mean"
-    if args.relaxed_scale is not None:
-        GarmentRenderer.RELAXED_SCALE = args.relaxed_scale
     if args.size_mode:
         GarmentRenderer.SIZE_MODE = args.size_mode
     GarmentRenderer.GPU_RASTER = GarmentRenderer.GPU_RASTER or args.gpu_render

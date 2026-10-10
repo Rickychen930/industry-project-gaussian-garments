@@ -71,8 +71,6 @@ USE_LANDMARK_YAW = True
 # 0.733 -> 0.756. ~25 ms a frame.
 SILHOUETTE_WEIGHT = 3.0
 SILHOUETTE_ITERATIONS = 3
-# Skin term (BodyFitter.set_skin); 0 = off.
-SKIN_WEIGHT = 0.0
 # Candidates within this factor of the best loss are "equally good" and
 # the one facing MediaPipe's way is taken.
 YAW_LOSS_SLACK = 1.3
@@ -427,8 +425,6 @@ class BodyFitter:
         )
         if self._silhouette_active and SILHOUETTE_WEIGHT > 0 and self._silhouette is not None:
             prior = prior + SILHOUETTE_WEIGHT * self._silhouette_loss()
-        if self._silhouette_active and SKIN_WEIGHT > 0 and self._skin_points is not None:
-            prior = prior + SKIN_WEIGHT * self._skin_loss()
         loss = data + prior
         loss.backward()
         self._optimiser.step()
@@ -910,42 +906,13 @@ class BodyFitter:
         for index in range(count):
             # the silhouette term (see `set_silhouette`) skins the whole mesh,
             # ~7.5 ms an iteration, so it runs on the last few only
-            self._silhouette_active = (self._silhouette is not None or self._skin_points is not None) and index >= count - SILHOUETTE_ITERATIONS
+            self._silhouette_active = self._silhouette is not None and index >= count - SILHOUETTE_ITERATIONS
             loss = self._step(target_tensor, weight_tensor, learning_rate, shape)
         self._silhouette_active = False
         return loss
 
     _silhouette = None
     _silhouette_active = False
-
-    _skin_points = None
-
-    def set_skin(self, skin_mask, count=400):
-        """Pixels of the wearer's exposed skin (face, arms, hands, legs) for
-        the next `track`, or None: each sampled skin pixel should have a
-        projected body vertex near it (SKIN_WEIGHT). Two-sided where it is
-        safe - skin is always body, unlike clothing."""
-        if skin_mask is None or SKIN_WEIGHT <= 0:
-            self._skin_points = None
-            return
-        ys, xs = np.nonzero(np.asarray(skin_mask, bool))
-        if len(xs) < 20:
-            self._skin_points = None
-            return
-        pick = np.random.default_rng(len(xs)).choice(len(xs), min(count, len(xs)), replace=False)
-        self._skin_points = torch.tensor(np.stack([xs[pick], ys[pick]], axis=1), dtype=torch.float32)
-
-    def _skin_loss(self):
-        """Mean squared distance (working px) from sampled skin pixels to the
-        nearest projected body vertex."""
-        if getattr(self, "_silhouette_vertices", None) is None:
-            rng = np.random.default_rng(0)
-            self._silhouette_vertices = torch.as_tensor(np.sort(rng.choice(10475, 1500, replace=False)))
-        vertices = self._forward().vertices[0][self._silhouette_vertices]
-        factor = getattr(self, "_work_factor", 1.0)
-        pixels = self._project(vertices) / factor
-        nearest = torch.cdist(self._skin_points, pixels).min(dim=1).values
-        return ((nearest * factor) ** 2).mean()
 
     def set_silhouette(self, person_mask):
         """The person's silhouette (bool, frame pixels) for the next `track`,
