@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
+from numba import njit
 
 from tryon.body.landmarks import JOINT_MAP
 
@@ -328,6 +329,26 @@ def restore_collar_layer(frame, original, garment_alpha, labels, points):
     part[band] = (blended[band] + 0.5).astype(np.uint8)
 
 
+@njit(cache=True)
+def _restore_below(frame, original, alpha, x0, x1, margin):
+    """`restore_below_hem`'s loop: per column, from the row under the garment's last covered pixel to the bottom,
+    copy `original` over the pixels the erase changed. One pass, no temporaries (9 -> 0.4 ms at 960 x 540)."""
+    rows = alpha.shape[0]
+    for x in range(x0, x1):
+        bottom = -1
+        for r in range(rows - 1, -1, -1):
+            if alpha[r, x] >= 25:
+                bottom = r
+                break
+        if bottom < 0:
+            continue
+        for r in range(bottom + margin + 1, rows):
+            if frame[r, x, 0] != original[r, x, 0] or frame[r, x, 1] != original[r, x, 1] or frame[r, x, 2] != original[r, x, 2]:
+                frame[r, x, 0] = original[r, x, 0]
+                frame[r, x, 1] = original[r, x, 1]
+                frame[r, x, 2] = original[r, x, 2]
+
+
 def restore_below_hem(frame, original, garment_alpha, margin=0):
     """Put the wearer's own pixels back below the garment's lower edge, in place.
     A wearer whose shirt is longer than the garment (a T-shirt under a cropped
@@ -335,27 +356,27 @@ def restore_below_hem(frame, original, garment_alpha, margin=0):
     learned background, which came out as grey, green and purple blocks (a
     recorded session, arms raised, 9 Oct); the real shirt continuing under the
     hem reads as a layer. Only the columns the garment covers, only below its
-    lowest covered row in that column, only the pixels the erase changed.
-    Worked out in the window under the garment's lowest row only."""
-    covered = garment_alpha >= 25
-    x, y, w, h = cv2.boundingRect(covered.view(np.uint8))
-    if w == 0 or h == 0:
+    lowest covered row in that column, only the pixels the erase changed."""
+    columns = np.flatnonzero((garment_alpha >= 25).any(axis=0))
+    if columns.size == 0:
         return
-    rows = covered.shape[0]
-    columns = covered[:, x : x + w]
-    bottom = rows - 1 - np.argmax(columns[::-1], axis=0)  # last covered row per column (every column here has one or more)
-    has = columns.any(axis=0)
-    bottom = np.where(has, bottom, rows)
-    first = int(bottom[has].min()) + margin + 1
-    if first >= rows:
-        return
-    window = (slice(first, rows), slice(x, x + w))
-    below = np.arange(first, rows)[:, None] > (bottom[None, :] + margin)
-    changed = (frame[window] != original[window]).any(axis=2)
-    restore = below & changed & has[None, :] & ~columns[first:rows]
-    if restore.any():
-        part = frame[window]
-        part[restore] = original[window][restore]
+    _restore_below(frame, original, garment_alpha, int(columns[0]), int(columns[-1]) + 1, int(margin))
+
+
+@njit(cache=True)
+def _blend(frame, bgra, x0, y0, x1, y1):
+    """Alpha-blend `bgra` over `frame` inside the box, float32 as the numpy form was (a / 255 first, then
+    g a + f (1 - a), truncated to 8 bits): the same bytes, without the float32 copies of the box and the pixels
+    whose alpha is 0 (7.7 -> ~1 ms at 960 x 540)."""
+    one, full = np.float32(1.0), np.float32(255.0)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            a = bgra[y, x, 3]
+            if a == 0:
+                continue
+            alpha = np.float32(a) / full
+            for c in range(3):
+                frame[y, x, c] = np.uint8(np.float32(bgra[y, x, c]) * alpha + np.float32(frame[y, x, c]) * (one - alpha))
 
 
 def composite_garment(frame, bgra):
@@ -367,11 +388,8 @@ def composite_garment(frame, bgra):
     plaid 00152_outer BLUE in every composite - found by comparing with
     the checkpoint's own ground-truth video, not by reading the code."""
     # only inside the garment's bounding box: outside it alpha is 0 and the
-    # blend returns the frame unchanged (8.5 -> ~2 ms a frame)
+    # blend returns the frame unchanged
     x, y, w, h = cv2.boundingRect(bgra[..., 3])
     if w == 0 or h == 0:
         return
-    region = (slice(y, y + h), slice(x, x + w))
-    alpha = bgra[region + (slice(3, 4),)].astype(np.float32) / 255.0
-    garment_bgr = bgra[region + (slice(0, 3),)].astype(np.float32)
-    frame[region] = (garment_bgr * alpha + frame[region].astype(np.float32) * (1.0 - alpha)).astype(np.uint8)
+    _blend(frame, bgra, x, y, x + w, y + h)

@@ -16,6 +16,7 @@ from datetime import datetime
 
 import cv2
 
+from tryon.app.camera import resolve_source
 from tryon.paths import CAPTURES
 
 MAX_WIDTH = 960
@@ -75,7 +76,7 @@ def main(argv: list[str]) -> int:
     if poses is None:
         print(f"Unknown pose set {argv[1]!r}: {', '.join(POSE_SETS)}", file=sys.stderr)
         return 2
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture(int(resolve_source("builtin")))
     if not capture.isOpened():
         print("Cannot open the camera (System Settings > Privacy > Camera: allow your terminal).", file=sys.stderr)
         return 1

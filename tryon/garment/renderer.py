@@ -101,14 +101,40 @@ def _place_splats_numba(vertices, faces, face_of, bary, local_xyz, local_rotatio
 
 
 @njit(cache=True)
-def _strain_passes(x, edges, limit, count, iterations):
-    """Jacobi strain limiting in place (`GarmentRenderer._limit_strain`):
-    each pass moves both ends of every over-long edge half its excess
-    toward each other, averaged over each vertex's edge count; stops when
-    no edge is over. Numba: 42 -> ~3 ms for 8,208 vertices, 30 passes."""
-    delta = np.zeros_like(x)
+def _torn_faces(vertices, faces, l0, l1, l2, seam):
+    """`GarmentRenderer.torn_faces`: a face is torn when one of its three edges is longer than its limit, or it
+    lies on the sleeve seam. The edge lengths as `np.linalg.norm` adds them (x x + y y + z z in that order), so the
+    answer is the numpy one's; one pass over the faces instead of nine gathers and norms (6 -> ~0.4 ms)."""
+    out = np.zeros(faces.shape[0], np.bool_)
+    for f in range(faces.shape[0]):
+        if seam[f]:
+            out[f] = True
+            continue
+        i, j, k = faces[f, 0], faces[f, 1], faces[f, 2]
+        d0, d1, d2 = vertices[j, 0] - vertices[i, 0], vertices[j, 1] - vertices[i, 1], vertices[j, 2] - vertices[i, 2]
+        if np.sqrt(d0 * d0 + d1 * d1 + d2 * d2) > l0[f]:
+            out[f] = True
+            continue
+        d0, d1, d2 = vertices[k, 0] - vertices[j, 0], vertices[k, 1] - vertices[j, 1], vertices[k, 2] - vertices[j, 2]
+        if np.sqrt(d0 * d0 + d1 * d1 + d2 * d2) > l1[f]:
+            out[f] = True
+            continue
+        d0, d1, d2 = vertices[i, 0] - vertices[k, 0], vertices[i, 1] - vertices[k, 1], vertices[i, 2] - vertices[k, 2]
+        if np.sqrt(d0 * d0 + d1 * d1 + d2 * d2) > l2[f]:
+            out[f] = True
+    return out
+
+
+@njit(cache=True)
+def _strain_passes(x, edges, limit, iterations):
+    """Strain limiting in place (`GarmentRenderer._limit_strain`), Gauss-Seidel: each over-long edge, taken in
+    order, moves both ends half its excess toward each other at once (position-based distance constraints), so
+    the next edge sees the moved ends. Stops when a pass finds no edge over. Against the Jacobi form it replaced
+    (every edge from the same positions, the moves averaged per vertex, 30 passes that never converged: 100 % of
+    the frames ran all 30 and left 36 mm of excess), 10 passes of this one score a higher garment IoU against the
+    real shirt on four release videos (00190_upper 0.6714 vs 0.6688, 00152_outer 0.6379 vs 0.6365, 00134_upper
+    0.7394 vs 0.7373, 10006_outer 0.6231 vs 0.6220) in a third of the work."""
     for _ in range(iterations):
-        delta[:] = 0.0
         any_over = False
         for k in range(edges.shape[0]):
             a, b = edges[k, 0], edges[k, 1]
@@ -117,17 +143,14 @@ def _strain_passes(x, edges, limit, count, iterations):
             if length > limit[k]:
                 any_over = True
                 f = 0.5 * (length - limit[k]) / length
-                delta[a, 0] += f * d0
-                delta[a, 1] += f * d1
-                delta[a, 2] += f * d2
-                delta[b, 0] -= f * d0
-                delta[b, 1] -= f * d1
-                delta[b, 2] -= f * d2
+                x[a, 0] += f * d0
+                x[a, 1] += f * d1
+                x[a, 2] += f * d2
+                x[b, 0] -= f * d0
+                x[b, 1] -= f * d1
+                x[b, 2] -= f * d2
         if not any_over:
             break
-        for i in range(x.shape[0]):
-            for c in range(3):
-                x[i, c] += delta[i, c] / count[i]
 
 
 class GarmentRenderer:
@@ -253,7 +276,7 @@ class GarmentRenderer:
         self._light = None
         self._last_tick = None
         self._frames = None  # (vertices, frames, scale) of the last `splats`
-        self._strain = None  # (key, edges, limit, count) of `_limit_strain`, per binding
+        self._strain = None  # (key, edges, limit) of `_limit_strain`, per binding
         self._torn_limit = None  # (key, per-face-edge tear length) of `torn_faces`, per binding
 
     # the cloth model class: SmoothCloth (parameters searched against the authors' ContourCraft
@@ -399,7 +422,7 @@ class GarmentRenderer:
     # IoU 0.652 -> 0.659 and 0.587 -> 0.594 (00190_upper, 00152_outer).
     # ~60 ms a frame.
     STRAIN_LIMIT = 0.05
-    STRAIN_ITERATIONS = 30
+    STRAIN_ITERATIONS = 10  # Gauss-Seidel passes (`_strain_passes`); 30 Jacobi passes before 11 Oct
 
     def _limit_strain(self, vertices):
         """Pull stretched edges back toward the garment's physical rest.
@@ -417,11 +440,10 @@ class GarmentRenderer:
             rest = self._binding.physical_rest
             length = np.linalg.norm(rest[edges[:, 1]] - rest[edges[:, 0]], axis=1)
             limit = length * (1.0 + self.STRAIN_LIMIT)
-            count = np.maximum(np.bincount(edges.ravel(), minlength=len(rest)).astype(np.float64), 1.0)
-            self._strain = (key, edges, limit, count)
-        _, edges, limit, count = self._strain
+            self._strain = (key, edges, limit)
+        _, edges, limit = self._strain
         x = np.array(vertices, np.float64, copy=True)
-        _strain_passes(x, edges, limit, count, int(self.STRAIN_ITERATIONS))
+        _strain_passes(x, edges, limit, int(self.STRAIN_ITERATIONS))
         return x
 
     def posed_mesh(self, fitter, dt=None):
@@ -510,13 +532,10 @@ class GarmentRenderer:
                 for a, b in ((0, 1), (1, 2), (2, 0))
             ]
             self._torn_limit = (key, limits)
-        vertices = np.asarray(vertices, np.float64)
-        torn = np.zeros(len(self.faces), dtype=bool)
-        for (a, b), limit in zip(((0, 1), (1, 2), (2, 0)), self._torn_limit[1]):
-            torn |= np.linalg.norm(vertices[self.faces[:, b]] - vertices[self.faces[:, a]], axis=1) > limit
-        if getattr(self, "_seam_faces", None) is not None:
-            torn |= self._seam_faces
-        return torn
+        seam = getattr(self, "_seam_faces", None)
+        l0, l1, l2 = self._torn_limit[1]
+        return _torn_faces(np.ascontiguousarray(vertices, np.float64), np.ascontiguousarray(self.faces), l0, l1, l2,
+                           np.zeros(len(self.faces), np.bool_) if seam is None else np.asarray(seam, np.bool_))
 
     # The per-Gaussian colour arrays: the biggest thing `splats` gathers
     # (2 x 90k x 24-45 floats), and the one a shading result replaces.

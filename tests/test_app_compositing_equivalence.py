@@ -8,7 +8,7 @@ import unittest
 import cv2
 import numpy as np
 
-from tryon.app.compositing import COLLAR_CHIN, COLLAR_DISTANCE, COLLAR_GROW, COLLAR_RADIUS, repair_collar, restore_below_hem
+from tryon.app.compositing import COLLAR_CHIN, COLLAR_DISTANCE, COLLAR_GROW, COLLAR_RADIUS, composite_garment, repair_collar, restore_below_hem
 
 
 def _reference_restore_below_hem(frame, original, garment_alpha, margin=0):
@@ -96,6 +96,40 @@ def _scene(seed):
     points[9, :2] = (cx - 5, 55)
     points[10, :2] = (cx + 5, 55)
     return frame, labels, alpha, points
+
+
+def _reference_composite_garment(frame, bgra):
+    """The numpy form before the numba kernel (10 Oct 2026)."""
+    x, y, w, h = cv2.boundingRect(bgra[..., 3])
+    if w == 0 or h == 0:
+        return
+    region = (slice(y, y + h), slice(x, x + w))
+    alpha = bgra[region + (slice(3, 4),)].astype(np.float32) / 255.0
+    garment_bgr = bgra[region + (slice(0, 3),)].astype(np.float32)
+    frame[region] = (garment_bgr * alpha + frame[region].astype(np.float32) * (1.0 - alpha)).astype(np.uint8)
+
+
+class CompositeEquivalenceTest(unittest.TestCase):
+    def test_same_bytes_as_the_numpy_form(self):
+        for seed in range(12):
+            rng = np.random.default_rng(seed)
+            frame = rng.integers(0, 256, (120, 160, 3), dtype=np.uint8)
+            bgra = rng.integers(0, 256, (120, 160, 4), dtype=np.uint8)
+            alpha = bgra[..., 3]
+            alpha[rng.random(alpha.shape) < 0.4] = 0  # transparent pixels
+            alpha[rng.random(alpha.shape) < 0.2] = 255  # opaque
+            alpha[:10] = 0  # a box that does not start at the origin
+            a, b = frame.copy(), frame.copy()
+            _reference_composite_garment(a, bgra)
+            composite_garment(b, bgra)
+            self.assertTrue(np.array_equal(a, b), f"seed {seed}")
+            self.assertFalse(np.array_equal(a, frame))
+
+    def test_a_fully_transparent_garment_changes_nothing(self):
+        frame = np.random.default_rng(0).integers(0, 256, (40, 40, 3), dtype=np.uint8)
+        before = frame.copy()
+        composite_garment(frame, np.zeros((40, 40, 4), np.uint8))
+        self.assertTrue(np.array_equal(frame, before))
 
 
 class RepairCollarEquivalenceTest(unittest.TestCase):

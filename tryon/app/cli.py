@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 
+from tryon.app.camera import resolve_source
 from tryon.app.pipeline import run
 from tryon.app.smooth_display import smooth_display
 from tryon.garment.cloth import LightCloth
@@ -18,11 +19,14 @@ def build_parser():
     parser = argparse.ArgumentParser(prog="python -m tryon.app", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     io = parser.add_argument_group("input and output")
-    io.add_argument("--source", default="0", help="camera index or video file")
+    io.add_argument("--source", default="builtin",
+                    help="'builtin' (the default): the laptop's own camera, found by name so a phone offered as a camera is never taken; a camera index; or a video file")
     io.add_argument("--max-frames", type=int, default=0, help="stop after this many frames (0: never)")
     io.add_argument("--max-width", type=int, default=960,
                     help="process frames at most this wide (0: as captured); 720 is ~17 ms a frame faster, same accuracy, smaller picture")
     io.add_argument("--headless", action="store_true", help="no window")
+    io.add_argument("--no-ui", action="store_true",
+                    help="the bare video window (keys n / p / q only) without the clickable garment bar, Exit and Snapshot buttons")
     io.add_argument("--output", help="write the last frame here (synchronous display)")
     io.add_argument("--output-video", help="write every shown frame (with the HUD) to this .mp4")
     io.add_argument("--record-input", help="write every frame as read from the source (before any processing) to this .mp4, to replay a session")
@@ -98,9 +102,11 @@ def pipeline_options(args):
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
+    args.source = resolve_source(args.source)
     apply_renderer_switches(args)
     if args.smooth_display:
         return smooth_display(args.source, max_width=args.max_width, headless=args.headless, output_video=args.output_video,
-                              max_frames=args.max_frames, dump_alpha=args.dump_alpha, delayed=args.delayed_sync, **pipeline_options(args))
+                              max_frames=args.max_frames, dump_alpha=args.dump_alpha, delayed=args.delayed_sync, ui=not args.no_ui,
+                              **pipeline_options(args))
     return run(args.source, max_frames=args.max_frames, headless=args.headless, output=args.output, output_video=args.output_video,
-               max_width=args.max_width, record_input=args.record_input, **pipeline_options(args))
+               max_width=args.max_width, record_input=args.record_input, ui=not args.no_ui, **pipeline_options(args))

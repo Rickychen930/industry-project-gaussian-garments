@@ -13,23 +13,20 @@ and the dated record of every measurement in [`LOG.md`](LOG.md).
 ./live-tryon
 ```
 
-It lists the garments, asks for a number (Enter picks the striped
-sweater), and opens the webcam window:
+It opens the webcam window straight away, wearing the striped sweater.
+Pick another garment with the bar at the bottom of the window:
 
-```
-  Available garments  (* closed = cleanest result)
-   9  00170_upper  sweater vest + white shirt  * closed
-  12  00176_upper  white T-shirt  * closed
-  13  00190_upper  striped knit sweater  * closed
-  ...
-  In the video window: n = next garment, p = previous, q = quit
-```
+- **Click a garment** to wear it (the arrows at the ends of the bar turn the page).
+- **Exit** (top right) closes the window; **Snapshot** saves the current picture
+  to `captures/` in the data root; **Hide UI** clears the controls off the picture.
+- **Keys:** `1`-`9` a garment, `n` / `p` next / previous, `s` snapshot,
+  `h` hide / show the controls, `q` or `Esc` quit.
 
 The first start takes about 10-20 s while the models load. Until the first
-garment is ready the window shows the camera with "starting ...".
-
-**Keys in the window:** `n` next garment, `p` previous garment, `q` or
-`Esc` quit.
+garment is ready the window shows the camera with "starting ...". A new
+garment takes a few seconds to load ("Loading ..." on the picture).
+`--no-ui` gives the bare window (keys only). To choose the first garment from
+a list in the terminal instead: `./live-tryon menu`.
 
 **For the best result:**
 - Stand about 2-3 m from the camera so you are visible at least down to
@@ -42,15 +39,16 @@ garment is ready the window shows the camera with "starting ...".
 
 | command | what it does |
 |---|---|
-| `./live-tryon` | Menu, then the live try-on from the webcam. |
+| `./live-tryon` | The live try-on from the webcam; the garment is chosen in the window (`menu`: from a terminal list first). |
 | `./live-tryon --smooth` | Camera at full rate; the garment is carried with the torso between pipeline frames (fluid, but the garment trails on moves). |
 | `./live-tryon --delayed` | `--smooth` shown ~1 s late, with the garment from the nearest pipeline frame (fluid and closer, but delayed). |
 | `./live-tryon --harmonize` | Also recolour the garment to the room's light (Harmonizer; needs its clone, see 7). |
 | `./live-tryon --source video.mp4` | Run on a recorded video instead of the camera. |
-| `./live-tryon run [N or name] [flags]` | The same without the menu, e.g. `./live-tryon run 13`. |
+| `./live-tryon run [N or name] [flags]` | Start with a given garment, e.g. `./live-tryon run 13`. |
 | `./live-tryon bench [N\|name] [frames] [source]` | Time the pipeline on the camera (source 0) or a video; prints the median ms of each stage, saves the output and the camera frames as read (`captures/bench-<time>[-input].mp4`). Run it in your own terminal (the camera permission) with nothing else busy. |
 | `./live-tryon record [seconds] [basic\|extended]` | Film yourself while it says which pose to take (basic: 12 poses, 5 s each; extended: 31 poses, `record 8 extended` is ~4 min); replay with `./live-tryon run NAME --source FILE`. |
 | `python -m tools.evaluate.session_benchmark FILE --garment NAME --out docs/baseline/session-X.json` | One recording through the live pipeline, with numbers (dressed share, reprojection, shoulder ratio, uncovered clothing, stage times): the same recording before and after a change says whether it helped. |
+| `--source builtin` (default) | The laptop's own camera, found by name, so an iPhone offered as a camera (Continuity Camera) never takes its place. `--source 1` picks an index, `--source clip.mp4` a file. The camera it chose is printed at start (`camera 0: FaceTime HD Camera`). It reads the list with `ffmpeg`; without it, index 0 is used. |
 | `./live-tryon garments` | List the garments by number and open `docs/figures/garments.jpg` (a picture of each). |
 | `./live-tryon compare <branch> [video] [frames]` | Measure any branch or tag on a release video (see `BRANCHES.md`). |
 | `./live-tryon test` | Run the test suite (`unittest`). |

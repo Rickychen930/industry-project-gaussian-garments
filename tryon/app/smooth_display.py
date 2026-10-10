@@ -20,6 +20,7 @@ import cv2
 import numpy as np
 
 from tryon.app.person import landmarks_from
+from tryon.app.ui import WINDOW, Overlay
 
 
 # MediaPipe model for the display's per-frame landmarks: the display shares
@@ -232,11 +233,18 @@ class DisplayOutput:
     """Where the display's frames go, in both modes: the window (unless
     `headless`, with n / p sent to the pipeline and q / Esc to stop), a
     video file, and the shown garment's alpha per frame (`--dump-alpha`,
-    for tools/evaluate/live_display.py)."""
+    for tools/evaluate/live_display.py).
 
-    def __init__(self, link, headless, output_video, fps, dump_alpha):
+    `ui`: the window's `ui.Overlay` (clickable garments, Exit, ...), drawn on
+    the shown copy only; its garment choices go to the pipeline as
+    ("goto", i). None: the bare window with the n / p / q keys."""
+
+    def __init__(self, link, headless, output_video, fps, dump_alpha, ui=None):
         self.link, self.headless, self.output_video, self.fps = link, headless, output_video, fps
         self.dump_alpha, self.alphas, self.writer, self.shown = dump_alpha, [], None, 0
+        self.ui = ui
+        if ui is not None and not headless:
+            ui.attach()
 
     def show(self, out, drawn):
         """Show one finished frame; True when the viewer asked to stop."""
@@ -248,8 +256,15 @@ class DisplayOutput:
                 self.writer = cv2.VideoWriter(str(self.output_video), cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (out.shape[1], out.shape[0]))
             self.writer.write(out)
         if not self.headless:
-            cv2.imshow("Gaussian Garments try-on", out)
+            cv2.imshow(WINDOW, out if self.ui is None else self.ui.render(out))
             key = cv2.waitKey(1) & 0xFF
+            if self.ui is not None:
+                action = self.ui.poll(key)
+                if action is not None and action[0] == "exit":
+                    return True
+                if action is not None:
+                    self.link.send(("key", ("goto", action[1])))
+                return False
             if key in (27, ord("q")):
                 return True
             if key in (ord("n"), ord("p")):
@@ -487,7 +502,7 @@ def _warm_up(capture, here, max_width):
 
 
 def smooth_display(source, max_width=960, headless=False, output_video=None, max_frames=0, dump_alpha=None,
-                   delayed=False, **pipeline):
+                   delayed=False, ui=True, **pipeline):
     """Show every camera frame, not only the ones the pipeline finishes.
 
     The pipeline (`pipeline.run`, unchanged: body regression and garment on
@@ -519,7 +534,8 @@ def smooth_display(source, max_width=960, headless=False, output_video=None, max
     worker.start()
     here = Link(here)
     layer, layers, wants_frame = _warm_up(capture, here, max_width) if not is_camera else (None, 0, False)
-    display = DisplayOutput(here, headless, output_video, fps_in, dump_alpha)
+    overlay = Overlay.for_garment(pipeline.get("garment")) if ui and not headless else None
+    display = DisplayOutput(here, headless, output_video, fps_in, dump_alpha, overlay)
     loop = _delayed_loop if delayed else _live_loop
     with mp.solutions.pose.Pose(static_image_mode=False, model_complexity=DISPLAY_POSE_COMPLEXITY, enable_segmentation=True) as pose:
         if delayed:

@@ -170,9 +170,10 @@ class ShadingStudent:
         self.static = AppearanceNet(checkpoint_dir, faces=faces, device="cpu", network=False)
         self.inputs = StudentInputs(self.static.binding, self.static.template["faces"] if faces is None else faces)
         self.device = torch.device(device or ("mps" if torch.backends.mps.is_available() else "cpu"))
-        self.model = StudentUNet().eval()
         path = Path(weights) if weights else Path(checkpoint_dir) / "stage3" / FILE_NAME
         saved = torch.load(path, map_location="cpu")
+        # a student trained with `--widths` records them; the first students did not (the default widths)
+        self.model = (StudentUNet(tuple(saved["widths"])) if saved.get("widths") else StudentUNet()).eval()
         self.model.load_state_dict(saved["model"])
         self.mean = None if saved.get("mean") is None else np.asarray(saved["mean"], np.float64)
         # fp16 on the GPU (the SH it predicts are small corrections)

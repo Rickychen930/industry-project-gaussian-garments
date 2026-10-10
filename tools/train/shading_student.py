@@ -135,6 +135,15 @@ def main():
     parser.add_argument("--extra-poses", nargs="*", default=[],
                         help="npz files of SMPL-X fits (tools.evaluate.cloth_trajectory.fit_frames) from other motions, "
                              "added to the training poses; the held-out poses stay the garment's own")
+    parser.add_argument("--pose-noise", type=float, default=POSE_NOISE,
+                        help=f"std (rad) of the Gaussian jitter added to every joint's rotation of a training pose "
+                             f"(default {POSE_NOISE}); the held-out poses are not jittered")
+    parser.add_argument("--yaw-range", type=float, default=YAW,
+                        help=f"training poses are turned by a random yaw of up to +- this many degrees (default {YAW}); "
+                             "the held-out poses keep the default sweep")
+    parser.add_argument("--widths", type=int, nargs=4, default=None, metavar=("W1", "W2", "W3", "W4"),
+                        help="channel widths of the student's four levels (default 32 64 128 192: 1.55M parameters); "
+                             "saved with the weights, so `--resume` and the live loader build the same network")
     parser.add_argument("--promote", action="store_true",
                         help="with --out-name: afterwards make it the live student (the first one it replaces is kept as "
                              "shading_student_nomean.pt)")
@@ -160,7 +169,12 @@ def main():
     body_faces = np.asarray(poser.fitter.model.faces)
     teacher = AppearanceNet(checkpoint, faces=renderer.faces, half=True)
     inputs = StudentInputs(teacher.binding, renderer.faces)
-    model = StudentUNet().to(device)
+    widths = tuple(args.widths) if args.widths else None
+    if args.resume and widths is None:  # the saved student's own widths
+        widths = (torch.load(checkpoint / "stage3" / (args.out_name or FILE_NAME), map_location="cpu").get("widths") or None)
+        widths = tuple(widths) if widths else None
+    model = StudentUNet(widths) if widths else StudentUNet()
+    model = model.to(device)
     optimiser = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     print(f"student: {sum(p.numel() for p in model.parameters()) / 1e6:.2f}M parameters on {device}", flush=True)
 
@@ -199,7 +213,7 @@ def main():
     if args.mean_poses > 0 and not args.resume:
         targets = []
         for _ in range(args.mean_poses):
-            x, target, _ = sample(poser.train, YAW, POSE_NOISE)
+            x, target, _ = sample(poser.train, args.yaw_range, args.pose_noise)
             targets.append(target)
             pool.append((torch.as_tensor(x, dtype=torch.float16), torch.as_tensor(target, dtype=torch.float16)))
         mean = np.mean(targets, axis=0).astype(np.float32)
@@ -250,7 +264,7 @@ def main():
         print(f"resumed from {out_path.name}: saved {best:.2f} dB, re-measured {start_score:.2f} dB", flush=True)
     deadline = started + args.hours * 3600
     while (cycle < args.cycles) if args.cycles else (time.perf_counter() < deadline):
-        x, target, _ = sample(poser.train, YAW, POSE_NOISE)
+        x, target, _ = sample(poser.train, args.yaw_range, args.pose_noise)
         pool.append((torch.as_tensor(x, dtype=torch.float16), torch.as_tensor(target, dtype=torch.float16)))
         if len(pool) > POOL:
             pool.pop(random.randrange(len(pool)))
@@ -279,6 +293,7 @@ def main():
             if score > best:
                 best = score
                 torch.save({"model": model.state_dict(), "held_out_db": score, "static_db": static_psnr, "cycle": cycle,
+                            "widths": list(widths) if widths else None,
                             "mean": None if mean is None else mean.astype(np.float16)}, out_path)
             write_json(BASELINE / log_name, log)
     print(f"done: best held-out {best:.2f} dB -> {out_path}", flush=True)

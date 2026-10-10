@@ -44,6 +44,7 @@ from tryon.app.person import (
     torso_visible,
     track_step,
 )
+from tryon.app.ui import WINDOW, Overlay
 from tryon.body.fitter import BodyFitter
 from tryon.body.regressor import box_from_joints, person_in_box
 from tryon.body.smoothing import OneEuroFilter, joint_acceleration
@@ -324,7 +325,7 @@ class LiveSession:
             self.wardrobe, self.worn = wardrobe_of(garment)
             if not headless and len(self.wardrobe) > 1:
                 print(f"garment {self.wardrobe[self.worn].name} ({self.worn + 1}/{len(self.wardrobe)}): "
-                      "press n / p for the next / previous one, q to quit")
+                      "click a garment in the bar at the bottom of the window (or press n / p), q or Exit to quit")
         self.harmonizer = None
         if harmonize:
             from tryon.app.harmonize import LiveHarmonizer
@@ -642,11 +643,15 @@ class LiveSession:
 
     def switch_garment(self, step):
         """Wear the next (+1) or previous (-1) garment of the wardrobe."""
-        if len(self.wardrobe) < 2:
+        self.wear(self.worn + step)
+
+    def wear(self, index):
+        """Wear garment `index` of the wardrobe (wrapping around)."""
+        if len(self.wardrobe) < 2 or index % len(self.wardrobe) == self.worn:
             return
         from tryon.garment.renderer import GarmentRenderer
 
-        self.worn = (self.worn + step) % len(self.wardrobe)
+        self.worn = index % len(self.wardrobe)
         print(f"garment {self.wardrobe[self.worn].name} ({self.worn + 1}/{len(self.wardrobe)})", flush=True)
         shading = getattr(self.renderer, "_appearance_net", None)
         if hasattr(shading, "close"):
@@ -706,13 +711,19 @@ class FrameSource:
 class FrameOutput:
     """Where finished frames go: the window (unless `headless`), a video
     file, and with the smooth display its channel instead of the window.
-    `show` returns the key pressed (or None) and whether to stop."""
+    `show` returns the key pressed (or None, or ("goto", i) when the
+    on-screen controls chose garment i) and whether to stop.
 
-    WINDOW = "Gaussian Garments try-on"
+    `ui`: the window's `ui.Overlay` (clickable garments, Exit, ...); None
+    keeps the bare window with the n / p / q keys."""
 
-    def __init__(self, headless, output_video, channel):
-        self.headless, self.output_video, self.channel = headless, output_video, channel
+    WINDOW = WINDOW
+
+    def __init__(self, headless, output_video, channel, ui=None):
+        self.headless, self.output_video, self.channel, self.ui = headless, output_video, channel, ui
         self.writer, self.last_frame = None, None
+        if ui is not None and not headless and channel is None:
+            ui.attach()
 
     def show(self, frame, source_frame, points, hud, garment_alpha):
         key = None
@@ -730,11 +741,25 @@ class FrameOutput:
                 self.writer = cv2.VideoWriter(str(self.output_video), cv2.VideoWriter_fourcc(*"mp4v"), 10.0, (width, height))
             self.writer.write(frame)
         if not self.headless:
-            cv2.imshow(self.WINDOW, frame)
+            cv2.imshow(self.WINDOW, frame if self.ui is None else self.ui.render(frame))
             key = cv2.waitKey(1) & 0xFF
+            if self.ui is not None:
+                return self._act(self.ui.poll(key), frame)
             if key in (27, ord("q")):
                 return key, True
         return key, False
+
+    def _act(self, action, frame):
+        """(key, stop) for the overlay's `action`. A new garment takes
+        seconds to load and nothing is shown meanwhile, so the loading
+        banner is put on the window first."""
+        if action is None:
+            return None, False
+        if action[0] == "exit":
+            return None, True
+        cv2.imshow(self.WINDOW, self.ui.banner(frame, "Loading garment ..."))
+        cv2.waitKey(1)
+        return ("goto", action[1]), False
 
     def close(self, still=None):
         """Release the video and window; `still`: write the last frame there."""
@@ -766,11 +791,14 @@ def run(
     max_width=960,
     channel=None,
     record_input=None,
+    ui=True,
 ):
     """The synchronous live loop: every shown frame carries the garment drawn
     for it. `channel`: a `smooth_display.Channel` when the loop runs behind
     the smooth display: frames come from it (the display's newest camera
     frame) and every finished frame is published to it instead of shown.
+
+    `ui`: draw the clickable controls (`tryon/app/ui.py`) on the window.
 
     With PREFETCH the next frame is read, its landmarks found and its body
     regression sent before this frame is drawn (`LiveSession.prefetch`).
@@ -783,7 +811,8 @@ def run(
                           background_plate, harmonize, body_regressor, headless)
     stage_times = collections.OrderedDict()
     frame_times = collections.deque(maxlen=30)
-    out = FrameOutput(headless, output_video, channel)
+    overlay = Overlay.for_garment(garment) if ui and not headless and channel is None else None
+    out = FrameOutput(headless, output_video, channel, overlay)
     frames, read, hud = 0, 0, "no frames"
     # Build the pose model before touching the camera. MediaPipe brings up
     # its own GL context on start, and on this Mac a camera opened before
@@ -838,7 +867,9 @@ def run(
             frames += 1
             if stop:
                 break
-            if key in (ord("n"), ord("p")):
+            if isinstance(key, tuple):  # ("goto", i): the on-screen controls chose a garment
+                session.wear(key[1])
+            elif key in (ord("n"), ord("p")):
                 session.switch_garment(1 if key == ord("n") else -1)
             if max_frames and frames >= max_frames:
                 break

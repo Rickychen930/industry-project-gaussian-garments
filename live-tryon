@@ -84,12 +84,15 @@ run_tryon() {  # run_tryon <garment number|name> [flags]
     ${display[@]+"${display[@]}"} ${args[@]+"${args[@]}"}
 }
 
-case "${1:-menu}" in
-  menu)  # no arguments: pick a garment, then the live webcam try-on
-    choice="$(menu)"
-    echo "  Starting ... (the first start takes ~10 s)"
-    run_tryon "$choice" ;;
-  --*)   # flags only (./live-tryon --smooth): the menu, then those flags
+case "${1:-}" in
+  "")    # no arguments: straight to the camera; the garment bar in the window picks the garment
+    echo "  Starting ... (the first start takes ~10 s; pick the garment in the window)"
+    run_tryon "$DEFAULT" ;;
+  --*)   # flags only (./live-tryon --smooth): the camera with those flags
+    echo "  Starting ... (the first start takes ~10 s; pick the garment in the window)"
+    run_tryon "$DEFAULT" "$@" ;;
+  menu)  # pick a garment in the terminal first, then the live webcam try-on
+    shift
     choice="$(menu)"
     echo "  Starting ... (the first start takes ~10 s)"
     run_tryon "$choice" "$@" ;;
@@ -100,10 +103,10 @@ case "${1:-menu}" in
     show_garments
     [[ -f "$ROOT/docs/figures/garments.jpg" ]] && { echo "pictures: docs/figures/garments.jpg"; command -v open >/dev/null && open "$ROOT/docs/figures/garments.jpg"; }
     exit 0 ;;
-  bench)  # ./live-tryon bench [N|name] [frames=120] [camera=0]: time the live pipeline on a camera or a video
+  bench)  # ./live-tryon bench [N|name] [frames=120] [camera=builtin]: time the live pipeline on a camera or a video
     shift; garment="${1:-$DEFAULT}"; [[ $# -gt 0 ]] && shift
     frames="${1:-120}"; [[ $# -gt 0 ]] && shift
-    source="${1:-0}"
+    source="${1:-builtin}"
     out="$(PYTHONPATH="$ROOT" "$PY" -c 'from tryon.paths import CAPTURES; print(CAPTURES)')"; mkdir -p "$out"
     video="$out/bench-$(date +%Y%m%d-%H%M%S).mp4"
     echo "Benchmark: garment $garment, $frames frames from source $source (stand in view; no window opens)."
@@ -138,16 +141,19 @@ case "${1:-menu}" in
     cat <<'USAGE'
 Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
 
-  ./live-tryon [flags]           pick a garment from a list, then the live webcam try-on
+  ./live-tryon [flags]           the live webcam try-on; click a garment in the bar at the bottom of the window
+  ./live-tryon menu [flags]      pick the first garment from a list in the terminal instead
   ./live-tryon run [N|name] ...  start directly with garment N or its name (default 00190_upper)
-                                 in the window: n / p next / previous garment, q quit
+                                 in the window: click a garment, Exit, Snapshot, Hide UI; or keys
+                                 1-9 / n / p garment, s snapshot, h hide the controls, q or Esc quit
+                                 (--no-ui: the bare window)
                                  --sync (default): every shown frame carries its own garment, ~7 fps on the M1
                                  --smooth: camera at full rate, the garment carried between pipeline frames
                                  --delayed: --smooth shown ~1 s late, garment from the nearest pipeline frame
                                  other flags pass through: --harmonize, --source video.mp4, --max-width 720, ...
   ./live-tryon garments          list the garments (numbered) and open their pictures
   ./live-tryon bench [N|name] [frames] [source]
-                                 time the pipeline on the camera (source 0) or a video file and save the
+                                 time the pipeline on the laptop camera (source builtin, or an index) or a video file and save the
                                  output to the data root's captures/ folder; prints the median ms of each stage
   ./live-tryon record [seconds] [basic|extended]
                                  record the camera while it tells you which pose to take (basic: 12 poses, 5 s each

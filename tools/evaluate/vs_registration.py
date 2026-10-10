@@ -169,7 +169,7 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
             if _bf.SILHOUETTE_WEIGHT > 0:
                 labels = parser.labels(panel)
                 previous_person = labels != 0
-                if t % every:
+            if t % every:
                 continue
             if _bf.SILHOUETTE_WEIGHT <= 0:
                 labels = parser.labels(panel)

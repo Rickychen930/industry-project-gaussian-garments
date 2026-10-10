@@ -58,5 +58,19 @@ class StoredMeanTest(unittest.TestCase):
         np.testing.assert_allclose(result["feature_dc"], student.static.static_features()[:, :1] + 0.5 * shadow[:, :1], atol=1e-6)
 
 
+class WidthsTest(unittest.TestCase):
+    def test_widths_change_the_capacity_not_the_interface(self):
+        import torch
+
+        from tryon.garment.shading_student import IN_CHANNELS, OUT_CHANNELS, StudentUNet
+
+        small, wide = StudentUNet(), StudentUNet((48, 96, 192, 288))
+        count = lambda m: sum(p.numel() for p in m.parameters())
+        self.assertGreater(count(wide), 2 * count(small))
+        x = torch.zeros(1, IN_CHANNELS, 32, 32)
+        self.assertEqual(tuple(small(x).shape), tuple(wide(x).shape))
+        self.assertEqual(small(x).shape[1], OUT_CHANNELS)
+
+
 if __name__ == "__main__":
     unittest.main()

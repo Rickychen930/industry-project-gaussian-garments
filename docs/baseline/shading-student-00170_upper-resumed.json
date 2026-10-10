@@ -1,37 +1,16 @@
 {
  "garment": "00170_upper",
- "static_vs_teacher_db": 19.86342724004424,
+ "static_vs_teacher_db": 19.856153720669237,
  "mean_poses": 32,
  "evals": [
   {
    "cycle": 100,
-   "hours": 0.09268937276611622,
-   "loss": 0.018757818266749382,
-   "student_vs_teacher_db": 31.343601138585615,
-   "student_ms": 71.0681660566479
-  },
-  {
-   "cycle": 200,
-   "hours": 0.18443281877307324,
-   "loss": 0.0175313763320446,
-   "student_vs_teacher_db": 31.689954684112553,
-   "student_ms": 69.9922910425812
-  },
-  {
-   "cycle": 300,
-   "hours": 0.2760571335300079,
-   "loss": 0.016907094046473503,
-   "student_vs_teacher_db": 31.86958282757102,
-   "student_ms": 70.24883304256946
-  },
-  {
-   "cycle": 400,
-   "hours": 0.36849919113417856,
-   "loss": 0.018441658467054367,
-   "student_vs_teacher_db": 31.956506044246318,
-   "student_ms": 72.36637501046062
+   "hours": 0.09593744549780645,
+   "loss": 0.01710044965147972,
+   "student_vs_teacher_db": 31.88194007905439,
+   "student_ms": 75.10404195636511
   }
  ],
- "resumed_from_db": 31.45373813440066,
- "resumed_score_db": 31.340459888416667
+ "resumed_from_db": 31.956506044246318,
+ "resumed_score_db": 31.961429031276886
 }

@@ -111,7 +111,6 @@ def simulate(seq, stride, make_cloth, limit_strain=True, filter_target=None):
     cloth = make_cloth()
     cloth.edges = seq["edges"]
     edges, limit = seq["edges"], seq["strain_limit"]
-    count = np.maximum(np.bincount(edges.ravel(), minlength=len(seq["targets"][0])).astype(np.float64), 1.0)
     out, tg = [], []
     for k in frames:
         target = seq["targets"][k].astype(np.float64)
@@ -120,7 +119,7 @@ def simulate(seq, stride, make_cloth, limit_strain=True, filter_target=None):
         x = cloth.step(target, dt, seq["bodies"][k].astype(np.float64), seq["body_faces"])
         x = np.array(x, np.float64)
         if limit_strain:
-            _strain_passes(x, edges, limit, count, int(GarmentRenderer.STRAIN_ITERATIONS))
+            _strain_passes(x, edges, limit, int(GarmentRenderer.STRAIN_ITERATIONS))
         out.append(x)
         tg.append(target)
     return frames, np.stack(out), np.stack(tg)
