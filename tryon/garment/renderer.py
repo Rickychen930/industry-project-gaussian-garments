@@ -571,7 +571,11 @@ class GarmentRenderer:
     # is broken geometry (the solver tears a few dozen edges per frame at
     # the seams of the real checkpoint); a splat scales with its face, so
     # drawing it paints a smear the size of the tear. Skip those splats.
-    TORN_FACE_STRAIN = 1.0
+    # 2.0 since 10 Oct (1.0 before): a cropped sweater under raised arms tore at its hem (faces stretched past
+    # 100 % were skipped and the wearer's dark shirt showed through the notches: ragged, black-edged hem on
+    # three recorded sessions); garment IoU against the real shirt on four release videos, 1.0 -> 2.0:
+    # 00152_outer 0.6333 -> 0.6365, 00190_upper 0.6578 -> 0.6688, 10006_outer and 00170_upper unchanged.
+    TORN_FACE_STRAIN = 2.0
 
     def torn_faces(self, vertices):
         """Faces with an edge stretched beyond `TORN_FACE_STRAIN` of rest."""

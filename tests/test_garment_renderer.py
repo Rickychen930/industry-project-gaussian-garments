@@ -371,6 +371,16 @@ class TornFaceCullingTest(unittest.TestCase):
     (measured: a few dozen edges per frame past +100% strain, at the
     seams) painted blobs the size of the tear. Those splats are skipped."""
 
+    def test_the_default_threshold_keeps_a_stretch_of_150_percent_and_drops_one_of_250_percent(self):
+        """Every edge stretched together (the garment scaled about its centroid): +150 % is kept (a cropped
+        sweater under raised arms stretches that far and was torn open at its hem at 1.0), +250 % is not."""
+        renderer = GarmentRenderer(GARMENT, dynamics=False)
+        self.assertEqual(GarmentRenderer.TORN_FACE_STRAIN, 2.0)
+        rest = renderer.rest_vertices
+        centre = rest.mean(axis=0)
+        self.assertFalse(renderer.torn_faces(centre + (rest - centre) * 2.5).any())
+        self.assertTrue(renderer.torn_faces(centre + (rest - centre) * 3.5).all())
+
     def test_the_compiled_placement_matches_the_numpy_oracle(self):
         """`splats` runs a numba kernel; `_splats_numpy` is the original.
         Measured on the checkpoint: max diff 1e-16 (xyz), 0 (rotation),

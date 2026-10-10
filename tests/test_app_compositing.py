@@ -273,6 +273,21 @@ class RestoreCollarLayerTest(unittest.TestCase):
         self.assertTrue(max(edge) >= min(edge))
         self.assertLessEqual(middle, 200)
 
+    def test_a_collapsed_or_implausible_head_geometry_changes_nothing(self):
+        from tryon.app.compositing import collar_geometry_ok, restore_collar_layer
+
+        frame, original, alpha, labels, points = self._scene()
+        self.assertTrue(collar_geometry_ok(points))
+        before = frame.copy()
+        collapsed = points.copy()
+        collapsed[11, :2], collapsed[12, :2] = (90, 150), (120, 150)  # shoulders 30 px apart
+        self.assertFalse(collar_geometry_ok(collapsed))
+        restore_collar_layer(frame, original, alpha, labels, collapsed)
+        self.assertTrue(np.array_equal(frame, before))
+        bowed = points.copy()
+        bowed[9, 1] = bowed[10, 1] = 200  # the mouth below the shoulders
+        self.assertFalse(collar_geometry_ok(bowed))
+
     def test_nothing_without_landmarks(self):
         from tryon.app.compositing import restore_collar_layer
 
@@ -291,7 +306,7 @@ class RestoreInsideGarmentTest(unittest.TestCase):
         frame[:] = 30  # the erase filled everything dark
         alpha = np.zeros((120, 120), np.uint8)
         alpha[20:100, 20:100] = 255  # the garment
-        alpha[55:62, 50:58] = 0  # a small gap inside (lace)
+        alpha[50:70, 50:70] = 0  # a gap inside (lace): 400 of 6,400 px, 6 % of the garment
         return frame, original, alpha
 
     def test_a_gap_inside_the_outline_gets_the_original_pixels_back(self):
@@ -299,7 +314,20 @@ class RestoreInsideGarmentTest(unittest.TestCase):
 
         frame, original, alpha = self._scene()
         restore_inside_garment(frame, original, alpha)
-        self.assertTrue((frame[58, 53] == 200).all())
+        self.assertTrue((frame[60, 60] == 200).all())
+
+    def test_a_speck_is_painted_over_from_the_garment_not_restored(self):
+        from tryon.app.compositing import restore_inside_garment
+
+        frame, original, alpha = self._scene()
+        frame[:] = 30
+        frame[20:100, 20:100] = 120  # the garment's colour
+        alpha[:] = 0
+        alpha[20:100, 20:100] = 255
+        alpha[58:62, 58:62] = 0  # 16 px, 0.25 % of the garment
+        frame[58:62, 58:62] = 5  # what the fill left there (dark)
+        restore_inside_garment(frame, original, alpha)
+        self.assertTrue((np.abs(frame[59, 59].astype(int) - 120) < 20).all())
 
     def test_the_outside_is_left_alone(self):
         from tryon.app.compositing import restore_inside_garment

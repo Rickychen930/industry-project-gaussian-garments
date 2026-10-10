@@ -46,6 +46,26 @@ def draw_body(frame, fitter, colour=(60, 220, 60)):
 IN_FRONT_CLASSES = (1, 2, 3, 11)
 
 COLLAR_CHIN = 1.3  # the chin is this many nose-to-mouth distances below the mouth
+# The chin line comes from the nose and mouth landmarks; with the head bowed, turned, or the shoulders collapsed
+# by a blurred or cut-off frame (a shoulder width of 37 px, the mouth 2.3 shoulder widths above the shoulders),
+# it is nonsense and the collar repair pasted pieces of a floral collar beside the face. In normal frames the
+# mouth is 0.2-0.55 shoulder widths above the shoulder line and the nose-to-mouth gap 0.08-0.13 of them.
+COLLAR_MOUTH_ABOVE = (0.12, 1.0)
+COLLAR_NOSE_MOUTH = (0.04, 0.2)
+COLLAR_MIN_SHOULDERS = 40.0  # px
+
+
+def collar_geometry_ok(points):
+    """Whether the face / shoulder landmarks of `points` are a head above shoulders that the collar functions can use."""
+    shoulders = float(np.linalg.norm(points[11, :2] - points[12, :2]))
+    if shoulders <= 1.0:
+        return True  # no shoulders given (a caller that only has the face): nothing to judge by
+    if shoulders < COLLAR_MIN_SHOULDERS:
+        return False
+    mouth_y = 0.5 * float(points[9, 1] + points[10, 1])
+    above = (0.5 * float(points[11, 1] + points[12, 1]) - mouth_y) / shoulders
+    gap = (mouth_y - float(points[0, 1])) / shoulders
+    return COLLAR_MOUTH_ABOVE[0] <= above <= COLLAR_MOUTH_ABOVE[1] and COLLAR_NOSE_MOUTH[0] <= gap <= COLLAR_NOSE_MOUTH[1]
 COLLAR_DISTANCE = 12.0  # Lab distance from the face's skin that marks a pixel as collar
 
 
@@ -166,7 +186,7 @@ def repair_collar(frame, garment_alpha, labels, points):
     if labels is None or points is None or labels.shape != frame.shape[:2]:
         return
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
-    if min(points[0, 2], points[9, 2], points[10, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
+    if min(points[0, 2], points[9, 2], points[10, 2]) < 0.3 or not np.isfinite(mouth[:2]).all() or not collar_geometry_ok(points):
         return
     gap = float(mouth[1] - nose[1])
     chin, mouth_row, nose_row = int(mouth[1] + COLLAR_CHIN * gap), int(mouth[1]), int(nose[1])
@@ -209,6 +229,7 @@ def repair_collar(frame, garment_alpha, labels, points):
 
 INSIDE_CLOSE = 21  # px: gaps up to this wide between garment pixels count as inside the garment
 INSIDE_MAX_SHARE = 0.25  # an enclosed hole bigger than this share of the garment is not a lace gap (a loop made by an arm)
+INSIDE_HEAL_SHARE = 0.03  # gaps up to this share of the garment are painted over from the garment around them (0: never): black specks in a lace sleeve
 
 
 def restore_inside_garment(frame, original, garment_alpha):
@@ -245,10 +266,18 @@ def restore_inside_garment(frame, original, garment_alpha):
     keep = np.zeros(count, bool)
     keep[1:] = stats[1:, cv2.CC_STAT_AREA] <= INSIDE_MAX_SHARE * area
     gaps = keep[labels]
-    changed = (frame[window] != original[window]).any(axis=2)
+    part = frame[window]
+    if INSIDE_HEAL_SHARE > 0:
+        small = np.zeros(count, bool)
+        small[1:] = stats[1:, cv2.CC_STAT_AREA] <= INSIDE_HEAL_SHARE * area
+        heal = small[labels] & gaps
+        if heal.any():
+            mask = cv2.dilate(heal.astype(np.uint8), np.ones((3, 3), np.uint8))
+            part[:] = cv2.inpaint(np.ascontiguousarray(part), mask * 255, 3, cv2.INPAINT_TELEA)
+            gaps = gaps & ~heal
+    changed = (part != original[window]).any(axis=2)
     restore = gaps & changed
     if restore.any():
-        part = frame[window]
         part[restore] = original[window][restore]
 
 
@@ -272,7 +301,7 @@ def restore_collar_layer(frame, original, garment_alpha, labels, points):
     if labels is None or points is None or labels.shape != frame.shape[:2]:
         return
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
-    if min(points[0, 2], points[9, 2], points[10, 2], points[11, 2], points[12, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
+    if min(points[0, 2], points[9, 2], points[10, 2], points[11, 2], points[12, 2]) < 0.3 or not np.isfinite(mouth[:2]).all() or not collar_geometry_ok(points):
         return
     gap = float(mouth[1] - nose[1])
     chin = int(mouth[1] + COLLAR_CHIN * gap)
