@@ -7,7 +7,20 @@ import numpy as np
 
 from tryon.rendering.splat_cpu import look_at, render_splats
 
-HAVE_GL = importlib.util.find_spec("moderngl") is not None
+def _gl_context_available():
+    """moderngl installed and an OpenGL context can be created (a headless CI runner has none)."""
+    if importlib.util.find_spec("moderngl") is None:
+        return False
+    try:
+        import moderngl
+
+        moderngl.create_standalone_context().release()
+    except Exception:
+        return False
+    return True
+
+
+HAVE_GL = _gl_context_available()
 
 
 def _splats(n=400, seed=0):
@@ -23,7 +36,7 @@ def _splats(n=400, seed=0):
     }
 
 
-@unittest.skipUnless(HAVE_GL, "moderngl not installed")
+@unittest.skipUnless(HAVE_GL, "no OpenGL context")
 class SplatGLTest(unittest.TestCase):
     def test_same_image_as_numba(self):
         from tryon.rendering.splat_gl import render_splats_gl
@@ -50,6 +63,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
+@unittest.skipUnless(HAVE_GL, "no OpenGL context")
 class Bgra8Test(unittest.TestCase):
     """`bgra8=True` is the float result rounded to 8 bits on the GPU."""
 
@@ -78,6 +92,7 @@ class Bgra8Test(unittest.TestCase):
         self.assertLessEqual(np.abs(packed.astype(int) - truncated.astype(int)).max(), 1)
 
 
+@unittest.skipUnless(HAVE_GL, "no OpenGL context")
 class OccluderTest(unittest.TestCase):
     """`occluder=` hides exactly the splats a nearer surface covers."""
 
@@ -140,6 +155,7 @@ class InstanceRowsTest(unittest.TestCase):
             np.testing.assert_array_equal(rows[:, 14], 0.0)
 
 
+@unittest.skipUnless(HAVE_GL, "no OpenGL context")
 class FillTrianglesTest(unittest.TestCase):
     def test_the_union_of_overlapping_triangles_has_no_holes(self):
         import cv2

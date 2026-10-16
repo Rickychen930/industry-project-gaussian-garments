@@ -218,6 +218,7 @@ class FacingAwayTest(unittest.TestCase):
         self.assertLess(float(np.abs(pitch_roll).max()), 0.35)
 
 
+@unittest.skipUnless(SMPLX_ROOT.is_dir(), f"no SMPL-X body models at {SMPLX_ROOT}")
 class TurningTest(unittest.TestCase):
     """A body turning through profile, the case a single frame cannot fit.
 
