@@ -1,20 +1,7 @@
 """Bind a garment mesh to the SMPL-X body so it deforms with the pose.
 
-This is the step that makes 360 degrees and motion-following structural
-rather than features. The 2D system faked rotation with a catalog of
-pre-rendered views and faked motion with anchor warping; a garment skinned
-to a body rotates and bends because the body does.
-
-Method: each garment vertex borrows the skinning weights of the body
-vertices nearest to it in the rest pose, then moves with them. This is
-standard practice for dressing a parametric body (SMPL, SIGGRAPH Asia 2015;
-DeePSD arXiv:2009.02715 uses the same nearest-body-vertex initialisation
-before learning a correction).
-
-Measured before writing this: a 4D-DRESS garment sits at y=1.36 while
-SMPL-X is pelvis-centred at y=0, and a single Y shift brings garment
-vertices to a median 7.7 cm from the body surface - a garment worn over a
-body, which is exactly right.
+Each garment vertex borrows the skinning weights of its nearest body
+vertices in the rest pose, then moves with them.
 """
 
 from __future__ import annotations
@@ -28,12 +15,10 @@ from tryon.paths import GARMENTS
 
 
 def _body():
-    """A stand-in torso: a cylinder of vertices with real 3D extent.
+    """A stand-in torso: a cylinder with real 3D extent.
 
-    Not a flat sheet. A neighbourhood with no thickness cannot determine a
-    rotation - its covariance is rank-deficient and the SVD returns an
-    arbitrary spin - so a coplanar fixture tests the degeneracy guard
-    rather than the skinning. A real body has depth.
+    A coplanar sheet has rank-deficient covariance, which would test the
+    degeneracy guard rather than the skinning.
     """
     angles = np.linspace(0, 2 * np.pi, 12, endpoint=False)
     rings = []
@@ -48,13 +33,10 @@ def _body():
 
 
 def _garment(offset=0.0):
-    """A tube around the body's upper half - a garment, not a flat sheet.
+    """A tube around the body's upper half.
 
-    A sheet hanging off to one side has no body vertices behind it, so its
-    binding is genuinely ambiguous and it shears under rotation. Measured on
-    the real assets, a garment that actually wraps a body deviates 1.74 cm
-    over a 90 cm garment through a 90-degree turn; a flat fixture deviated
-    14%, which was the fixture's geometry and not the code's.
+    A flat sheet off to one side has an ambiguous binding and shears under
+    rotation, which is the fixture's geometry and not the code's fault.
     """
     angles = np.linspace(0, 2 * np.pi, 10, endpoint=False)
     rings = []
@@ -151,22 +133,9 @@ if __name__ == "__main__":
 class SkinnedBindingTest(unittest.TestCase):
     """Skin the garment with the body's own LBS weights, not by copying positions.
 
-    Nearest-vertex binding tore the garment at the joints: when the arm
-    rose, garment vertices near the armpit had been bound to body vertices
-    on DIFFERENT bones, which moved apart and stretched 332 faces up to 58x
-    - their splats ballooned into a smear. More neighbours barely helped
-    (p99 7.2 -> 5.5): smoothing over distance is the wrong axis.
-
-    The right axis is the bone. SMPL-X gives every body vertex a skinning
-    weight over the 55 joints (`lbs_weights`). A garment vertex takes the
-    distance-weighted blend of its neighbours' weights and is then skinned
-    by the body's joint transforms directly - exactly how SMPL skins its own
-    vertices (Loper et al. 2015, Eq. 1). Measured, arms raised 1.2 rad:
-
-        neighbours   edge-stretch p99   max    faces > 3x
-        nearest 6          7.24         58.0      331
-        LBS 16             3.22         38.1      162
-        LBS 200            1.89          3.8        2
+    Nearest-vertex binding tore the garment at the joints, where neighbours
+    sat on different bones. Blending the neighbours' LBS weights and skinning
+    with the body's joint transforms (as SMPL does) keeps edge stretch low.
     """
 
     def _fixture(self):

@@ -1,40 +1,23 @@
-"""A 3D Gaussian splat rasteriser, written out rather than called.
+"""A 3D Gaussian splat rasteriser, written out in numpy/numba rather than called.
 
-This renders the trained garments released with the paper - real captured
-clothing, ~95k Gaussians each - into ordinary images, so a real garment can
-become a multi-view asset for the 2D try-on app. It exists to be readable:
-every step is the textbook operation written in numpy, not a call into a
-CUDA rasteriser, because the point is to show the geometry rather than hide
-it. It runs on CPU in a few seconds per view.
+Renders the trained garments of Gaussian Garments (~95k Gaussians each) on
+the CPU. Pipeline:
 
-The pipeline, in order:
-
-1. **World placement.** Stored `xyz` are offsets in each mesh face's own
-   tangent frame, not world coordinates (every value is within a few
-   thousandths of zero). World position is `R_face @ local * s_face +
-   c_face`, matching `MeshGaussianModel.get_xyz`.
-2. **Projection.** Rigid world-to-camera transform, then the pinhole
-   division `u = f * x / z + c`.
-3. **Covariance propagation.** Each Gaussian is an ellipsoid
-   `Sigma = R S S^T R^T`. Projecting it is a change of variables, so the
-   screen-space covariance is `J W Sigma W^T J^T` where `W` is the camera
-   rotation and `J` the Jacobian of the perspective division (EWA
-   splatting, Zwicker et al. 2001).
-4. **Colour.** Spherical harmonics evaluated for the direction the camera
-   sees each Gaussian from, which is what makes fabric change appearance as
-   it turns rather than reading as flat paint.
-5. **Compositing.** Sorted back-to-front and alpha-blended - the painter's
-   algorithm - so near fabric hides far fabric.
+1. World placement: stored `xyz` are offsets in each face's tangent frame;
+   world position is `R_face @ local * s_face + c_face`.
+2. Projection: rigid world-to-camera transform, then `u = f * x / z + c`.
+3. Covariance: `Sigma = R S S^T R^T`, projected as `J W Sigma W^T J^T`
+   (EWA splatting, Zwicker et al. 2001).
+4. Colour: spherical harmonics along the view direction.
+5. Compositing: sorted back-to-front and alpha-blended.
 """
 
 from __future__ import annotations
 
-
 import numpy as np
 from numba import njit, prange
 
-# Real spherical harmonic basis constants, bands 0-3, in the order the
-# checkpoints store them.
+# real spherical harmonic constants, bands 0-3, in checkpoint order
 SH_C0 = 0.28209479177387814
 SH_C1 = 0.4886025119029199
 SH_C2 = (
@@ -73,11 +56,9 @@ def quaternion_to_rotation(quaternions):
 def face_frames(vertices, faces):
     """Per-face origin, orthonormal frame and scale.
 
-    Mirrors `utils.graphics_utils.compute_face_orientation`: the first axis
-    runs along edge v0->v1, the second along the face normal, the third
-    completes a right-handed frame. Scale is the mean of the edge length
-    and the triangle's extent along that third axis, which is what makes a
-    Gaussian grow with the face it is bound to.
+    Mirrors `compute_face_orientation`: axis 0 along edge v0->v1, axis 1
+    along the normal, axis 2 completes the frame. Scale is the mean of the
+    edge length and the triangle's extent along axis 2.
     """
     vertices = np.asarray(vertices, np.float64)
     triangles = vertices[np.asarray(faces)]
@@ -101,13 +82,12 @@ def face_frames(vertices, faces):
 
 @njit(inline="always")
 def face_frame(vertices, faces, f):
-    """`face_frames` for one face, as scalars: the frame's three axes
-    (a0x, a0y, a0z, a1x, ..., a2z) and the scale. The one copy of this
-    arithmetic the compiled kernels share (`GarmentRenderer`'s placement,
-    `AppearanceNet.world_xyz`); same operations, same order, as the numpy
-    version. Inlined, so each kernel keeps its own loop (parallel or not).
-    (numba's on-disk cache does not notice an edit here: clear
-    `__pycache__` of the kernels' modules after changing it.)"""
+    """`face_frames` for one face as scalars: the three axes (a0x ... a2z) and the scale.
+
+    The one copy shared by the compiled kernels (`GarmentRenderer` placement,
+    `AppearanceNet.world_xyz`), inlined so each keeps its own loop. numba's
+    cache does not notice edits here: clear `__pycache__` of the kernels'
+    modules after changing it."""
     i0, i1, i2 = faces[f, 0], faces[f, 1], faces[f, 2]
     v0x, v0y, v0z = vertices[i0, 0], vertices[i0, 1], vertices[i0, 2]
     e1x, e1y, e1z = vertices[i1, 0] - v0x, vertices[i1, 1] - v0y, vertices[i1, 2] - v0z
@@ -127,9 +107,8 @@ def face_frame(vertices, faces, f):
 
 @njit(cache=True)
 def face_frames_numba(vertices, faces):
-    """(frames (F, 3, 3), scale (F,)) of every face: `face_frames`' orientation
-    and scale, compiled. Serial on purpose (the shading workers call it on
-    their own threads; see `appearance._world_xyz_numba`)."""
+    """(frames (F, 3, 3), scale (F,)) of every face; compiled `face_frames`.
+    Serial on purpose (shading workers call it; see `appearance._world_xyz_numba`)."""
     frames = np.empty((len(faces), 3, 3))
     scale = np.empty(len(faces))
     for f in range(len(faces)):
@@ -153,21 +132,12 @@ def world_positions(local_xyz, binding, vertices, faces):
 def face_scaled_log_scaling(log_scaling, binding, vertices, faces, dilate=1.0):
     """Scale each Gaussian by the face it is bound to, in log space.
 
-    Stored `scaling` is *relative* to its face, exactly as
-    `MeshGaussianModel.remember_scaling` treats it. Using it directly makes
-    every splat roughly ninety times too large - `exp(scaling)` has a median
-    of 0.28 against a face scale of 0.011 - which projects to a ~646 pixel
-    radius per Gaussian and exhausts memory long before a view is written.
-    Returned in log space so it drops straight into `screen_covariance`.
+    Stored `scaling` is relative to its face; used directly, splats would be
+    ~90x too large. Returned in log space for `screen_covariance`.
 
-    `dilate` grows every splat by a constant factor. A trained garment
-    carries fewer Gaussians than the pixels it must fill - 93k over a ~160k
-    pixel silhouette, 0.58 per pixel at a median radius of 1.29px - so at
-    their stored size they do not quite meet, leaving 10.3% of the garment
-    thin or empty and reading as grain rather than weave. Measured: x1.3
-    closes that to 7.1%, x1.6 to 6.4%, x2.0 back to 7.1%, while sharpness
-    falls 878 -> 569 -> 399 -> 270. x1.3 buys most of the coverage for the
-    least blur.
+    `dilate` grows every splat by a constant factor: the stored sizes leave
+    gaps on a garment this sparse, and 1.3 closes most of them for the least
+    blur.
     """
     _, _, scale = face_frames(vertices, faces)
     return (
@@ -205,13 +175,11 @@ def look_at(eye, target, up=(0.0, 1.0, 0.0)):
 
 @njit(cache=True, fastmath={"contract"})
 def camera_coordinates(px, py, pz, rotation, translation):
-    """The camera-space position of a world point: the row `points @ R.T + t`
-    gives, bit for bit. Accelerate's gemm evaluates each dot product as a
-    multiply and two fused multiply-adds in the order y, x, z (found by trying
-    every order: equal to the matmul on random views at every row count from 1
-    to 200,000, where the plain sum differs in the last bit on 5 % of the
-    rows). `contract` lets LLVM fuse them; it covers this function's own
-    instructions only, so the callers' other arithmetic is not fused."""
+    """Camera-space position of a world point, bit for bit equal to `points @ R.T + t`.
+
+    Accelerate's gemm evaluates each dot product as a multiply and two fused
+    multiply-adds in the order y, x, z; `contract` lets LLVM fuse them here
+    without fusing the callers' arithmetic."""
     a = py * rotation[0, 1]
     a = px * rotation[0, 0] + a
     x = (pz * rotation[0, 2] + a) + translation[0]
@@ -226,11 +194,8 @@ def camera_coordinates(px, py, pz, rotation, translation):
 
 @njit(cache=True)
 def _project_numba(points, rotation, translation, fx, fy, cx, cy):
-    """`_project_points_numpy` in one serial pass: no BLAS (the 85k x 3 gemm
-    took 0.5 ms alone and 10-19 ms when the cores were busy) and no
-    temporaries. The camera coordinates are the matmul's bit for bit (see
-    `_dot3`), so pixels, depths and `valid` equal the numpy ones. Serial: it
-    may run on any thread."""
+    """`_project_points_numpy` in one serial pass (no BLAS, no temporaries).
+    Camera coordinates match the matmul bit for bit; safe on any thread."""
     n = len(points)
     pixels = np.empty((n, 2))
     depth = np.empty(n)
@@ -260,7 +225,7 @@ def project_points(points, view, intrinsics):
 
 
 def _project_points_numpy(points, view, intrinsics):
-    """The original numpy `project_points`: the oracle for the compiled one."""
+    """Numpy `project_points`; oracle for the compiled one."""
     points = np.asarray(points, np.float64)
     camera = points @ view[:3, :3].T + view[:3, 3]
     depth = camera[:, 2]
@@ -275,14 +240,12 @@ def _project_points_numpy(points, view, intrinsics):
 def screen_covariance(points, scaling, rotation, view, intrinsics):
     """2D covariance of each projected Gaussian (EWA splatting).
 
-    `Sigma = R S S^T R^T` in world space. Projection is a nonlinear change
-    of variables, so it is linearised about each centre: with `W` the
-    camera rotation and `J` the Jacobian of `(x, y, z) -> (fx/z, fy/z)`,
-    the screen covariance is `J W Sigma W^T J^T`.
+    `Sigma = R S S^T R^T` in world space, linearised about each centre:
+    screen covariance is `J W Sigma W^T J^T` with `W` the camera rotation
+    and `J` the Jacobian of the perspective division.
     """
     scales = np.exp(np.asarray(scaling, np.float64))
     rotations = quaternion_to_rotation(rotation)
-    # R @ diag(s) without materialising the diagonal matrix.
     scaled = rotations * scales[:, None, :]
     world_cov = scaled @ np.transpose(scaled, (0, 2, 1))
 
@@ -297,8 +260,7 @@ def screen_covariance(points, scaling, rotation, view, intrinsics):
 
     transform = jacobian @ view[:3, :3]
     cov2d = transform @ world_cov @ np.transpose(transform, (0, 2, 1))
-    # A small dilation keeps sub-pixel Gaussians from vanishing and the
-    # matrix invertible, as in the reference implementation.
+    # small dilation keeps sub-pixel Gaussians visible and the matrix invertible
     cov2d[:, 0, 0] += 0.3
     cov2d[:, 1, 1] += 0.3
     return cov2d
@@ -307,9 +269,8 @@ def screen_covariance(points, scaling, rotation, view, intrinsics):
 def sh_to_rgb(feature_dc, feature_rest, directions):
     """Evaluate spherical harmonics for the given viewing directions.
 
-    Band 0 is the view-independent base colour; bands 1-3 are what let a
-    surface look different from the front than from the side. The stored
-    coefficients are offsets from 0.5, matching the reference convention.
+    Band 0 is the view-independent colour; bands 1-3 add view dependence.
+    Stored coefficients are offsets from 0.5.
     """
     dc = np.asarray(feature_dc, np.float64).reshape(len(feature_dc), 3)
     rest = np.asarray(feature_rest, np.float64)
@@ -352,8 +313,8 @@ def render_splats_reference(splats, view, intrinsics, size, tile=3.0):
     """Rasterise Gaussians into (BGR float image, alpha).
 
     Back-to-front painter's algorithm: each Gaussian contributes
-    `alpha * exp(-0.5 * d^T Sigma^-1 d)` over the pixels within `tile`
-    standard deviations of its centre, blended over what is already there.
+    `alpha * exp(-0.5 * d^T Sigma^-1 d)` within `tile` standard deviations of
+    its centre. Slow oracle for `render_splats`.
     """
     height, width = size
     image = np.zeros((height, width, 3), np.float64)
@@ -375,7 +336,7 @@ def render_splats_reference(splats, view, intrinsics, size, tile=3.0):
     )
     opacity = 1.0 / (1.0 + np.exp(-np.asarray(splats["opacity"], np.float64).ravel()))
 
-    # Furthest first, so nearer Gaussians paint over them.
+    # furthest first
     order = np.argsort(-depth)
     order = order[valid[order]]
     radius = tile * np.sqrt(
@@ -396,7 +357,6 @@ def render_splats_reference(splats, view, intrinsics, size, tile=3.0):
         dy = ys - centre[1]
         a, b, c = cov2d[index, 0, 0], cov2d[index, 0, 1], cov2d[index, 1, 1]
         inverse = determinant[index]
-        # Inverse of a symmetric 2x2, written out.
         power = -0.5 * (
             (c * dx * dx - 2 * b * dx * dy + a * dy * dy) / inverse
         )
@@ -406,8 +366,7 @@ def render_splats_reference(splats, view, intrinsics, size, tile=3.0):
             continue
         region = image[y0:y1, x0:x1]
         existing = alpha_buffer[y0:y1, x0:x1]
-        # Colour is stored BGR to match OpenCV, the convention everywhere
-        # else in this package.
+        # BGR, as everywhere in this package
         colour = colours[index][::-1]
         region *= (1 - weight)[..., None]
         region += weight[..., None] * colour
@@ -417,33 +376,19 @@ def render_splats_reference(splats, view, intrinsics, size, tile=3.0):
 
 # --- Fast rasteriser --------------------------------------------------------
 #
-# `render_splats_reference` above is a per-Gaussian Python loop: 93k
-# iterations and 30k `np.mgrid` calls made it 2.0 s of a 2.3 s frame. The
-# compositing is a painter's recurrence - back to front, `canvas =
-# canvas*(1-w) + w*colour` - so it is order-dependent and cannot be a single
-# scatter-add. What can be vectorised is everything inside a TILE: bin the
-# splats into TILE x TILE pixel blocks, then for each tile composite its
-# splats in depth order as one dense (n_splats, TILE, TILE) stack. That is
-# the design of Kerbl et al. 2023, on the CPU. The reference is kept as the
-# oracle: `tests/test_rendering_splat_cpu_speed.py` requires the two to agree to a
-# quarter of a grey level.
+# Compositing is an order-dependent painter's recurrence, so splats are
+# binned into TILE x TILE blocks and composited per tile in depth order
+# (Kerbl et al. 2023, on the CPU). `render_splats_reference` is the oracle;
+# tests require agreement to a quarter of a grey level.
 
+# 6 beat 16 and 32 on both a scattered and a real-garment workload: partly
+# overlapped tiles are mostly wasted work at small splat radii.
 TILE = 6
-# 16 was the first guess (Kerbl et al. use it on a GPU, where each tile is
-# one thread block). On the CPU, a splat that only partly overlaps its tile
-# still pays for the full TILE x TILE array in every numpy call, and with
-# splats of a few pixels' radius most of a 16x16 tile is wasted work.
-# Measured with median-of-several timing on two workloads, 240x320: 20,000
-# scattered splats (radius ~6 px) is 276-282 ms across TILE 6-8 and rises to
-# 485 ms at 16, 1728 ms at 32; the real garment (93k splats bound to a body)
-# is smallest at TILE=6 (~390-550 ms across five runs) against ~600 ms at 16.
-# Both point the same way; 6 is the better of the two measured minima.
 
 
 @njit(cache=True, parallel=True)
 def _screen_covariance_numba(points, scaling, rotation, view_rotation, view_translation, fx, fy):
-    """`screen_covariance`, one splat per iteration, compiled. Same maths:
-    Sigma = R S S^T R^T in the world, then J W Sigma W^T J^T + 0.3 I."""
+    """Compiled `screen_covariance`, one splat per iteration (same maths)."""
     n = len(points)
     out = np.empty((n, 2, 2))
     for i in prange(n):
@@ -454,7 +399,7 @@ def _screen_covariance_numba(points, scaling, rotation, view_rotation, view_tran
         r10, r11, r12 = 2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)
         r20, r21, r22 = 2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)
         s0, s1, s2 = np.exp(scaling[i, 0]), np.exp(scaling[i, 1]), np.exp(scaling[i, 2])
-        # M = R diag(s); Sigma = M M^T
+        # Sigma = M M^T with M = R diag(s)
         m00, m01, m02 = r00 * s0, r01 * s1, r02 * s2
         m10, m11, m12 = r10 * s0, r11 * s1, r12 * s2
         m20, m21, m22 = r20 * s0, r21 * s1, r22 * s2
@@ -495,7 +440,7 @@ def _screen_covariance_numba(points, scaling, rotation, view_rotation, view_tran
 
 @njit(cache=True, parallel=True)
 def _sh_to_rgb_numba(dc, rest, directions, c1, c2, c3):
-    """`sh_to_rgb`, compiled; bands present are decided by `rest`'s width."""
+    """Compiled `sh_to_rgb`; bands present follow `rest`'s width."""
     n = len(dc)
     available = rest.shape[1]
     out = np.empty((n, 3))
@@ -535,14 +480,8 @@ def _sh_to_rgb_numba(dc, rest, directions, c1, c2, c3):
 
 
 def _prepare(splats, view, intrinsics, tile):
-    """Everything per-splat that does not depend on the pixel: shared.
-
-    The two per-splat passes that dominated this step (measured at 56k
-    splats: `screen_covariance` 212 ms, `sh_to_rgb` 169 ms of a 660 ms
-    pre-pass, against 486 ms for the whole compiled composite) run in
-    numba here; the numpy originals stay as the oracles their tests
-    compare against.
-    """
+    """Everything per-splat that does not depend on the pixel (shared by the
+    CPU and GL rasterisers); covariance and SH run compiled."""
     positions = np.ascontiguousarray(splats["xyz"], dtype=np.float64)
     pixels, depth, valid = project_points(positions, view, intrinsics)
     view_rotation = np.ascontiguousarray(view[:3, :3], dtype=np.float64)
@@ -568,7 +507,7 @@ def _prepare(splats, view, intrinsics, tile):
         np.asarray(SH_C2, np.float64),
         np.asarray(SH_C3, np.float64),
     )
-    opacity = splats.get("opacity_alpha")  # the sigmoid, when the caller kept it (a static garment's: `GarmentRenderer`)
+    opacity = splats.get("opacity_alpha")  # precomputed sigmoid, when the caller kept it
     if opacity is None:
         opacity = 1.0 / (1.0 + np.exp(-np.asarray(splats["opacity"], np.float64).ravel()))
     radius = tile * np.sqrt(np.maximum(cov2d[:, 0, 0], cov2d[:, 1, 1]))
@@ -577,20 +516,10 @@ def _prepare(splats, view, intrinsics, tile):
 
 @njit(cache=True)
 def _bucket_sort_by_tile(tile_id, n_tiles):
-    """Stable O(n) counting sort of (splat, tile) pair indices by tile_id.
+    """Stable O(n + n_tiles) counting sort of (splat, tile) pair indices by tile_id.
 
-    Replaces `np.lexsort((-depth, tile_id))` for the GROUPING half of the
-    job. `tile_id` is bounded and small (a few thousand at most, one per
-    TILE x TILE block of the frame) - exactly the case a counting sort
-    beats a comparison sort on: O(n + n_tiles) here against O(n log n) for
-    lexsort. Depth order WITHIN a tile still needs sorting - done
-    separately in `_composite_tiles` via a real O(k log k) `np.argsort`
-    per tile, not here and not by insertion sort (see that function's
-    docstring for why insertion sort was tried and reverted: real tile
-    groups at a garment's screen size average ~838 splats, not the ~137
-    a naive `pairs / all_tile_slots` estimate suggested, since most of a
-    frame's tile slots are empty - O(k^2) at k~838 lost to the O(n log n)
-    it was meant to beat).
+    Groups only; depth order within a tile is sorted in `_composite_tiles`
+    (insertion sort lost: real tile groups average ~800 splats).
     """
     counts = np.zeros(n_tiles, dtype=np.int64)
     n = len(tile_id)
@@ -616,30 +545,11 @@ def _composite_tiles(
 ):
     """The painter's-recurrence loop, one compiled pass over every tile.
 
-    Same maths as the pure-numpy version this replaces (kept as
-    `render_splats_reference`, a fully independent implementation, not a
-    fast path re-deriving the slow one's answer). Two things were
-    compiled here, in two separate attempts:
-
-    1. The composite loop itself: 93k splats means 1000+ non-empty tiles
-       at a real garment's screen size, and the old pure-numpy version
-       paid Python call overhead per tile. Compiling it alone (keeping
-       `np.lexsort` for binning) measured 715-760ms -> 407-442ms at
-       480x640.
-    2. The binning/sort step, once (1) made it the largest remaining
-       cost (~298 of ~325ms): grouping is now `_bucket_sort_by_tile`
-       (O(n)), and depth order WITHIN each tile's group is sorted here,
-       per tile, with a real `np.argsort` (O(k log k)) - not a second
-       global sort over all 1.17M pairs, and NOT insertion sort (tried
-       first; O(k^2) at the real mean group size of ~838 measured
-       WORSE than the lexsort it was meant to replace - see
-       `_bucket_sort_by_tile`'s docstring and PLAN.md for that
-       measurement).
+    Same maths as `render_splats_reference`. Each tile's group (already
+    grouped by `_bucket_sort_by_tile`) is depth-sorted here with `np.argsort`.
     """
     n_tiles = len(starts)
-    # Tiles are independent (each writes only its own block of the image),
-    # so they run in parallel; the per-tile arithmetic and its order are
-    # unchanged, so the result is identical to the serial pass.
+    # tiles write only their own block, so they run in parallel
     for i in prange(n_tiles):
         start, end = starts[i], ends[i]
         t = tile_id[i]
@@ -647,20 +557,11 @@ def _composite_tiles(
         px = (t % tiles_x) * TILE
         th = min(TILE, height - py)
         tw = min(TILE, width - px)
-        # Sort this tile's group by depth, ascending, with a real
-        # O(k log k) sort - `splat_of[start:end]` arrives grouped by tile
-        # (via `_bucket_sort_by_tile`) but not yet depth-ordered within
-        # that group. `np.argsort` ascending puts the smallest depth
-        # (nearest) first; the loop below wants farthest-first at
-        # `start`, so it is read in reverse below instead of reversing
-        # the array here.
+        # the group arrives grouped by tile but not depth-ordered
         group = splat_of[start:end]
         group_depth = depth[group]
         local_order = np.argsort(group_depth)
-        # Transmittance accumulates back-to-front; visiting nearest-first
-        # (ascending depth, as `local_order` gives) in a forward pass
-        # over that order matches cumprod(w[::-1])[::-1] on the
-        # farthest-first array the old code built explicitly.
+        # nearest-first with a running transmittance equals the back-to-front blend
         trans = np.ones((th, tw))
         accum_bgr = np.zeros((th, tw, 3))
         accum_alpha = np.zeros((th, tw))
@@ -670,8 +571,7 @@ def _composite_tiles(
             as_, bs, cs, det = a[s], b[s], c[s], determinant[s]
             op = opacity[s]
             bx0, bx1, by0, by1 = x0[s], x1[s], y0[s], y1[s]
-            # Only the cells inside this splat's bounding box, instead of
-            # testing every one of the tile's 36 cells against it.
+            # only cells inside this splat's bounding box
             row_start = max(by0 - py, 0)
             row_end = min(by1 - py, th)
             col_start = max(bx0 - px, 0)
@@ -699,10 +599,8 @@ def _composite_tiles(
 
 
 def render_splats(splats, view, intrinsics, size, tile=3.0):
-    """Rasterise Gaussians into (BGR float image, alpha) - tiled, compiled.
-
-    Identical output to `render_splats_reference`; see the section comment.
-    """
+    """Rasterise Gaussians into (BGR float image, alpha); tiled and compiled.
+    Same output as `render_splats_reference`."""
     height, width = size
     image = np.zeros((height, width, 3), np.float64)
     alpha_buffer = np.zeros((height, width), np.float64)
@@ -711,7 +609,7 @@ def render_splats(splats, view, intrinsics, size, tile=3.0):
     pixels, depth, valid, cov2d, determinant, colours, opacity, radius = _prepare(
         splats, view, intrinsics, tile
     )
-    # Bounding box per splat, clipped to the image; drop what falls outside.
+    # per-splat bounding box clipped to the image
     x0 = np.maximum(np.floor(pixels[:, 0] - radius), 0).astype(np.int64)
     x1 = np.minimum(np.ceil(pixels[:, 0] + radius) + 1, width).astype(np.int64)
     y0 = np.maximum(np.floor(pixels[:, 1] - radius), 0).astype(np.int64)
@@ -720,7 +618,7 @@ def render_splats(splats, view, intrinsics, size, tile=3.0):
     keep = np.flatnonzero(valid)
     if keep.size == 0:
         return image, alpha_buffer
-    # Which tiles does each splat touch? Enumerate (splat, tile) pairs.
+    # enumerate (splat, tile) pairs
     tiles_x = (width + TILE - 1) // TILE
     tiles_y = (height + TILE - 1) // TILE
     n_tiles = tiles_x * tiles_y
@@ -728,25 +626,21 @@ def render_splats(splats, view, intrinsics, size, tile=3.0):
     ty0, ty1 = y0[keep] // TILE, (y1[keep] - 1) // TILE
     counts = (tx1 - tx0 + 1) * (ty1 - ty0 + 1)
     splat_of = np.repeat(keep, counts)
-    # Per pair: which tile, laid out row-major within each splat's tile box.
+    # tile of each pair, row-major within the splat's tile box
     offsets = np.arange(counts.sum()) - np.repeat(np.cumsum(counts) - counts, counts)
     span_x = np.repeat(tx1 - tx0 + 1, counts)
     tile_x = np.repeat(tx0, counts) + offsets % span_x
     tile_y = np.repeat(ty0, counts) + offsets // span_x
     tile_id = (tile_y * tiles_x + tile_x).astype(np.int64)
-    # Group pairs by tile in O(n); depth order within each group is sorted
-    # separately, inside the compiled kernel, with a real O(k log k) sort
-    # per tile rather than one O(n log n) lexsort over all pairs - see
-    # `_bucket_sort_by_tile` and `_composite_tiles`'s docstrings.
+    # group pairs by tile; depth is sorted per tile inside the kernel
     bucket_order, all_starts = _bucket_sort_by_tile(tile_id, n_tiles)
     splat_of = splat_of[bucket_order].astype(np.int64)
     non_empty = np.flatnonzero(np.diff(all_starts))
     starts = all_starts[non_empty]
     ends = all_starts[non_empty + 1]
     run_tile_id = non_empty.astype(np.int64)
-    # Precompute the symmetric 2x2 inverse-covariance coefficients.
     a, b, c = cov2d[:, 0, 0], cov2d[:, 0, 1], cov2d[:, 1, 1]
-    colours_bgr = np.ascontiguousarray(colours[:, ::-1])  # BGR, as everywhere here
+    colours_bgr = np.ascontiguousarray(colours[:, ::-1])  # BGR
     _composite_tiles(
         starts, ends, splat_of, run_tile_id, depth, tiles_x, height, width,
         pixels, a, b, c, determinant, opacity.ravel(), colours_bgr, x0, x1, y0, y1,
@@ -781,8 +675,7 @@ def _rotation_to_quaternion_reference(matrices):
 
 @njit(cache=True)
 def _rotation_to_quaternion_numba(m):
-    """`_rotation_to_quaternion_numpy`, one matrix per iteration: the same
-    four branches chosen by the same rule (10 -> ~1 ms at 121k splats).
+    """Compiled `_rotation_to_quaternion_numpy`, one matrix per iteration.
     Serial, so it is safe beside another thread's numba parallel region."""
     n = m.shape[0]
     q = np.empty((n, 4))
@@ -805,9 +698,7 @@ def _rotation_to_quaternion_numba(m):
 
 
 def rotation_to_quaternion(matrices):
-    """Batch of 3x3 rotations -> (w, x, y, z), Shepperd's method, compiled
-    (`_rotation_to_quaternion_numba`); `_rotation_to_quaternion_numpy` is
-    the vectorised original."""
+    """Batch of 3x3 rotations -> (w, x, y, z), Shepperd's method, compiled."""
     m = np.ascontiguousarray(matrices, np.float64)
     if m.shape[0] == 0:
         return np.zeros((0, 4))
@@ -815,19 +706,16 @@ def rotation_to_quaternion(matrices):
 
 
 def _rotation_to_quaternion_numpy(matrices):
-    """Batch of 3x3 rotations -> (w, x, y, z). Shepperd's method, vectorised.
+    """Batch of 3x3 rotations -> (w, x, y, z), Shepperd's method, vectorised.
 
-    Each of the four branches is evaluated for every matrix and the right
-    one selected, which is cheaper than any per-row dispatch in numpy; the
-    selection is by largest of (trace, r00, r11, r22), so no branch's square
-    root ever sees a negative argument on a valid rotation. A per-matrix
-    loop of the same formulas is kept as `_rotation_to_quaternion_reference`
-    and the two are tested equal.
+    All four branches are evaluated and the right one selected; selection by
+    the largest of (trace, r00, r11, r22) keeps square roots non-negative.
+    Tested against `_rotation_to_quaternion_reference`.
     """
     m = np.asarray(matrices, np.float64)
     r00, r11, r22 = m[:, 0, 0], m[:, 1, 1], m[:, 2, 2]
     trace = r00 + r11 + r22
-    # Candidate 4x s for each branch, clipped so the unused branches never NaN.
+    # clipped so unused branches never NaN
     s0 = np.sqrt(np.maximum(trace + 1.0, 0.0)) * 2
     s1 = np.sqrt(np.maximum(1.0 + r00 - r11 - r22, 0.0)) * 2
     s2 = np.sqrt(np.maximum(1.0 + r11 - r00 - r22, 0.0)) * 2

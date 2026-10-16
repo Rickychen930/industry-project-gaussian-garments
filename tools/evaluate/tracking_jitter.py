@@ -1,31 +1,20 @@
 """Tracking jitter on real video: the authors' release clips.
 
-The synthetic sequences in `tests/synthetic_sequence.py` add iid pixel
-noise to exact projections; MediaPipe's video mode does not produce iid
-noise (it smooths across frames), so a tracker tuned on them may be tuned
-to the wrong problem. This runs the LIVE per-frame body logic
-(`tryon.app.track_step`: warm track, refit on a spike) over the
-"Ground Truth" panel of the Gaussian-Garments release videos - real people
-moving smoothly at 25 fps - and reports, per clip:
+Synthetic sequences add iid noise, which MediaPipe's video mode does not
+produce, so a tracker tuned on them may be tuned to the wrong problem. This runs
+the live per-frame body logic (`tryon.app.track_step`) over the release videos'
+"Ground Truth" panel (25 fps) and reports per clip:
+  screen_accel  mean |second difference| of the fitted joints' projection, in
+                thousandths of person height per frame^2 (what the viewer sees shake)
+  reprojection  mean px from fitted joints to MediaPipe's, as % of height; must
+                not rise, since a tracker that lags also has low acceleration
+  input_accel   the same for MediaPipe's own landmarks, for scale
+  accel_3d      root-relative 3D joint acceleration, mm/frame^2
 
-  screen_accel   mean |second difference| of the fitted body's projected
-                 joints, in thousandths of the person's height per frame^2.
-                 What the viewer sees shake. A real body moving smoothly
-                 has little of it, so lower is better as long as
-  reprojection   (mean px from the fitted joints to MediaPipe's, as % of
-                 the person's height) does not rise - a tracker that lags
-                 or ignores the input also has low acceleration.
-  input_accel    the same acceleration of MediaPipe's own landmarks: the
-                 detector's jitter plus true motion, for scale.
-  accel_3d       root-relative 3D joint acceleration, mm/frame^2.
+There is no ground-truth body past frame 0, so this ranks tracker variants but
+does not score them absolutely.
 
-There is no ground-truth body for these frames (the trajectories do not
-align with the video past frame 0 - see docs/LOG.md), so this is a
-proxy: it ranks tracker variants, it does not score them absolutely.
-
-    .venv/bin/python -m tools.evaluate.tracking_jitter \\
-        [--videos 00152_outer,00134_upper] [--height 870] [--frames 120] \\
-        [--out docs/baseline/tracking-jitter.json]
+    .venv/bin/python -m tools.evaluate.tracking_jitter [--videos 00152_outer,00134_upper] [--height 870] [--frames 120] [--out docs/baseline/tracking-jitter.json]
 """
 
 from __future__ import annotations

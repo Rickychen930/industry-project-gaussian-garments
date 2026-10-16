@@ -29,15 +29,13 @@ class YawBinTest(unittest.TestCase):
             self.assertEqual(yaw_to_bin(center), bin_index)
 
     def test_bins_partition_the_full_circle(self):
-        # Sweeping yaw across the whole range should visit every bin
-        # exactly proportionally - no gaps, no bin unreachable.
+        # Sweeping yaw across the range should visit every bin.
         yaws = np.linspace(-np.pi, np.pi, 4000, endpoint=False)
         seen_bins = {yaw_to_bin(y) for y in yaws}
         self.assertEqual(seen_bins, set(range(N_BINS)))
 
     def test_adjacent_yaws_are_same_or_adjacent_bin(self):
-        # A small change in yaw must not jump more than one bin - the
-        # binning itself must be monotonic/contiguous, not scrambled.
+        # A small yaw change must not jump more than one bin.
         yaws = np.linspace(-np.pi, np.pi - 1e-6, 2000)
         bins = [yaw_to_bin(y) for y in yaws]
         for a, b in zip(bins, bins[1:]):
@@ -51,10 +49,8 @@ class SamplePoseAndKeypointsTest(unittest.TestCase):
     def setUpClass(cls):
         from tryon.body.fitter import BodyFitter
 
-        # One fitter reused across every test in this class - constructing
-        # one costs ~0.67s (loads the SMPL-X model from disk), and every
-        # parameter `sample_pose_and_keypoints` touches is overwritten
-        # before use, so sharing it across tests is safe.
+        # One shared fitter: constructing one loads SMPL-X (~0.7 s) and
+        # every parameter used is overwritten before use.
         cls.fitter = BodyFitter()
 
     def test_output_shapes(self):
@@ -79,9 +75,7 @@ class SamplePoseAndKeypointsTest(unittest.TestCase):
         self.assertTrue(np.all((visibility == 0.0) | (visibility == 1.0)))
 
     def test_dropout_rate_matches_requested_probability_on_average(self):
-        # Over many draws, the fraction of dropped (LEFT_WRIST) samples
-        # should be close to its configured 0.12 probability - not exact
-        # (this is a random process) but not wildly off either.
+        # The dropped-wrist fraction should be near its configured 0.12.
         from tryon.body.orientation_data import _DROPOUT_PROBABILITY
 
         left_wrist_landmark = 15
@@ -99,11 +93,7 @@ class SamplePoseAndKeypointsTest(unittest.TestCase):
         self.assertLess(abs(observed_rate - expected_rate), 0.03)
 
     def test_normalization_is_invariant_to_translation_and_scale(self):
-        """The whole point of normalising by torso scale/translation: two
-        bodies with the SAME orientation/pose but different screen
-        position/size must produce nearly the same feature vector, so the
-        classifier cannot cheat by learning screen placement instead of
-        orientation (see the module docstring)."""
+        """Same orientation at different screen position/size gives nearly the same features."""
         import torch
 
         from tryon.body.fitter import BodyFitter
@@ -128,12 +118,7 @@ class SamplePoseAndKeypointsTest(unittest.TestCase):
         np.testing.assert_allclose(features_a, features_b, atol=1e-4)
 
     def test_left_right_ordering_flips_across_a_half_turn(self):
-        """A qualitative sanity check on the yaw-to-keypoint relationship
-        itself (not just the binning): at yaw=0 the left shoulder should
-        project to one side, and at yaw=pi (fully turned) the apparent
-        left-right ordering in the image should flip - the actual visual
-        cue MediaPipe-derived keypoints carry that lets orientation be
-        inferred at all."""
+        """Yaw pi flips the apparent left-right ordering of the shoulders."""
         import torch
 
         from tryon.body.fitter import BodyFitter
@@ -156,8 +141,7 @@ class SamplePoseAndKeypointsTest(unittest.TestCase):
 
         front_left_minus_right_x = pixels_front[left_shoulder_row, 0] - pixels_front[right_shoulder_row, 0]
         back_left_minus_right_x = pixels_back[left_shoulder_row, 0] - pixels_back[right_shoulder_row, 0]
-        # Turning 180 degrees must flip which side the (anatomically)
-        # left shoulder projects to in the image.
+        # Turning 180 degrees flips which side the left shoulder projects to.
         self.assertTrue(front_left_minus_right_x * back_left_minus_right_x < 0)
 
 

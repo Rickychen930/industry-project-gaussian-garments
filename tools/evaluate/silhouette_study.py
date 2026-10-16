@@ -1,18 +1,16 @@
 """How much of the garment's over-drawn silhouette is the Gaussians' soft fringe rather than geometry.
 
-The metric of `vs_registration` is our alpha > 25 (of 255) against the real shirt. A splat's smooth
-falloff makes that a very low bar, so every tail counts as garment. `collect` runs the live path
-(GPU rasteriser, NLF body, as `placement_gap.collect`) and, on every scored frame, re-renders the
-SAME splats under a set of rasteriser settings (nothing in tryon/ is changed: the arguments the
-renderer hands the rasteriser are intercepted):
-
-  scale xM     every Gaussian's scale times M (on top of the garment's own 1.3 SPLAT_DILATION)
-  op^G         per-splat opacity to the power G (a harder peak)
-  ewa0         without the +0.3 px^2 screen-space low-pass term of `screen_covariance`
-  nofloat      without the Gaussians farther than 1 cm from the template surface at rest
-
-and scores each at the alpha thresholds `THRESHOLDS`: IoU, extra / missed pixels as a share of the
-real shirt's area, and the composite guards (holes in the garment's interior, edge softness).
+`vs_registration` scores our alpha > 25 against the real shirt, and a splat's
+smooth falloff makes that a low bar. `collect` runs the live path (as
+`placement_gap.collect`) and re-renders the same splats on each scored frame
+under rasteriser settings (the arguments handed to the rasteriser are
+intercepted; tryon/ is unchanged):
+  scale xM   every Gaussian's scale times M
+  op^G       per-splat opacity to the power G
+  ewa0       without the +0.3 px^2 low-pass of `screen_covariance`
+  nofloat    without Gaussians farther than 1 cm from the template surface
+Each is scored at the `THRESHOLDS` alpha levels: IoU, extra / missed pixels as a
+share of the real shirt, and composite guards (interior holes, edge softness).
 
     .venv/bin/python -m tools.evaluate.silhouette_study collect [videos] [--every 20]
     .venv/bin/python -m tools.evaluate.silhouette_study report [--out docs/baseline/silhouette-study.json]

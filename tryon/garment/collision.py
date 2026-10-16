@@ -1,11 +1,8 @@
 """Keep the garment outside the wearer's body.
 
-The body is the fitted SMPL-X mesh. For every garment vertex the nearest
-body vertex and its outward normal give a local tangent plane; a vertex
-closer to that plane than `margin` (or behind it) is pushed out along the
-normal (Muller et al. 2007, position-based dynamics, section 3.3). A KD-tree
-over the body's vertices makes this O(n log m) per frame, cheap enough to
-run every frame on the ~8,000-vertex garments.
+Each garment vertex is tested against the tangent plane of its nearest body
+vertex and pushed out along the normal if closer than `margin` (Muller et
+al. 2007, section 3.3). A KD-tree keeps this cheap enough for every frame.
 """
 
 from __future__ import annotations
@@ -16,20 +13,18 @@ from scipy.spatial import cKDTree
 
 
 def scatter_rows(index, values, count):
-    """`out[index[i]] += values[i]` for (N, 3) `values` into (count, 3):
-    `np.add.at`'s sum, by one `np.bincount` per column (~8x faster)."""
+    """`out[index[i]] += values[i]` for (N, 3) `values` into (count, 3); bincount per column, faster than `np.add.at`."""
     index = np.asarray(index)
     return np.stack([np.bincount(index, weights=values[:, c], minlength=count) for c in range(values.shape[1])], axis=1)
 
 
 @njit(cache=True)
 def _vertex_normals_csr(vertices, faces, offset, entry):
-    """Per-vertex sums of the face normals (2 x area, `np.cross`'s arithmetic)
-    around each vertex. `entry[offset[v]:offset[v + 1]]` are the corners
-    (`corner * n_faces + face`) at vertex `v`, in ascending order - the order
-    `np.bincount` added them in, so the sums are bit-identical to
-    `scatter_rows`. Serial: the shading workers run compiled code on their
-    own threads, and two parallel regions at once abort numba's workqueue."""
+    """Per-vertex sums of face normals (2 x area) around each vertex.
+
+    `entry[offset[v]:offset[v + 1]]` are the corners (`corner * n_faces + face`)
+    at `v`, ascending, so sums match `scatter_rows` bit for bit. Serial on
+    purpose: two parallel numba regions at once abort the workqueue."""
     n_faces = len(faces)
     face_normals = np.empty((n_faces, 3))
     for f in range(n_faces):
@@ -51,12 +46,11 @@ def _vertex_normals_csr(vertices, faces, offset, entry):
     return out
 
 
-_CORNERS = {}  # one entry: (faces, n_vertices, offset, entry) of the last mesh topology
+_CORNERS = {}  # (faces, n_vertices, offset, entry) of the last topology
 
 
 def _corner_table(faces, n_vertices):
-    """The vertex -> corners CSR of `_vertex_normals_csr`; depends only on the
-    topology, so it is built once per mesh (the body's faces never change)."""
+    """Vertex -> corners CSR for `_vertex_normals_csr`; cached per topology."""
     cached = _CORNERS.get("last")
     if cached is not None and cached[1] == n_vertices and (cached[0] is faces or np.array_equal(cached[0], faces)):
         return cached[2], cached[3]
@@ -69,8 +63,7 @@ def _corner_table(faces, n_vertices):
 
 
 def body_vertex_normals(body_vertices, body_faces):
-    """Outward per-vertex normals of a closed body mesh: the area-weighted
-    average of the normals of the faces around each vertex."""
+    """Area-weighted outward per-vertex normals of a closed body mesh."""
     body_vertices = np.ascontiguousarray(body_vertices, np.float64)
     body_faces = np.ascontiguousarray(body_faces, np.int64)
     offset, entry = _corner_table(body_faces, len(body_vertices))
@@ -79,7 +72,7 @@ def body_vertex_normals(body_vertices, body_faces):
 
 
 def _body_vertex_normals_numpy(body_vertices, body_faces):
-    """The original (cross, tile, three bincounts): the oracle for `body_vertex_normals`."""
+    """Reference numpy form; oracle for `body_vertex_normals`."""
     body_vertices = np.asarray(body_vertices, np.float64)
     body_faces = np.asarray(body_faces, np.int64)
     v0, v1, v2 = (body_vertices[body_faces[:, k]] for k in range(3))
@@ -89,21 +82,16 @@ def _body_vertex_normals_numpy(body_vertices, body_faces):
 
 
 class BodySurface:
-    """One frame's body for collision queries: vertices, outward normals
-    and a KD-tree over the vertices."""
+    """One frame's body for collision queries: vertices, normals, KD-tree."""
 
     def __init__(self, body_vertices, body_faces):
         self.vertices = np.asarray(body_vertices, np.float64)
         self.normals = body_vertex_normals(self.vertices, body_faces)
-        # sliding-midpoint, non-compact, 32-point leaves: the tree builds in
-        # 0.8 ms instead of 2.1 and queries as fast overall (4.0 against 5.2 ms
-        # for build + the push of 8,283 points); the nearest vertex is the same
+        # non-compact 32-point leaves: builds ~2.5x faster, same nearest vertex
         self.tree = cKDTree(self.vertices, leafsize=32, balanced_tree=False, compact_nodes=False)
 
     def nearest(self, points):
-        """(nearest body vertex, its normal) for every row of `points`.
-        Four query threads: 0.72 -> 0.41 ms for 1,000 points against the
-        10,475-vertex body (more threads cost more than they save)."""
+        """(nearest body vertex, its normal) for every row of `points`."""
         _, index = self.tree.query(points, k=1, workers=4)
         return self.vertices[index], self.normals[index]
 
@@ -124,9 +112,10 @@ def _signed_distances(points, index, vertices, normals):
 
 @njit(cache=True)
 def _push_violations(points, index, signed, normals, margin, moved, moved_points):
-    """Push every point closer than `margin` out along its vertex normal, in
-    place; `moved[:n]` are those points, `moved_points[:n]` their new
-    positions (contiguous, for the next KD query). Returns n."""
+    """Push points closer than `margin` out along their vertex normal, in place.
+
+    `moved[:n]` are the pushed indices, `moved_points[:n]` their new positions
+    (for the next KD query). Returns n."""
     n = 0
     for i in range(len(points)):
         violation = margin - signed[i]
@@ -155,15 +144,12 @@ def _renew_nearest(points, moved, count, new_index, index, signed, vertices, nor
 
 
 def push_out_of_body(points, body, margin, passes=3):
-    """`points` (N, 3) with every point moved to at least `margin` outside
-    the tangent plane of its nearest body vertex, in place, and returned.
+    """Move `points` (N, 3) to at least `margin` outside the tangent plane of
+    their nearest body vertex, in place, and return them.
 
-    Repeated up to `passes` times because a push can carry a point into a
-    different body vertex's neighbourhood (an armpit, the inside of an
-    elbow) where it is still inside; stops early once nothing is. The
-    arithmetic runs in serial numba kernels (cloth runs on worker threads
-    too), bit-identical to `_push_out_of_body_numpy`; the nearest vertex is
-    not looked up again after the last push, since nothing reads it."""
+    Repeats up to `passes` times: a push can land a point inside another body
+    vertex's region (armpit, elbow). Serial numba kernels, bit-identical to
+    `_push_out_of_body_numpy`."""
     if points.dtype != np.float64 or not points.flags.c_contiguous or len(points) == 0:
         return _push_out_of_body_numpy(points, body, margin, passes)
     vertices, normals = body.vertices, body.normals
@@ -181,12 +167,7 @@ def push_out_of_body(points, body, margin, passes=3):
 
 
 def _push_out_of_body_numpy(points, body, margin, passes=3):
-    """The original numpy form of `push_out_of_body` (its oracle and the fallback for other dtypes): `points` (N, 3) with every point moved to at least `margin` outside
-    the tangent plane of its nearest body vertex, in place, and returned.
-
-    Repeated up to `passes` times because a push can carry a point into a
-    different body vertex's neighbourhood (an armpit, the inside of an
-    elbow) where it is still inside; stops early once nothing is."""
+    """Numpy form of `push_out_of_body`: its oracle and the fallback for other dtypes."""
     nearest_vertex, nearest_normal = body.nearest(points)
     signed_distance = np.sum((points - nearest_vertex) * nearest_normal, axis=1)
     for _ in range(passes):
@@ -195,7 +176,7 @@ def _push_out_of_body_numpy(points, body, margin, passes=3):
         if not hit.any():
             break
         points[hit] += violation[hit, None] * nearest_normal[hit]
-        # only the points just moved can have a new nearest body vertex
+        # only moved points can have a new nearest vertex
         moved = np.flatnonzero(hit)
         vertex, normal = body.nearest(points[moved])
         nearest_vertex[moved], nearest_normal[moved] = vertex, normal

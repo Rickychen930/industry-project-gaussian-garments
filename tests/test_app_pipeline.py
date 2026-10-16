@@ -209,9 +209,7 @@ class ShoulderWidthTest(unittest.TestCase):
 
 
 class RefindLimitTest(unittest.TestCase):
-    """MediaPipe blind: the regressor may dress the wearer for REFIND_LIMIT
-    frames in a row (an arm across the torso), not for as long as a camera
-    stays pointed at part of a body."""
+    """MediaPipe blind: the regressor may dress the wearer for REFIND_LIMIT frames in a row, not indefinitely."""
 
     def _session(self):
         import collections
@@ -263,8 +261,7 @@ class RefindLimitTest(unittest.TestCase):
 
 
 class EarlyMaskTest(unittest.TestCase):
-    """The clothing parse of frame t+1 starts in `prefetch`, while frame t is
-    still being erased and shown; each frame must get its own parse."""
+    """The parse of frame t+1 starts in `prefetch`; each frame must get its own parse."""
 
     SIZE = 16
 

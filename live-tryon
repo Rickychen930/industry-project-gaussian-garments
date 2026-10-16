@@ -103,7 +103,7 @@ case "${1:-}" in
     show_garments
     [[ -f "$ROOT/docs/figures/garments.jpg" ]] && { echo "pictures: docs/figures/garments.jpg"; command -v open >/dev/null && open "$ROOT/docs/figures/garments.jpg"; }
     exit 0 ;;
-  bench)  # ./live-tryon bench [N|name] [frames=120] [camera=builtin]: time the live pipeline on a camera or a video
+    bench)  # ./live-tryon bench [N|name] [frames=120] [camera=builtin]: time the live pipeline
     shift; garment="${1:-$DEFAULT}"; [[ $# -gt 0 ]] && shift
     frames="${1:-120}"; [[ $# -gt 0 ]] && shift
     source="${1:-builtin}"
@@ -114,7 +114,7 @@ case "${1:-}" in
     echo "The camera frames as read are saved too: ${video%.mp4}-input.mp4 (to replay this session)"
     run_tryon "$garment" --source "$source" --headless --max-frames "$frames" --profile --output-video "$video" --record-input "${video%.mp4}-input.mp4"
     ;;
-  record)  # ./live-tryon record [seconds-per-pose=5] [basic|extended]: a guided camera recording (cues printed and spoken) to replay and measure
+    record)  # ./live-tryon record [seconds-per-pose=5] [basic|extended]: guided camera recording to replay and measure
     shift; exec env PYTHONPATH="$ROOT" "$PY" "$ROOT/tools/record_session.py" "$@" ;;
   pipeline) shift; exec env PYTHONPATH="$ROOT" "$PY" -m tryon.app "$@" ;;
   test)     exec "$PY" -m unittest discover -s "$ROOT/tests" -v ;;
@@ -132,7 +132,7 @@ case "${1:-}" in
     for link in models data; do [[ -e "$ROOT/$link" && ! -e "$tmp/$link" ]] && ln -s "$(cd "$ROOT/$link" && pwd -P)" "$tmp/$link"; done
     out="$ROOT/docs/baseline/compare-$(echo "$ref" | tr '/' '-')-$video.json"
     echo "Measuring $ref on $video ($frames frames): garment IoU vs the real shirt ..."
-    # the tool is tools/evaluate/vs_registration.py since 1 Oct 2026; tags from before that (the archive/ tags) have it as tools/evaluate_vs_registration.py
+    # tags from before 1 Oct 2026 (archive/) keep this tool at the old path
     tool=tools/evaluate/vs_registration.py; [[ -f "$tmp/$tool" ]] || tool=tools/evaluate_vs_registration.py
     (cd "$tmp" && PYTHONPATH="$tmp" "$PY" "$tool" "$video" --every 5 --frames "$frames" --out "$out" | tail -1)
     echo "-> $out"

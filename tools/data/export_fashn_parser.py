@@ -1,16 +1,12 @@
 """Export the FASHN human parser to ONNX for `tryon/removal/parsing_fashn.py`.
 
-Runs in a SEPARATE venv so this project's pinned torch / torchvision stay
-untouched (transformers is not a project dependency):
+Runs in a separate venv so the project's pinned torch stays untouched.
+Writes models/pretrained/fashn_human_parser.onnx (~257 MB); SegFormer licence,
+non-commercial.
 
     python3.10 -m venv /tmp/fashn_venv
     /tmp/fashn_venv/bin/pip install "torch==2.2.2" "transformers==4.44.2" "onnx==1.16.2" onnxscript "numpy==1.26.4"
     /tmp/fashn_venv/bin/.venv/bin/python -m tools.data.export_fashn_parser
-
-Writes models/pretrained/fashn_human_parser.onnx (~257 MB; input
-pixel_values (1, 3, 576, 384), output logits (1, 18, 144, 96)). The model
-is `fashn-ai/fashn-human-parser` on HuggingFace, NVIDIA SegFormer licence
-(non-commercial).
 """
 
 from pathlib import Path

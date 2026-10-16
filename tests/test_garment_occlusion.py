@@ -1,9 +1,7 @@
 """The wearer's body must hide the parts of the garment behind it.
 
-Found on a real frame: the hooded coat's back panel rendered across the
-wearer's face, because the rasteriser draws every splat and the real
-body (a photo, not geometry) is not in the scene to occlude anything.
-`GarmentRenderer.occluded_by_body` culls splats behind the body surface.
+The rasteriser draws every splat and the real body is a photo, not
+geometry, so `GarmentRenderer.occluded_by_body` culls splats behind it.
 """
 
 from __future__ import annotations
@@ -28,9 +26,8 @@ class BodyOcclusionTest(unittest.TestCase):
         from tryon.garment.renderer import GarmentRenderer
 
         cls.renderer = GarmentRenderer(GARMENT, subsample=0.35, dynamics=False)
-        # These pin the ray cast itself, with the WHOLE body as occluder;
-        # the live default occludes only with the parts the garment leaves
-        # bare (`CoveredOcclusionTest` below).
+        # These pin the ray cast with the whole body as occluder; the live
+        # default uses only the parts the garment leaves bare.
         cls.renderer.OCCLUDE_UNCOVERED_ONLY = False
         cls.fitter = BodyFitter()
         with torch.no_grad():
@@ -43,19 +40,14 @@ class BodyOcclusionTest(unittest.TestCase):
     def test_it_culls_a_meaningful_share_of_splats(self):
         splats = self.renderer.splats(self.renderer.posed_mesh(self.fitter))
         culled = self.renderer.occluded_by_body(splats, self.fitter).mean()
-        # The back half of a closed garment is behind the body from any
-        # single viewpoint, so roughly a third to a half of its splats
-        # should be hidden - not none, not nearly all.
+        # Roughly a third to a half of a closed garment is behind the body
+        # from one viewpoint: not none, not nearly all.
         self.assertGreater(float(culled), 0.2, f"only {culled:.0%} of splats culled")
         self.assertLess(float(culled), 0.8, f"{culled:.0%} of splats culled - the body cannot hide that much")
 
     def _behind_the_body(self, splats, pixel_radius=4.0):
-        """Per splat: deeper than the front-most body vertex within
-        `pixel_radius` px of THAT splat by more than the occlusion margin
-        (the depth-buffer rule's own definition), whether it projects
-        inside the body silhouette, and whether it projects DEEP inside
-        it (every pixel within 2 * `pixel_radius` covered by the body) -
-        where the depth rule and a ray cast cannot disagree."""
+        """Per splat: depth beyond the nearest body vertex near it (by the
+        occlusion margin), inside the silhouette, and deep inside it."""
         import cv2
         from scipy.spatial import cKDTree
 
@@ -83,38 +75,24 @@ class BodyOcclusionTest(unittest.TestCase):
         return behind, inside, deep
 
     def test_nothing_behind_the_body_survives(self):
-        """The geometric guarantee: after culling, no splat projecting
-        well inside the body's silhouette sits behind the body's front
-        surface. Until 25 Sep 2026 this was stated on a face window, on
-        the belief that 00152_outer was a hooded coat whose hood-back
-        showed through the face; the checkpoint's release video shows an
-        open plaid shirt, and with the scan-frame binding nothing
-        projects onto the face at all. The property that matters is the
-        same for the torso: the shirt's back panel must not paint through
-        the chest. Since 26 Sep 2026 the rule is a ray cast and the
-        depth-buffer definition here is the independent oracle; the two
-        legitimately differ within a few pixels of the silhouette (the
-        buffer's radius reads body depth where the body is not - see
-        `occluded_by_body`), so the check is over the silhouette's
-        interior."""
+        """After culling, no splat well inside the silhouette is behind the front surface.
+
+        The depth-buffer rule is the independent oracle; it differs from the
+        ray cast near the silhouette edge, so only the interior is checked."""
         splats = self.renderer.splats(self.renderer.posed_mesh(self.fitter))
         keep = ~self.renderer.occluded_by_body(splats, self.fitter)
         behind, inside, deep = self._behind_the_body(splats)
         survivors = int((keep & behind & deep).sum())
         self.assertGreater(int((behind & deep).sum()), 1000, "fixture assumption: the back panel projects well inside the torso")
         self.assertLessEqual(survivors, 0.005 * (inside & deep).sum(), f"{survivors} splats behind the body survived")
-        # And the culling did real work: the back panel of an open shirt
-        # projects onto the torso from behind.
+        # The culling did real work: the back panel projects onto the torso.
         share = float((inside & ~keep).sum() / max(inside.sum(), 1))
         self.assertGreater(share, 0.2, f"only {share:.0%} of the splats over the body were culled")
 
     def test_a_splat_just_outside_the_surface_facing_the_camera_is_kept(self):
-        """The case the depth buffer got wrong on the profile cameras: a
-        splat a centimetre outside the body, on a surface that faces the
-        camera, is visible whatever body pixels lie within 4 px of it.
-        Measured on the annotated profiles at frame 3: the buffer culled
-        9,279 / 7,656 visible splats (10 / 8 % of all) on 0028 / 0076 -
-        41 % of the near sleeve, 2,053 of those 5,085 wrongly."""
+        """A splat just outside a camera-facing surface is visible whatever body pixels lie within 4 px.
+
+        The depth buffer wrongly culled these on the profile cameras."""
         import trimesh
 
         with torch.no_grad():
@@ -127,19 +105,14 @@ class BodyOcclusionTest(unittest.TestCase):
         to_camera = np.array([0.0, 0.0, CAMERA_DISTANCE]) - body
         facing = (normals * to_camera).sum(axis=1) > 0.3 * np.linalg.norm(to_camera, axis=1)
         ray_kept = ~self.renderer.occluded_by_body(outside, self.fitter)
-        # Not 100 %: a camera-facing surface can still sit behind another
-        # body part (fingers behind fingers, the chin's underside); measured 97.1 %.
+        # Not 100%: a camera-facing surface can sit behind another body part.
         self.assertGreater(float(ray_kept[facing].mean()), 0.95, f"ray cast kept {ray_kept[facing].mean():.1%} of the camera-facing splats")
-        # ...and the ones on the far side are still hidden where the body is
-        # thicker than the 3 cm margin (measured 62.5 %: fingers, ears and
-        # the edges of the limbs are thinner than that and survive by design).
+        # Far-side splats are hidden where the body is thicker than the margin.
         away = (normals * to_camera).sum(axis=1) < -0.3 * np.linalg.norm(to_camera, axis=1)
         self.assertGreater(float((~ray_kept)[away].mean()), 0.5, f"only {(~ray_kept)[away].mean():.1%} of the far-side splats culled")
 
     def test_the_torso_alpha_drops_but_the_front_stays(self):
-        """Over the torso the back panel is culled and the front panels
-        are drawn, so alpha drops without vanishing: the front of an open
-        shirt is physically in front of the body."""
+        """Alpha drops over the torso without vanishing: the front panels are drawn."""
         with torch.no_grad():
             out = self.fitter._forward()
             chest = out.joints[0, 9]  # spine3
@@ -153,7 +126,7 @@ class BodyOcclusionTest(unittest.TestCase):
         self.assertGreater(after, 10.0, "the front panels should still be drawn")
 
     def test_the_ray_cast_is_cheap(self):
-        """~10 ms at 93k splats measured; the budget is a render (~360 ms)."""
+        """Culling cost is small next to a render (~360 ms)."""
         import time
 
         splats = self.renderer.splats(self.renderer.posed_mesh(self.fitter))
@@ -163,8 +136,7 @@ class BodyOcclusionTest(unittest.TestCase):
         self.assertLess(time.perf_counter() - t0, 0.15)
 
     def test_the_front_of_the_garment_is_untouched(self):
-        # Total garment coverage must remain substantial - occlusion trims
-        # the back, it must not erase the coat.
+        # Occlusion trims the back; it must not erase the coat.
         coverage = (self.with_occlusion[..., 3] > 25).mean()
         self.assertGreater(float(coverage), 0.02)
 

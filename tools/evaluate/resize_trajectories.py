@@ -1,60 +1,34 @@
 """The garment's size handling against the authors' "resize" simulations: is a
-garment bound on ITS scan body and posed on ANOTHER body still on that
-body, and does the height-only scale (`SkinnedGarment.scale`) leave it
-inside the body as girth changes?
+garment bound on its scan body and posed on another body still on that body, and
+does the height-only scale (`SkinnedGarment.scale`) keep it outside the body as
+girth changes?
 
     .venv/bin/python -m tools.evaluate.resize_trajectories --garment 10006_outer
 
-The data (`~/tryon-data/trajectories/resize/<folder>/<take>.pkl`,
-inspected 25 Sep): ten folders o0100..o0280, each ONE OUTFIT - two to
-four garments from different scanned subjects (`garment_names`, e.g.
-o0100 = 00170_lower + 00190_upper + 10006_outer, o0170 = 00152_lower +
-00176_upper + 00152_outer + 10004_outer) - simulated by the authors on
-four motion takes (13_10, 13_15, 13_17, 13_27; 402 frames each).
-`pred[k]` stacks the garments in `garment_names` order (vertex counts
-equal each checkpoint's stage1/template_uv.obj, and they sum exactly to
-pred's width); `obstacle[k]` is the SMPL-X body (10,475 vertices, our
-BodyFitter's topology). Frame 0 is NOT the template pose - the outfit is
-already on the moving body (nearest template vertex 5-45 cm away) - so
-every frame is a test of posing the template onto a different body.
-Every (folder, take) pair is its own body (measured by the SMPL-X fit
-below, 25 Sep: heights 1.53-1.89 m, chest girth 62-136 cm, i.e. girth
-ratios 0.54-1.48 to the scan bodies), so betas[0], zero-pose height and
-chest width / depth / girth are reported per folder and take.
+Data: `~/tryon-data/trajectories/resize/<folder>/<take>.pkl`, ten outfit folders
+(o0100..o0280, two to four garments each from different scanned subjects) on
+four motion takes. `pred[k]` stacks the garments in `garment_names` order;
+`obstacle[k]` is the SMPL-X body. Frame 0 is not the template pose, so every
+frame tests posing the template onto a different body. Every (folder, take) is
+its own body (heights 1.53-1.89 m, girth ratios 0.54-1.48 to the scan bodies).
 
-Per (folder, take) that contains `--garment`, and per frame in
-`--frames` (default 0, 100, 200, 300):
+Per (folder, take) containing `--garment`, per frame in `--frames`:
+1. SMPL-X is fitted to `obstacle[k]` (`BodyFitter.fit_mesh`, warm-started,
+   cached in docs/baseline/resize-fits.npz).
+2. The garment is bound on the frame-0 fit as live (`ScanPoseBinder.bind`, then
+   `SkinnedGarment.scale` by the height ratio), re-scaled per `--scale-modes`
+   about the pelvis (none, height = live, anisotropic by chest width/depth,
+   girth by slab perimeter), posed on the frame-k fit and compared with
+   `pred[k]`: mean / p90 vertex distance (cm), all / sleeves / rest.
+3. Garment-inside-body fraction (signed distance to `obstacle[k]`), per mode and
+   for `pred[k]` as the metric's floor.
 
-1. SMPL-X is fitted to `obstacle[k]` (`BodyFitter.fit_mesh`, warm-started
-   along the take; every fit cached in docs/baseline/resize-fits.npz).
-2. `GarmentRenderer.bind` on a fitter set to the frame-0 fit, rigid LBS,
-   exactly the live path with the checkpoint's scan pose cached
-   (`ScanPoseBinder.bind`: bound in the template frame on the scan body,
-   then `SkinnedGarment.scale` by the wearer's zero-pose height over the
-   scan body's). The bound garment's zero-pose rest is then re-scaled per
-   `--scale-modes` about the pelvis:
-     none         ratio 1 - the control (the template at the scan
-                  subject's size);
-     height       the live path: x, y, z by the height ratio;
-     anisotropic  x by the chest-WIDTH ratio, y by the height ratio, z by
-                  the chest-DEPTH ratio;
-     girth        x and z by the chest-GIRTH (slab perimeter) ratio, y by
-                  the height ratio.
-   Every mode is posed on the frame-k fit and compared with `pred[k]`'s
-   slice for the garment: mean / p90 vertex distance (cm), all / sleeves
-   (`renderer.sleeve_vertices`) / rest.
-3. Garment-inside-body fraction: the signed distance of every garment
-   vertex to `obstacle[k]` (nearest body vertex, trimesh vertex normal;
-   negative = inside), for each mode and, as the floor of the metric, for
-   `pred[k]` itself.
-
-Chest measurements are taken on the ZERO-pose body of the fitted betas:
-the non-arm vertices within 2 cm of the spine3 joint's height (joint 9);
-width = x extent, depth = z extent, girth = convex-hull perimeter in xz.
-The ratios are wearer over scan body (`stage1/scan_pose.npz` betas).
+Chest measurements are on the zero-pose body of the fitted betas: non-arm
+vertices within 2 cm of the spine3 height; width = x extent, depth = z extent,
+girth = convex-hull perimeter in xz. Ratios are wearer over scan body.
 
 Writes docs/baseline/resize-eval-<garment>.json and prints one line per
-(folder, take), averaged over the frames.
+(folder, take), averaged over frames.
 """
 
 from __future__ import annotations
@@ -262,9 +236,8 @@ def evaluate(garment, takes, frames, modes, fits_cache, inventory_cache, iterati
         print(f"{len(sequences)} sequences hold {garment}: " + ", ".join(f"{f}/{t}" for f, t in sequences))
 
     renderer = GarmentRenderer(checkpoint, dynamics=False)
-    # These bodies are TRUE shapes from the authors' simulations, so the
-    # chest ratio measures the wearer and widening is valid here; the live
-    # default is off because a monocular fit no longer estimates girth.
+    # These are true shapes from the simulations, so widening is valid here; live
+    # it is off because a monocular fit no longer estimates girth.
     renderer.WIDEN_TO_WEARER = True
     to_ref, count = reference_vertex_map(renderer)
     cache = FitCache(fits_cache)

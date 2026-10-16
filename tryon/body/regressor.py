@@ -1,24 +1,19 @@
 """Monocular SMPL-X regression with Multi-HMR (Baradel et al., ECCV 2024).
 
-Our body comes from fitting SMPL-X to MediaPipe's 2D keypoints; a network
-that regresses the whole body from the image knows far more. On the 16
-annotated 4D-DRESS photos with ground-truth SMPL-X (the project's own
-tools/evaluate/real_fit.py protocol, 12 joints, Procrustes-aligned MPJPE):
-our fit 87 mm; Multi-HMR 672_S 48 mm, 672_B 38 mm, 896_L 25 mm. CPU time a
-photo: 0.57 s / 1.7 s / 32 s (672_S 0.63 s on MPS).
+A network that regresses the whole body from the image is far more accurate than
+fitting SMPL-X to MediaPipe's 2D keypoints (annotated 4D-DRESS photos, Procrustes MPJPE:
+keypoint fit 87 mm, Multi-HMR 672_S 48 mm, 672_B 38 mm, 896_L 25 mm).
 
-Code and weights (NAVER, non-commercial licence) are NOT part of this
-repository: clone https://github.com/naver/multi-hmr to
-`models/pretrained/multi-hmr` (git-ignored), put the checkpoints from
-download.europe.naverlabs.com/ComputerVision/MultiHMR/ in its
+Code and weights (NAVER, non-commercial) are NOT in this repository: clone
+https://github.com/naver/multi-hmr to `models/pretrained/multi-hmr` (git-ignored), put
+the checkpoints from download.europe.naverlabs.com/ComputerVision/MultiHMR/ in its
 `models/multiHMR/`, symlink `models/smplx` to the SMPL-X models, and
-`pip install --no-deps roma` (einops is already a dependency).
+`pip install --no-deps roma`.
 
-`predict` returns the most confident person's SMPL-X in THIS project's
-convention: Multi-HMR works in the OpenCV camera frame (y down, z into
-the scene); our model frame has y up and a person facing the camera
-facing +z, which is the same frame turned 180 degrees about x, so the
-root rotation is pre-multiplied by diag(1, -1, -1).
+`predict` returns the most confident person's SMPL-X in THIS project's convention:
+Multi-HMR works in the OpenCV camera frame (y down, z into the scene); ours has y up and
+a person facing the camera facing +z, so the root rotation is pre-multiplied by
+diag(1, -1, -1).
 """
 
 from __future__ import annotations
@@ -36,11 +31,8 @@ from tryon.paths import REPO_ROOT
 ROOT = REPO_ROOT
 MULTIHMR_ROOT = ROOT / "models" / "pretrained" / "multi-hmr"
 _FLIP = np.diag([1.0, -1.0, -1.0])
-# Input square (px); None = the model's own (672). On the 8 annotated
-# views 448 px was as good (PA-MPJPE 46.9 vs 50.0 mm, 0.30 vs 0.93 s on a
-# loaded CPU; 364 px 54.8 mm, 2 of 8 missed), but on the five release
-# videos, where the person is smaller in the frame, garment IoU fell
-# 0.716 -> 0.685 - so the native size stays the default.
+# Input square (px); None = the model's own (672). Smaller sizes were nearly as good on
+# annotated photos but cost garment IoU on the release videos, so native stays default.
 INPUT_SIZE = None
 
 
@@ -134,9 +126,8 @@ def nlf_available():
 
 
 def box_from_landmarks(points, shape, margin=0.25, floor=0.3):
-    """[x, y, w, h] around MediaPipe's visible landmarks, grown by `margin`
-    of the larger side each way and clipped to the frame - NLF's person box
-    without running its YOLO detector (1.5 s a frame on the CPU). None
+    """[x, y, w, h] around MediaPipe's visible landmarks, grown by `margin` of the larger
+    side and clipped to the frame: NLF's person box without its slow YOLO detector. None
     without at least 4 visible landmarks."""
     if points is None:
         return None
@@ -153,10 +144,9 @@ def box_from_landmarks(points, shape, margin=0.25, floor=0.3):
 
 
 def box_from_joints(joints_2d, shape, margin=0.3):
-    """The person box from a regressor's own projected body joints (22, 2),
-    grown by `margin` of the larger side (the joints stop at the neck and
-    ankles) - kept by the live loop to re-find the wearer when MediaPipe
-    loses them."""
+    """The person box from a regressor's projected body joints (22, 2), grown by `margin`
+    of the larger side (the joints stop at neck and ankles); the live loop uses it to
+    re-find the wearer when MediaPipe loses them."""
     points = np.ones((len(joints_2d), 3), np.float32)
     points[:, :2] = joints_2d
     return box_from_landmarks(points, shape, margin=margin)
@@ -172,29 +162,20 @@ def person_in_box(person_mask, box, fraction=0.15):
 
 
 class NLF:
-    """Neural Localizer Fields (Sarandi et al., NeurIPS 2024), NLF-S: on
-    the 8 annotated views PA-MPJPE 26-27 mm (Multi-HMR 672_S 49, 672_B 38)
-    at 0.23-0.30 s on the CPU with a person box handed in
-    (docs/baseline/body-regressors.json). Its TorchScript needs a newer
-    torch than the project's, so it runs in `tryon/body/nlf_worker.py` under
-    `models/pretrained/nlf/venv`; this class is the same interface as
-    `MultiHMR` (`predict` -> global_orient, body_pose, betas, joints_2d,
-    image_size). Code MIT, models non-commercial research use."""
+    """Neural Localizer Fields (Sarandi et al., NeurIPS 2024), NLF-S: more accurate than
+    Multi-HMR and ~0.25 s on CPU with a person box handed in (docs/baseline/body-regressors.json).
+    Its TorchScript needs a newer torch than the project's, so it runs in
+    `tryon/body/nlf_worker.py` under `models/pretrained/nlf/venv`; same interface as
+    `MultiHMR`. Code MIT, models non-commercial research use."""
 
-    # torch threads in the worker. Alone on the M1: 2 / 4 / 6 / 8 threads
-    # 87 / 92 / 117 / 126 ms a call; in the live loop, beside the parsers and
-    # the render, 2 threads left more of the machine to them (regressor
-    # 182 -> 152-165 ms, the whole frame 425-451 -> 374-420 ms).
+    # torch threads in the worker: 2 leaves more of the machine to the parsers and render
+    # in the live loop at a small cost alone.
     THREADS = 2
-    # where the worker runs the image backbone: "mps" (Apple GPU, the rest
-    # stays on the CPU; nlf_worker's docstring) or "cpu"
+    # where the worker runs the image backbone: "mps" (rest stays on CPU) or "cpu"
     BACKBONE = "mps"
     # NLF's test-time augmentation: crops averaged per call (nlf_worker.NUM_AUG).
-    # Garment IoU vs the real shirt, 00170_upper / 00190_upper / 00152_outer:
-    # 1 crop 0.787 / 0.726 / 0.655, 2 crops 0.788 / 0.731 / 0.657, 3 crops
-    # 0.791 / 0.729 / 0.661. NLF 73 / 91 / 120 ms a call; it runs beside the
-    # render (prefetch), and 80 live frames took 28.6-30.2 s with 1, 27.5-32.1
-    # with 2 (no measurable cost) and 33.8-38.1 with 3 (15-25 % fewer fps).
+    # NLF's test-time augmentation: crops averaged per call (nlf_worker.NUM_AUG). 2 crops
+    # improve garment IoU slightly at no measurable fps cost; 3 cost 15-25 % of fps.
     NUM_AUG = 2
 
     def __init__(self, weights=NLF_WEIGHTS, fov_degrees=60.0, threads=None):
@@ -207,8 +188,7 @@ class NLF:
             [str(NLF_PYTHON), str(Path(__file__).with_name("nlf_worker.py")), str(weights), str(threads), self.BACKBONE, str(self.NUM_AUG)],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         )
-        # not waited for here: the worker loads and warms up (a few seconds)
-        # while the caller loads everything else; the first predict waits
+        # not waited for here: the worker loads while the caller loads everything else
         self._ready = False
         self._pending = collections.deque()  # (frame, box, K) sent by `prefetch`, answers not yet read
 
@@ -248,10 +228,9 @@ class NLF:
         return (box if box is not None else box_from_landmarks(keypoints, frame_bgr.shape)), np.asarray(intrinsics, np.float32)
 
     def prefetch(self, frame_bgr, intrinsics=None, keypoints=None, box=None):
-        """Send the request for `frame_bgr` now; the `predict` call with the
-        same frame object and box reads its answer. The worker runs it while
-        the caller finishes the previous frame. A prefetched answer nobody
-        asks for is read and dropped by the next `predict`."""
+        """Send the request for `frame_bgr` now; the `predict` call with the same frame object
+        and box reads its answer. A prefetched answer nobody asks for is dropped by the next
+        `predict`."""
         box, k = self._request(frame_bgr, intrinsics, keypoints, box)
         self._wait_ready()
         self._send({"frame": np.ascontiguousarray(frame_bgr), "box": box, "K": k})
@@ -292,8 +271,8 @@ class NLF:
 
 
 # ---------------------------------------------------------------- arm refinement
-# SMPL-X joints (collar, shoulder, elbow, wrist) of each arm; the elbow is a hinge about its local y,
-# flexion = -y on the left, +y on the right (NLF's elbow axis-angles, 10004_outer).
+# SMPL-X joints (collar, shoulder, elbow, wrist) of each arm; the elbow is a hinge about
+# its local y, flexion = -y on the left, +y on the right.
 ARM_JOINTS = {"left": (13, 16, 18, 20, -1.0), "right": (14, 17, 19, 21, 1.0)}
 MAX_FLEXION = 2.7  # rad, a little past the elbow's range
 MIN_FLEXION = -0.15
@@ -312,14 +291,14 @@ def _rotation(vectors):
 def refine_arm(frames, targets, length, camera, sign, shoulder_prior=0.3, twist_prior=1.0, flexion_prior=0.1, scale_loss=0.1, steps=5):
     """Rotations of one arm's shoulder and elbow that put its elbow and wrist on 2D targets.
 
-    `frames`: dict of the current chain, all in the world the camera projects: `R_collar` (3, 3) the
-    collar's global rotation, `shoulder` (3,) the shoulder joint, `a_shoulder`, `a_elbow` (3,) the
-    current local axis-angles, `o_elbow` (3,) the elbow in the shoulder's frame and `o_wrist` (3,) the
-    wrist in the elbow's frame. `targets`: {"elbow": (x, y) or None, "wrist": ...} pixels. `length`: the
-    torso length in px, the unit of the residuals. `camera`: (scale, translation (2,)): y flips, as
-    `BodyFitter._project`. The prior holds the shoulder (`shoulder_prior` per rad) and the elbow's
-    non-hinge components (`twist_prior`) near the regressor's pose and leaves the flexion free inside
-    its range. Returns (a_shoulder, a_elbow, cost before, cost after) with the cost in torso lengths.
+    `frames`: the current chain in the world the camera projects: `R_collar` (3, 3), `shoulder`
+    (3,), `a_shoulder` and `a_elbow` (3,) local axis-angles, `o_elbow` (3,) the elbow in the
+    shoulder's frame, `o_wrist` (3,) the wrist in the elbow's frame. `targets`: {"elbow": (x, y)
+    or None, "wrist": ...} pixels. `length`: torso length in px, the residual unit. `camera`:
+    (scale, translation (2,)); y flips as in `BodyFitter._project`. The prior holds the
+    shoulder (`shoulder_prior` per rad) and non-hinge elbow components (`twist_prior`) near
+    the regressor's pose and leaves flexion free. Returns (a_shoulder, a_elbow, cost before,
+    cost after), costs in torso lengths.
     """
     from scipy.optimize import least_squares
 

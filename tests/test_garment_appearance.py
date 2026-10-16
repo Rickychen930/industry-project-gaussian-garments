@@ -1,11 +1,6 @@
-"""Tests for the checkpoint's per-frame appearance network.
-
-The StyleUNet port is checked against the reference's own CPU code paths
-(copied here as oracles), the texel binding against the checkpoint's
-Gaussian count and against the renderer's existing `uv_binding`, and the
-forward for shape, non-triviality and MPS/CPU agreement. Everything that
-needs the checkpoint skips without it.
-"""
+"""Per-frame appearance network of the checkpoint: StyleUNet port against
+the reference's CPU code (as oracles), texel binding, and forward shape.
+Checkpoint-dependent tests skip without it."""
 
 import unittest
 
@@ -44,9 +39,7 @@ def reference_upfirdn2d(input, kernel, up_x, up_y, down_x, down_y, pad_x0, pad_x
 
 
 class UpFirDnTests(unittest.TestCase):
-    """The FIR resampler is every blur, up- and down-sample and Haar
-    transform in the StyleUNet; the port must match the reference's
-    native implementation for every (up, down, pad) it is called with."""
+    """The FIR resampler must match the reference for every (up, down, pad) used."""
 
     def test_matches_reference_for_every_configuration_the_net_uses(self):
         torch.manual_seed(0)
@@ -69,8 +62,7 @@ class UpFirDnTests(unittest.TestCase):
                 torch.testing.assert_close(ours, theirs, rtol=0, atol=1e-6)
 
     def test_haar_round_trip_is_the_identity(self):
-        # `dwt` then `iwt` is how every skip connection is resampled; the
-        # 2x2 Haar basis is orthonormal so the pair must reconstruct.
+        # The 2x2 Haar basis is orthonormal, so dwt then iwt must reconstruct.
         x = torch.randn(1, 3, 8, 8)
         back = styleunet.InverseHaarTransform(3)(styleunet.HaarTransform(3)(x))
         torch.testing.assert_close(back, x, rtol=0, atol=1e-6)
@@ -112,9 +104,8 @@ class MergeTests(unittest.TestCase):
 
 class WorldToViewTests(unittest.TestCase):
     def test_is_the_transposed_rigid_transform(self):
-        # For the rasteriser's w2c 4x4 the reference stores the SAME rigid
-        # transform transposed (row-vector convention); rotating a normal
-        # with it therefore applies the camera-to-world rotation.
+        # The reference stores the rigid transform transposed (row-vector
+        # convention), so rotating a normal applies the camera-to-world rotation.
         theta = 0.3
         w2c = np.eye(4)
         w2c[:3, :3] = [[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]]
@@ -138,10 +129,8 @@ class TexelBindingTests(unittest.TestCase):
         self.assertEqual(self.binding.num_gs, 93491)
 
     def test_agrees_with_the_renderers_binding(self):
-        # `tryon.garment.checkpoint.uv_binding` is a separate rasteriser of the same
-        # atlas; the covered texel SET must be identical (so Gaussian i is
-        # the same texel in both) and the face ids all but identical -
-        # an edge texel may fall to either neighbour.
+        # The covered texel set must match the separate rasteriser's; an
+        # edge texel may fall to either neighbour.
         from tryon.garment.checkpoint import load_checkpoint, uv_binding
 
         _, mesh = load_checkpoint(GARMENT)
@@ -151,8 +140,7 @@ class TexelBindingTests(unittest.TestCase):
         self.assertLessEqual(int((ours != self.binding.binding).sum()), 4)
 
     def test_barycentric_weights_are_valid(self):
-        # The atlas stores float32 UVs, so a texel centre the scanline
-        # rasteriser accepts can sit ~1e-6 outside the float64 triangle.
+        # Atlas UVs are float32, so a texel centre can sit ~1e-6 outside the float64 triangle.
         bc = self.binding.bc
         np.testing.assert_allclose(bc.sum(1), 1.0, atol=1e-9)
         self.assertGreaterEqual(bc.min(), -1e-4)

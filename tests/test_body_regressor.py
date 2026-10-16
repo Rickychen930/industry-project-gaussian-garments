@@ -1,5 +1,4 @@
-"""`tryon.body.regressor.MultiHMR` - skipped unless its code and weights
-are installed (models/pretrained/multi-hmr, not part of the repository)."""
+"""`tryon.body.regressor.MultiHMR`; skipped unless its code and weights are installed."""
 
 from __future__ import annotations
 
@@ -19,8 +18,7 @@ class MultiHMRTest(unittest.TestCase):
         cls.model = MultiHMR()
 
     def _person(self):
-        """A synthetic grey body silhouette is not a person to a detector;
-        use an annotated 4D-DRESS view when present."""
+        """A synthetic silhouette is not a person to a detector; use an annotated view."""
 
         import cv2
         import tools.evaluate.real_fit as real
@@ -103,8 +101,7 @@ def _nlf_available():
 
 @unittest.skipUnless(_nlf_available(), "NLF is not installed")
 class NLFTest(unittest.TestCase):
-    """The NLF worker process, on an annotated view (camera 0004 faces the
-    wearer)."""
+    """The NLF worker process on an annotated view (camera 0004 faces the wearer)."""
 
     def test_a_person_facing_the_camera(self):
 
@@ -130,9 +127,7 @@ class NLFTest(unittest.TestCase):
 
 
 class NLFPrefetchTest(unittest.TestCase):
-    """The worker answers requests in order; `predict` must take the answer
-    prefetched for ITS frame and drop one nobody asked for. No worker: the
-    pipe is a list."""
+    """The worker answers in order; `predict` takes the answer for its own frame and drops stale ones."""
 
     def _client(self):
         import collections

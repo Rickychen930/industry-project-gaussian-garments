@@ -1,33 +1,20 @@
 """A small network that shades the garment every frame, distilled from the
-checkpoint's own appearance network.
+checkpoint's appearance network (`appearance.py`, the teacher).
 
-The checkpoint's `shadow_net` (tryon/garment/appearance.py; a 55M-parameter
-StyleUNet at 512 x 512) gives the garment its pose-dependent shading, but
-needs an ambient-occlusion bake of the posed garment (~150 ms of ray
-casting on the CPU) plus ~285 ms of network on the M1, so the live loop
-can only afford it every 2 s (`AsyncAppearance`). This student reproduces
-its output from inputs that cost a few milliseconds:
+The teacher needs an AO bake plus a 55M-parameter StyleUNet, too slow for
+every frame. The student reads cheap inputs at 256 x 256 in the UV atlas:
 
-  camera-space normals   the posed garment's face normal at each texel,
-                         rotated into the camera (3 channels)
-  body distance          each texel's distance to the nearest body vertex,
-                         clipped at 10 cm - where the teacher's AO is dark
-                         (armpits, folds against the torso) the cloth is
-                         close to the body (1 channel)
-  coverage               which texels hold a Gaussian (1 channel)
+  camera-space normals   posed face normal per texel, in camera frame (3)
+  body distance          distance to the nearest body vertex, clipped at 10 cm (1)
+  coverage               texels that hold a Gaussian (1)
 
-at 256 x 256 in the garment's UV atlas, and predicts the teacher's 51
-output channels (3 position offset + 48 spherical-harmonic coefficients)
-at the same resolution; each Gaussian reads its texel bilinearly. Trained
-per garment by `tools/train/shading_student.py`.
+and predicts the teacher's 51 channels (3 position offset + 48 SH
+coefficients), read bilinearly per Gaussian. Trained per garment by
+`tools/train/shading_student.py`.
 
-A student may carry a stored per-Gaussian mean of the teacher's output
-(over training poses) and predict only the residual around it. Most of the
-teacher's fine detail is fixed to the garment, like a texture; a network
-that sees no surface coordinates cannot place it, and a 256 x 256 map
-cannot hold it (the teacher's own output pooled to 256 and read back
-renders at 26.8 dB on 00134_upper). With the mean, that ceiling is 36.2 dB,
-and the mean alone renders at 28.0 dB - above the mean-free student's 24.9.
+A student may store a per-Gaussian mean of the teacher's output and predict
+only the residual: the fine garment-fixed detail cannot fit in a 256 map
+without surface coordinates.
 """
 
 from __future__ import annotations
@@ -82,9 +69,7 @@ class StudentUNet(nn.Module):
 
 
 class StudentInputs:
-    """The student's input maps for a posed garment, from the checkpoint's
-    texel binding (`texels.TexelBinding`, 512 x 512 atlas), pooled to
-    SIZE x SIZE."""
+    """Student input maps for a posed garment, from `texels.TexelBinding` pooled to SIZE x SIZE."""
 
     def __init__(self, binding, faces):
         self.binding = binding
@@ -93,9 +78,8 @@ class StudentInputs:
         self.cell = (binding.gs_u // scale) * SIZE + (binding.gs_v // scale)
         self.count = np.bincount(self.cell, minlength=SIZE * SIZE).astype(np.float32)
         self.coverage = (self.count > 0).astype(np.float32).reshape(SIZE, SIZE)
-        # where each Gaussian reads the student's output: its texel's centre
-        # on the SIZE map, bilinearly - four neighbours and their weights,
-        # precomputed (grid_sample has no backward on MPS in torch 2.1)
+        # bilinear read of each Gaussian's texel centre: four neighbours and
+        # weights, precomputed (grid_sample has no backward on MPS in torch 2.1)
         row = (binding.gs_u + 0.5) * SIZE / binding.res - 0.5
         col = (binding.gs_v + 0.5) * SIZE / binding.res - 0.5
         r0, c0 = np.floor(row).astype(int), np.floor(col).astype(int)
@@ -115,10 +99,10 @@ class StudentInputs:
         return out.reshape(SIZE, SIZE, -1)
 
     def maps(self, vertices, view, body_vertices, per_vertex_distance=False):
-        """(IN_CHANNELS, SIZE, SIZE) float32. `per_vertex_distance`: query the
-        body distance at the mesh's vertices and interpolate it to the texels
-        (~11x fewer queries; the training inputs used the exact per-texel
-        distance)."""
+        """(IN_CHANNELS, SIZE, SIZE) float32.
+
+        `per_vertex_distance`: query body distance at mesh vertices and
+        interpolate to texels (~11x fewer queries; training used per-texel)."""
         vertices = np.asarray(vertices, np.float64)
         triangles = vertices[self.faces]
         normals = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
@@ -135,12 +119,9 @@ class StudentInputs:
         return np.concatenate([pooled.transpose(2, 0, 1), self.coverage[None]]).astype(np.float32)
 
     def gather_numpy(self, output):
-        """`gather` on the CPU: (N, 51) float64 from a (51, SIZE, SIZE) array.
-        The same bilinear read; on MPS the four index_selects and the copy
-        back cost ~100 ms."""
+        """`gather` on the CPU: (N, 51) float64 from a (51, SIZE, SIZE) array (MPS round trips cost ~100 ms)."""
         if not hasattr(self, "_sampler"):
-            # the bilinear read as a sparse (N, SIZE*SIZE) matrix, 4 entries a row:
-            # 104 ms of fancy indexing -> one sparse product
+            # bilinear read as a sparse (N, SIZE*SIZE) matrix, 4 entries a row
             from scipy.sparse import csr_matrix
 
             index, weight = self.index.cpu().numpy(), self.weight.cpu().numpy()
@@ -159,20 +140,18 @@ class StudentInputs:
 
 
 class ShadingStudent:
-    """Inference: the student in place of `AppearanceNet.forward`, with the
-    same result keys `merge` reads."""
+    """Inference: stands in for `AppearanceNet.forward` with the same result keys."""
 
     def __init__(self, checkpoint_dir, faces=None, device=None, weights=None):
         from tryon.garment.appearance import AppearanceNet
 
-        # the teacher's static Gaussians, binding and mesh handling, without
-        # moving its 55M-parameter network anywhere
+        # reuse the teacher's static Gaussians and binding without its network
         self.static = AppearanceNet(checkpoint_dir, faces=faces, device="cpu", network=False)
         self.inputs = StudentInputs(self.static.binding, self.static.template["faces"] if faces is None else faces)
         self.device = torch.device(device or ("mps" if torch.backends.mps.is_available() else "cpu"))
         path = Path(weights) if weights else Path(checkpoint_dir) / "stage3" / FILE_NAME
         saved = torch.load(path, map_location="cpu")
-        # a student trained with `--widths` records them; the first students did not (the default widths)
+        # `--widths` is recorded when non-default
         self.model = (StudentUNet(tuple(saved["widths"])) if saved.get("widths") else StudentUNet()).eval()
         self.model.load_state_dict(saved["model"])
         self.mean = None if saved.get("mean") is None else np.asarray(saved["mean"], np.float64)
@@ -180,9 +159,7 @@ class ShadingStudent:
         self.dtype = torch.float16 if self.device.type == "mps" else torch.float32
         self.model = self.model.to(self.device, self.dtype)
         self.per_vertex_distance = False
-        # Scale of the predicted shading (SH change) added to the static colours; 1.0 is the teacher's.
-        # tools/evaluate/colour_study.py: 0.75 lowers the nine-video mean dE76 only 11.93 -> 11.48 (needs >= 1.5),
-        # so it stays 1.0; a flag for measuring, not a fix.
+        # Scale of the predicted shading added to the static colours (1.0 = teacher's); a measuring flag.
         self.shadow_strength = 1.0
 
     @torch.no_grad()
@@ -205,20 +182,12 @@ class ShadingStudent:
 
 
 class AsyncStudent(IntervalWorker):
-    """`ShadingStudent.forward` on a worker thread, a pass at most every
-    INTERVAL seconds; each frame draws the newest result placed on the current
-    mesh, as `appearance.AsyncAppearance` does.
+    """`ShadingStudent.forward` on a worker thread every INTERVAL seconds; each
+    frame draws the newest result placed on the current mesh (as
+    `appearance.AsyncAppearance`). At equal age the teacher is better; the
+    student wins by being cheap enough to be fresh."""
 
-    Measured on held-out 00190_upper trajectory frames, against the teacher
-    on the current pose (render PSNR): student on the current pose 31.2 dB;
-    student 0.5 / 1 / 2 s old 29.5 / 27.7 / 26.7 dB; teacher 0.5 / 1 / 2 s old
-    32.4 / 28.6 / 27.0 dB. So at equal age the teacher is better; the student
-    wins by being cheap enough to be fresh. Live (1080p test clip, frame time):
-    teacher every 2 s 673 ms; student every 0.7 s 649 ms; student continuous
-    1617 ms (it starves the body regressor on the GPU); student in the frame
-    (synchronous, `--student-shading` without `--async-appearance`) 848 ms."""
-
-    INTERVAL = 0.7  # s between passes: continuous passes starved the body regressor (1617 ms frames); 0.7 s costs nothing (649 vs 673 ms)
+    INTERVAL = 0.7  # s: continuous passes starve the body regressor on the GPU
 
     def __init__(self, student):
         self.student = student
@@ -229,9 +198,7 @@ class AsyncStudent(IntervalWorker):
 
     def _compute(self, job):
         result = self.student.forward(*job)
-        # contiguous once here (a pass every INTERVAL), not per frame: `forward` hands
-        # back slices of one (N, 16, 3) array, and the rasteriser's contiguous-copy
-        # of those slices was ~30 MB a frame
+        # contiguous once per pass; slices of one array would be copied every frame
         return {k: np.ascontiguousarray(result[k]) for k in ("feature_dc", "feature_rest", "local_xyz")}
 
     def latest(self, vertices, frames=None):

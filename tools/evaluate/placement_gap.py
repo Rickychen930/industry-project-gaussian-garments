@@ -1,15 +1,15 @@
 """Where the 0.73 -> 0.83 gap to the authors' registration is lost: placement bias, frame noise, or shape.
 
-`collect` runs `vs_registration.evaluate` (NLF regressor, as the README number) and keeps, per scored
-frame, our garment mask O, the real shirt mask T (SCHP) and the registration's garment mask R in the
-left panel. `analyse` then, on those masks only:
-
-  1. finds per frame the similarity (log scale, dx, dy, rotation about O's centroid) that maximises
-     IoU(warp(O), T) (and, separately, vs R): the ceiling of ANY 2D placement fix;
-  2. fits ONE constant transform per video on the odd scored frames and scores it on the even ones
-     (and the reverse), and a pooled one on 4 videos scored on the 5th;
-  3. gives the mean / std / lag-1 autocorrelation of the per-frame optimum (bias vs noise vs drift);
-  4. splits the error left after alignment: area ratio, extra / missed pixels by region, row widths.
+`collect` runs `vs_registration.evaluate` (NLF regressor) and keeps per scored
+frame our mask O, the real shirt mask T (SCHP) and the registration mask R.
+`analyse`, on those masks only:
+  1. per-frame best similarity (scale, dx, dy, rotation) for IoU(warp(O), T):
+     the ceiling of any 2D placement fix;
+  2. one constant transform per video fitted on odd frames, scored on even
+     (and reverse), plus a pooled one scored on a held-out video;
+  3. mean / std / lag-1 autocorrelation of the per-frame optimum (bias vs
+     noise vs drift);
+  4. the residual error: area ratio, extra / missed pixels by region, row widths.
 
     .venv/bin/python -m tools.evaluate.placement_gap collect [videos] [--cache DIR]
     .venv/bin/python -m tools.evaluate.placement_gap analyse [videos] [--cache DIR] [--out j.json]

@@ -1,60 +1,36 @@
-"""The per-frame appearance network that ships in the stage-3 checkpoint.
+"""The per-frame appearance network shipped in the stage-3 checkpoint.
 
-`net.pt` holds more than the 93,491 static Gaussians `tryon/rendering/splat_cpu.py`
-renders: 55M parameters of `shadow_net` (a StyleUNet) and a small
-`viewdir_net`. At capture time Gaussian Garments (Rong et al. 2409.08189)
-ran them on every frame - input: a 512x512 ambient-occlusion map and a
-normal map of the deformed garment, baked in the UV atlas - and ADDED the
-output to the static Gaussians: 48 spherical-harmonic coefficients and a
-3-vector position offset per texel. That is where the studio shading,
-wrinkle shadows and cloth self-occlusion come from; the static SH alone
-reads flat. This module makes that network usable here.
+`net.pt` holds the static Gaussians plus `shadow_net` (a 55M-parameter
+StyleUNet) and a small `viewdir_net`. Gaussian Garments (Rong et al.
+2409.08189) runs them per frame on an ambient-occlusion map and a normal map
+of the deformed garment (baked in the UV atlas) and ADDS the output (48 SH
+coefficients and a 3-vector offset per texel) to the static Gaussians. That
+is the source of wrinkle shadows and self-occlusion.
 
-Ported from the reference implementation, `scene/avatar_net.py`,
-`scene/avatar_gaussian_model.py` and `scene/styleunet/styleunet.py` of
-https://github.com/eth-ait/Gaussian-Garments (ETH AIT). The Gaussian
-model files there carry the Inria GRAPHDECO header ("free for
-non-commercial, research and evaluation use"); the StyleUNet is the
-rosinality StyleGAN2 port (MIT) as adapted by StyleAvatar/Animatable
-Gaussians, whose CUDA kernels carry the NVIDIA Source Code License-NC.
-The repository root has no LICENSE file. Treat this port, and the
-checkpoint weights, as research/evaluation use only.
+Ported from `scene/avatar_net.py`, `scene/avatar_gaussian_model.py` and
+`scene/styleunet/styleunet.py` of eth-ait/Gaussian-Garments. Those files
+carry non-commercial licences (Inria GRAPHDECO, NVIDIA Source Code
+License-NC) and the repo has no LICENSE: treat this port and the weights as
+research/evaluation use only.
 
-What is reproduced exactly (verified against the reference code path,
-not against a CUDA run - none is available here):
+Reproduced from the reference code path (no CUDA run available):
 
-* the texel<->Gaussian binding (`get_texture_binding` + `rasterize`,
-  ported line for line; 93,491 covered texels, asserted at load),
-* the barycentric anchor of every Gaussian (`get_barycentric_3d`),
-* the camera-space normal transform, INCLUDING the reference's quirk of
-  applying the transposed world-to-view matrix (it multiplies by
-  `world_view_transform`, which in 3DGS is stored transposed, so the
-  normals are rotated by the camera-to-world rotation). The network was
-  trained with it, so it is kept,
-* the view-direction map, INCLUDING `viewdir_map[gs_u, gs_u]` (row index
-  used twice). It does not matter: `SWGAN_unet.forward` adds the view
-  feature to `out` AFTER the last `to_rgb`, so it never reaches the
-  output (`test_garment_appearance.py` checks this),
-* the StyleUNet forward with the stored fixed noise buffers
-  (`randomize_noise=False`) and the constant style `1/sqrt(512)`.
+* texel<->Gaussian binding and barycentric anchors,
+* the camera-space normal transform, including the quirk of applying the
+  transposed world-to-view matrix (the network was trained with it),
+* the view-direction map, including `viewdir_map[gs_u, gs_u]`; harmless
+  because `SWGAN_unet.forward` adds the view feature after the last
+  `to_rgb`, so it never reaches the output,
+* the StyleUNet forward with fixed noise and constant style `1/sqrt(512)`.
 
-What is NOT the reference: the ambient-occlusion and normal maps. The
-paper bakes them in Blender Cycles (`bpy.ops.object.bake(type='AO')` and
-`type='NORMAL', normal_space='OBJECT'`, margin 5 texels) with the body
-mesh present as an occluder. `bake_maps` below replaces that with flat
-face normals in the garment's own frame (the OBJ importer keeps the mesh
-data in file coordinates and rotates the OBJECT, so 'OBJECT' space is
-the file's y-up frame) and a cosine-weighted hemisphere ray cast
-(open3d, 32 rays a texel, 10 m range like Blender's default AO
-distance), dilated 5 texels. Blender's AO is the same integral
-estimated with more samples; the systematic differences are the flat
-(not smooth) normal - the template has no `vn`/`s` lines, so Blender's
-importer flat-shades it too - and whatever occluders are passed in.
+Not the reference: the AO and normal maps. The paper bakes them in Blender
+Cycles; `bake_maps` uses flat face normals in the file's y-up frame and a
+cosine-weighted hemisphere ray cast (open3d, 32 rays, 10 m range),
+dilated 5 texels.
 
-Coordinate conventions: `view` is the rasteriser's world-to-camera 4x4
-(+x right, +y down, +z forward), which is the OpenCV `[R|t]` the
-checkpoint's `cameras.json` also uses. The scan's world is y-up with the
-subject facing +z (camera 0004 sits at z=+2.8 looking down -z).
+Conventions: `view` is the rasteriser's world-to-camera 4x4 (OpenCV
+`[R|t]`, +x right, +y down, +z forward). The scan world is y-up with the
+subject facing +z.
 """
 
 from __future__ import annotations
@@ -81,13 +57,11 @@ OUT_CHANNELS = SH_COEFFS * 3 + 3  # 51: 3 xyz offset + 48 SH
 
 @njit(cache=True)
 def _world_xyz_numba(vertices, faces, binding, bc, local_xyz, frames, scale):
-    """`AppearanceNet._world_xyz_numpy` (the barycentric anchor, frame @ local
-    * scale + anchor, on the face frames of `face_frames_numba`), one Gaussian
-    per iteration: the numpy version cost 22-30 ms a frame at 93k Gaussians
-    in the live loop. Serial on purpose: the shading workers
-    (`AsyncStudent`, `AsyncAppearance`) call it on their own thread while
-    the loop runs `_place_splats_numba`, and numba's workqueue layer aborts
-    the process on two parallel regions at once."""
+    """Compiled `AppearanceNet._world_xyz_numpy`: frame @ local * scale + anchor.
+
+    Serial on purpose: shading workers call it while the loop runs
+    `_place_splats_numba`, and numba's workqueue aborts on two parallel
+    regions at once."""
     n = len(binding)
     xyz = np.empty((n, 3))
     for s in range(n):
@@ -101,13 +75,8 @@ def _world_xyz_numba(vertices, faces, binding, bc, local_xyz, frames, scale):
     return xyz
 
 
-# --- Camera, as the reference builds it ------------------------------------
-
-
 def _world_to_view_transposed(view):
-    """`Camera.world_view_transform` for the rasteriser's `view` (w2c 4x4):
-    `getWorld2View2(R, T).transpose(0, 1)` with `R = w2c[:3, :3].T`,
-    `T = w2c[:3, 3]`, exactly as `scene/cameras.py` does it."""
+    """`Camera.world_view_transform` for a w2c 4x4 `view`, as `scene/cameras.py` builds it."""
     view = np.asarray(view, np.float64)
     R, T = view[:3, :3].T, view[:3, 3]
     Rt = np.zeros((4, 4))
@@ -115,9 +84,6 @@ def _world_to_view_transposed(view):
     Rt[:3, 3] = T
     Rt[3, 3] = 1.0
     return np.float32(Rt).T
-
-
-# --- The network ------------------------------------------------------------
 
 
 def pick_device(device=None):
@@ -129,18 +95,14 @@ def pick_device(device=None):
 
 
 class AppearanceNet:
-    """`shadow_net` + `viewdir_net` from `net.pt`, plus the static Gaussians
-    they are added to. `forward` is `AvatarNet.forward` for one frame."""
+    """`shadow_net` + `viewdir_net` from `net.pt` and the static Gaussians they modify."""
 
     def __init__(self, checkpoint_dir, device=None, texture_size=TEXTURE_SIZE, faces=None, half=False, network=True):
-        """`half`: run `shadow_net` in float16. Measured on the M1 (MPS):
-        ~1.0 s a frame against ~2.3 s in float32, output within 2.3e-3
-        (max) / 1.8e-4 (mean) of float32 in SH units - under a grey level
-        of colour. Off by default: float32 is the reference.
+        """`half`: run `shadow_net` in float16 (~2x faster on MPS, under a grey
+        level of colour error). Off by default: float32 is the reference.
 
-        `network=False`: only the static Gaussians and the texel binding
-        (what `shading_student.ShadingStudent` uses) - building and loading
-        the 55M-parameter nets was ~0.6 s of a garment switch for nothing."""
+        `network=False`: only the static Gaussians and texel binding (what
+        `shading_student.ShadingStudent` needs)."""
         checkpoint_dir = Path(checkpoint_dir)
         self.device = pick_device(device)
         self.dtype = torch.float16 if half else torch.float32
@@ -156,9 +118,8 @@ class AppearanceNet:
             raise ValueError(
                 f"UV atlas covers {self.binding.num_gs} texels at {texture_size}^2 but the "
                 f"checkpoint stores {stored} Gaussians; the texel binding is wrong")
-        # The renderer's mesh (trimesh, UV-split: 8208 vertices) and the
-        # reference's (7972 vertices) index the same faces in the same
-        # order; accept either by vertex count.
+        # The renderer's UV-split mesh and the reference's index the same
+        # faces in the same order; accept either by vertex count.
         self.faces_by_vertex_count = {len(self.template["vertices"]): self.template["faces"]}
         if faces is not None:
             faces = np.asarray(faces)
@@ -207,30 +168,27 @@ class AppearanceNet:
         return np.concatenate([self.feature_dc, self.feature_rest], axis=1)
 
     def condition_maps(self, normal, view):
-        """The 4-channel network input: ambient goes in as is; the normal
-        map is decoded from [0, 1], rotated by `world_view_transform` as
-        the reference does (see the module docstring) and re-normalised.
-        Returns the 3 camera-space normal channels, (3, res, res)."""
+        """Camera-space normal channels (3, res, res): the normal map decoded
+        from [0, 1], rotated by `world_view_transform` as the reference does,
+        and re-normalised."""
         w2v = _world_to_view_transposed(view).astype(np.float64)
         normal = np.asarray(normal, np.float64)  # (H, W, 3)
         covered = normal.sum(-1) > 0
         nw_pad = np.concatenate([normal * 2 - 1, np.ones(normal.shape[:2] + (1,))], axis=-1) * covered[..., None]
         nc = nw_pad @ w2v[:3].T  # (H, W, 3) = (W @ [n; 1])[:3] per texel
         norm = np.linalg.norm(nc, axis=-1, keepdims=True)
-        # F.normalize: divide by max(norm, eps)
         return (nc / np.maximum(norm, 1e-12)).transpose(2, 0, 1)
 
     def view_feature(self, anchor, orientation, view):
-        """`viewdir_net` on the reference's view-direction map. Kept for
-        fidelity checks only: `SWGAN_unet.forward` never lets it reach
-        the output, so `forward` skips it by default."""
+        """`viewdir_net` on the reference's view-direction map; fidelity checks
+        only (it never reaches the output, so `forward` skips it)."""
         camera_center = np.linalg.inv(_world_to_view_transposed(view).astype(np.float64))[3, :3]
         dir_pp = anchor - camera_center
         dir_pp = dir_pp / np.linalg.norm(dir_pp, axis=1, keepdims=True)
         local_viewdir = np.einsum("nji,nj->ni", orientation[self.binding.binding], dir_pp)  # R^T d
         H = W = self.texture_size
         viewdir_map = torch.zeros(H, W, 3)
-        # Reference: `viewdir_map[gs_u, gs_u] = local_viewdir` (sic).
+        # as in the reference (sic): gs_u used for both indices
         viewdir_map[self.binding.gs_u, self.binding.gs_u] = torch.as_tensor(local_viewdir, dtype=torch.float32)
         return self.viewdir_net(viewdir_map.permute(2, 0, 1)[None].to(self.device, self.dtype))
 
@@ -238,17 +196,14 @@ class AppearanceNet:
     def forward(self, vertices, view, ambient=None, normal=None, occluders=(), use_viewdir=False):
         """One frame of `AvatarNet.forward`.
 
-        `vertices`: the deformed garment mesh. `view`: the rasteriser's
-        world-to-camera 4x4. `ambient` (res, res) and `normal` (res, res,
-        3) in [0, 1]; baked here from the mesh when not given.
+        `vertices`: deformed garment mesh. `view`: world-to-camera 4x4.
+        `ambient` (res, res) and `normal` (res, res, 3) in [0, 1]; baked
+        from the mesh when not given.
 
-        Returns a dict of numpy arrays: `feature_dc` (N, 1, 3) and
-        `feature_rest` (N, 15, 3) = static + shadow SH, in the layout
-        `tryon/rendering/splat_cpu.py` renders; `xyz` (N, 3) world positions of
-        `local_xyz = stored xyz + offset` about the barycentric anchor
-        (`get_final_xyz`); `offset` and `shadow_shs` (N, 16, 3) alone;
-        `anchor` (N, 3), the barycentric points; the two maps.
-        Stage timings land in `self.last_timing`.
+        Returns numpy arrays: `feature_dc` (N, 1, 3) and `feature_rest`
+        (N, 15, 3) (static + shadow SH); `xyz` (N, 3) world positions of
+        `local_xyz` (stored xyz + offset); `offset`, `shadow_shs`, `anchor`
+        and the two maps. Stage timings go to `self.last_timing`.
         """
         timing = {}
         vertices = np.asarray(vertices, np.float64)
@@ -275,9 +230,7 @@ class AppearanceNet:
         timing["network"] = time.perf_counter() - t0
 
         t0 = time.perf_counter()
-        # (1, 51, H, W) -> gather the covered texels; a contiguous copy to
-        # the host and numpy indexing, since boolean indexing on MPS and a
-        # permuted `.cpu()` each cost seconds.
+        # gather covered texels on the host; boolean indexing on MPS costs seconds
         maps = shadow_out[0].float().cpu().numpy()
         per_gaussian = maps[:, self.binding.gs_u, self.binding.gs_v].T.astype(np.float64)  # (N, 51)
         offset = per_gaussian[:, :3]
@@ -301,14 +254,12 @@ class AppearanceNet:
         }
 
     def world_xyz(self, vertices, local_xyz, frames=None):
-        """World positions of face-local Gaussian positions (the stored xyz
-        plus a network offset, `forward`'s "local_xyz") on `vertices` - to
-        place an earlier frame's result on the current mesh. Compiled
-        (`_world_xyz_numba`); `_world_xyz_numpy` is the oracle.
+        """World positions of face-local Gaussian positions (`forward`'s
+        "local_xyz") on `vertices`, to place an earlier result on the
+        current mesh. `_world_xyz_numpy` is the oracle.
 
-        `frames`: (frames, scale) already computed for these `vertices` and
-        this mesh's faces (`GarmentRenderer.splats` has them); omitted, they
-        are computed here."""
+        `frames`: (frames, scale) already computed for `vertices`; computed
+        here when omitted."""
         vertices = np.ascontiguousarray(vertices, np.float64)
         faces = np.ascontiguousarray(self.faces_for(vertices), np.int64)
         if frames is None:
@@ -325,8 +276,7 @@ class AppearanceNet:
         return np.einsum("nij,nj->ni", frames, local_xyz) * scale[self.binding.binding, None] + anchor
 
     def static_xyz(self, vertices):
-        """World positions of the STATIC Gaussians about the barycentric
-        anchor (`get_xyz` of the stage-3 model) - no network."""
+        """World positions of the static Gaussians (`get_xyz`); no network."""
         vertices = np.asarray(vertices, np.float64)
         faces = self.faces_for(vertices)
         _, orientation, scale = face_frames(vertices, faces)
@@ -336,13 +286,10 @@ class AppearanceNet:
 
 
 def merge(splats, result, indices=None, keys=("feature_dc", "feature_rest", "xyz")):
-    """A copy of `splats` (the dict `GarmentRenderer.splats` /
-    `render_splats` use) with `feature_dc`, `feature_rest` and `xyz`
-    replaced by the network's. `indices`: which of the checkpoint's N
-    Gaussians each entry of `splats` is, when it holds a subset (torn
-    faces, body occlusion, subsampling); omitted means all N in order.
-    `keys`: which of the three to take (`GarmentRenderer.render` takes the
-    positions first, for the occlusion test, and the colours of what survives it)."""
+    """Copy of `splats` with `keys` replaced by the network's values.
+
+    `indices`: which of the checkpoint's N Gaussians each entry of `splats`
+    is, when it holds a subset; omitted means all N in order."""
     count = len(splats["xyz"])
     if indices is None:
         if count != len(result["xyz"]):
@@ -351,8 +298,7 @@ def merge(splats, result, indices=None, keys=("feature_dc", "feature_rest", "xyz
                 "pass `indices` for a subset")
         indices = slice(None)
     elif len(indices) != count:
-        # a mismatch here would reach the compiled rasteriser as arrays of
-        # different lengths, which reads out of bounds and crashes the process
+        # a mismatch would crash the compiled rasteriser with out-of-bounds reads
         raise ValueError(f"splats hold {count} Gaussians but {len(indices)} indices were given")
     out = dict(splats)
     for key in keys:
@@ -366,20 +312,15 @@ def apply(splats, net: AppearanceNet, vertices, view, indices=None, **forward_kw
 
 
 class AsyncAppearance(IntervalWorker):
-    """`AppearanceNet.forward` on a worker thread, for the live loop.
+    """`AppearanceNet.forward` on a worker thread for the live loop.
 
-    The shading changes slowly with the pose and is bound to the garment's
-    texels, so an answer a frame or two old still sits on the right cloth:
-    `latest(vertices)` returns the newest finished result with its
-    positions re-placed on the CURRENT mesh (`world_xyz`), and hands the
-    worker the current mesh when it is idle. Measured on the M1 at 8 AO
-    rays: bake ~150 ms (CPU, open3d) + network ~285 ms (MPS, fp16) a
-    result, none of it in the frame loop. 8 rays against the reference's
-    32: rendered frame within 42.6 dB (PSNR) of the 32-ray one.
+    Shading changes slowly and is bound to texels, so a slightly old result
+    still fits: `latest(vertices)` returns the newest result re-placed on
+    the CURRENT mesh. Uses 8 AO rays (vs 32 in the reference) for speed.
     """
 
     RAYS = 8
-    INTERVAL = 2.0  # s between shading passes: 2 s adds nothing to a 0.65 s frame, 1.5 s adds 0.17 s (measured)
+    INTERVAL = 2.0  # s between shading passes
 
     def __init__(self, checkpoint_dir, faces=None, half=True):
         self.net = AppearanceNet(checkpoint_dir, faces=faces, half=half)
@@ -395,7 +336,6 @@ class AsyncAppearance(IntervalWorker):
         vertices, view, occluders = job
         ambient, normal = self.net.bake(vertices, occluders, rays=self.RAYS)
         result = self.net.forward(vertices, view, ambient=ambient, normal=normal)
-        # contiguous once per pass, not per frame (see `AsyncStudent._compute`)
         return {k: np.ascontiguousarray(result[k]) for k in ("feature_dc", "feature_rest", "local_xyz")}
 
     def submit(self, vertices, view, occluders=()):

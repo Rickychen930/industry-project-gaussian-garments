@@ -1,32 +1,19 @@
-"""The cloth against the authors' simulation: how close does our garment
-posing get to ContourCraft's when our body IS the scan body?
+"""The cloth against the authors' simulation: how close does our garment posing
+get to ContourCraft's when our body is the scan body?
 
     .venv/bin/python -m tools.evaluate.cloth_trajectory ~/tryon-data/garments/00152_outer
 
-The trajectory file (`individual-garments/<name>_Take<N>.pkl`, see
-tools/data/fit_scan_pose.py) carries `obstacle[k]` (the SMPL-X body, our
-BodyFitter's own topology) and `pred[k]` (the garment ContourCraft
-simulated on it) for 160 frames at 25 fps; pred[0] is the template. For
-every `stride`-th frame:
+The trajectory file (see tools/data/fit_scan_pose.py) has `obstacle[k]` (SMPL-X
+body) and `pred[k]` (simulated garment), 160 frames at 25 fps. For every
+`stride`-th frame: SMPL-X is fitted to obstacle[k] (`BodyFitter.fit_mesh`,
+warm-started, cached in one npz); `GarmentRenderer` is driven by those fits with
+rigid LBS and with the live cloth (`dynamics=True`, dt = stride / 25 s); mean /
+p90 vertex distance (cm) to pred[k] is reported over all vertices, sleeves and
+the rest. Two floors: pred[k] against the template carried rigidly by the true
+body, and against pred[0] unmoved.
 
-1. SMPL-X is fitted to obstacle[k] (`BodyFitter.fit_mesh`, warm-started
-   from the previous frame; all fits cached in one npz so reruns are
-   instant), residual reported per frame.
-2. `GarmentRenderer` is driven by a fitter set to those fits, rigid LBS
-   (`dynamics=False`) and the live cloth (`dynamics=True`: `LightCloth`
-   springs plus body collision, stepped once per fitted frame with
-   dt = stride / 25 s; a step longer than `light_cloth.MAX_DT` restarts
-   the springs from the skinned pose).
-3. Per frame: mean / p90 vertex distance (cm) to pred[k], over all
-   vertices, the sleeves (`renderer.sleeve_vertices`) and the rest. Two
-   reference floors: pred[k] against the template carried rigidly by the
-   TRUE body (`bind.GarmentBinding` on obstacle - nearest-body-vertex LBS
-   with no fit in the loop), i.e. how far the reference cloth moves away
-   from rigid following; and pred[k] against pred[0] unmoved.
-
-The renderer's mesh is trimesh's UV-split order (8208 vertices); the
-reference's is the obj's (7972). They index the same faces in the same
-order (`AppearanceNet.__init__`), which gives the map used here.
+The renderer's mesh is trimesh's UV-split order (8208 vertices), the
+reference's the obj's (7972); they share faces in order, which gives the map.
 """
 
 from __future__ import annotations
@@ -91,8 +78,7 @@ def fit_frames(trajectory, frames, cache, iterations, warm_iterations, seed=None
             warm = True
         obstacle = trajectory["obstacle"]
         for k in missing:
-            # Warm start: the fitter keeps its parameters between calls, and
-            # `fit_mesh` re-solves the offset from the centroids itself.
+            # warm start: the fitter keeps its parameters; `fit_mesh` re-solves the offset
             nearest = [j for j in fits if j < k]
             if nearest:
                 j = max(nearest)

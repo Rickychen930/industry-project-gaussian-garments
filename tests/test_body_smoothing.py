@@ -1,20 +1,8 @@
 """Tracking a body through video: the metric, then the behaviour.
 
-VIBE (Kocabas et al., CVPR 2020) is the reference. Two of its findings
-shape everything here:
-
-* per-frame fitting "yields jittery, unstable results" on video, and the
-  number that exposes it is **acceleration error** - the difference in
-  acceleration between predicted and true 3D joints, in mm/s^2. On 3DPW a
-  per-frame fitter scores 29.8 and VIBE 23.4.
-* a body does not change shape between frames. VIBE predicts shape per
-  frame and average-pools it over the sequence; here `track` freezes shape
-  after the cold fit, so any drift in beta is impossible rather than merely
-  discouraged.
-
-The metric is tested before the tracker, on synthetic sequences whose
-ground truth is known exactly - otherwise a tracker's score has no
-reference and "smoother" cannot be told from "lagging".
+Following VIBE (Kocabas et al., 2020), jitter is measured as acceleration
+error of 3D joints, and shape is held fixed over a sequence. The metric is
+tested first on synthetic sequences with exact ground truth.
 """
 
 from __future__ import annotations
@@ -59,11 +47,7 @@ class AccelerationErrorTest(unittest.TestCase):
         self.assertAlmostEqual(acceleration_error(shifted, truth, fps=30.0), 0.0, places=6)
 
     def test_lag_is_penalised_at_a_turn(self):
-        """Over-smoothing that misses a direction change must score badly.
-
-        This is VIBE's warning about Temporal-HMR, made testable: a tracker
-        that lags a sharp turn is smooth but wrong.
-        """
+        """Over-smoothing that misses a direction change must score badly."""
         frames = 40
         truth = np.zeros((frames, 1, 3))
         truth[:20, 0, 0] = np.linspace(0, 0.4, 20)
@@ -94,14 +78,9 @@ if __name__ == "__main__":
     "no SMPL-X body models",
 )
 class TrackerJitterTest(unittest.TestCase):
-    """Freezing shape during tracking does NOT reduce jitter - measured.
+    """Freezing shape during tracking does not reduce jitter (measured).
 
-    It first appeared to, by 41%, against a cold fit that had converged to
-    the wrong basin. Once `fit` was staged (camera first, then pose) and the
-    fit converged, five seeds gave a frozen/free acceleration ratio of 1.03
-    with 10 mm worse MPJPE frozen. This test pins that finding so the
-    "obvious" optimisation is not re-added on the strength of the paper it
-    was borrowed from: the number has to move before the code does.
+    Pins the finding so the optimisation is not re-added from the paper alone.
     """
 
     def test_freezing_shape_is_not_an_improvement(self):
@@ -122,17 +101,10 @@ class TrackerJitterTest(unittest.TestCase):
         )
 
     def test_tracking_a_known_motion_is_smoother_than_refitting_each_frame(self):
-        """Warm-started tracking stays about as smooth as cold per-frame
-        fitting.
+        """Warm-started tracking stays about as smooth as cold per-frame fitting.
 
-        This used to assert tracking strictly smoother. Since the fit runs
-        in a normalised frame (`bodyfit.WORK_SCALE`) the cold fits are much
-        better, and on this sequence they are now smoother than 3-iteration
-        tracking: acceleration error 17,821 cold vs 24,683 tracked (was
-        24,930 vs 25,396 before the change, so tracking itself improved
-        slightly). Tracking's value is yaw continuity and a 5x lower
-        per-frame cost, not smoothness. The bound pins the measured ratio
-        (1.39) with room for noise, so a real regression still fails."""
+        Tracking's value is yaw continuity and lower per-frame cost; the
+        bound pins the measured ratio with room for noise."""
         import torch
 
         from tests.synthetic_sequence import make_sequence

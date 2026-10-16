@@ -84,7 +84,7 @@ nearest pipeline frame.
 |---|---|---|
 | garment IoU vs the real shirt, 5 release videos | **0.730** (the authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
 | body accuracy, 16 annotated views (PA-MPJPE) | **24.6 mm** (keypoint fit 87-94 mm) | `docs/baseline/body-regressors.json` |
-| pipeline time a frame, M1 | 0.085-0.10 s of work (0.21-0.23 s before the 8 Oct speed work); smooth display at camera rate | `python -m tryon.app --profile` |
+| pipeline time a frame, M1 | 0.1-0.2 s of work (0.085-0.10 s on a quiet machine, 125 ms in the 13 Oct profiled run; 0.21-0.23 s before the 8 Oct speed work); smooth display at camera rate | `python -m tryon.app --profile` |
 
 ## Setup, step by step
 

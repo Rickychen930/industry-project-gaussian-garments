@@ -34,15 +34,21 @@ named): `garments/`, `trajectories/`, `release_videos/`, `body_models/smplx/`,
 
 The pretrained models are fetched by `./setup.sh` (`tools/data/download_pretrained.py`).
 
-## Archived: 4D-DRESS (not requested)
+## 4D-DRESS (full release, late; used only for body accuracy)
 
 4D-DRESS (ETH Zurich, CVPR 2024, https://4d-dress.ait.ethz.ch) is the
 dataset the 15 garments were captured from. It is only available through a
 registration form with an institutional e-mail and a manual approval of
 days to weeks; there is no download in the official repository
 (github.com/eth-ait/4d-dress, code only) or on the project page, and the
-licence forbids redistribution, so no copy elsewhere may be used. With no
-time left to wait for approval, it was not requested (7 Oct 2026).
+licence forbids redistribution, so no copy elsewhere may be used. The plan
+was archived on 7 Oct 2026 without it; the full release reached us later and
+was used only for the body-accuracy test in `docs/baseline/body-accuracy-4ddress.json`
+(4,208 views of subjects 00134 and 00136: mean PA-MPJPE 42.5 mm, 14.7% of
+views above 60 mm, against 24.6 mm on the 16-view sample), the corrector in
+`body-corrector.json` (did not help on the held-out subject) and the failure
+detector in `failure-detector.json` (AUC 0.75 and 0.80). Garment overlap was
+not scored against its captured shirts.
 
 The project does not need it to run or to be evaluated: a small official
 sample is in `data/annotated/` (from the Gaussian Garments
@@ -64,3 +70,13 @@ simulation), and 4-camera masks (a multi-view test set).
 | ActorsHQ | Requested before the project used Gaussian Garments checkpoints; gives no garment assets. |
 | DeepFashion2, VITON-HD train | Frontal 2D photos: no cameras, no 3D. |
 | VTON360 renders | Downloaded (`~/Downloads/vton360/`, outside the data root with the other reference systems) for the 360-degree comparison, not used by the live system. |
+
+## Files not in the repository
+
+`docs/baseline/motion-fits/` and `docs/baseline/trajectory-fits-*.npz` are SMPL-X
+fits of the garment authors' released simulations, and
+`docs/baseline/idm-vton-vs-ours-camera0004-frame4.png` shows a frame of the
+4D-DRESS sample. They are not redistributed. Regenerate the fits with
+`tools/data/fit_trajectories.py` and `tools/data/fit_motions.py` once the
+garments and trajectories are in place; earlier commits of this repository
+still contain them.

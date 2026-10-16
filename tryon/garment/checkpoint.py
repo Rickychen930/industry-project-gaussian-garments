@@ -1,11 +1,7 @@
-"""Reading a Gaussian Garments checkpoint (Rong et al., 3DV 2025).
+"""Read a Gaussian Garments checkpoint (Rong et al., 3DV 2025).
 
-A checkpoint directory holds `stage1/template_uv.obj` (the garment mesh,
-with UVs) and `stage3/ckpt/net.pt` (the Gaussians: their positions,
-rotations, scales and colours, each bound to a face of the template).
-This module turns those files into the arrays the renderer works with;
-the appearance network's own reading of the template (its original
-vertex indexing) is in `texels.read_template`.
+`stage1/template_uv.obj` is the garment mesh with UVs; `stage3/ckpt/net.pt`
+holds the Gaussians, each bound to a template face.
 """
 
 from __future__ import annotations
@@ -32,17 +28,10 @@ def load_checkpoint(model_dir):
 def load_template(path):
     """The garment template, split into vertices by (position, UV) only.
 
-    trimesh splits an OBJ's vertices on every distinct (v, vt, vn) corner.
-    Most checkpoints store per-vertex normals, but 00122_outer,
-    00134_upper and 10004_outer store ONE NORMAL PER FACE ("f 1/1/1
-    3/2/1 2/3/1"), so every face got three vertices of its own: 47k
-    vertices for 15.7k faces, a triangle soup with no shared edges. The
-    cloth solver then simulated each triangle as a separate piece of
-    cloth and the garment fell apart into shreds; the sleeve labels and
-    anything else built on mesh adjacency broke with it. Normals are not
-    used (the splats carry their own frames), so the vn indices are
-    dropped and the split is by (v, vt) - 8,245 vertices for 00122_outer,
-    the same scheme 00152_outer's normal-free file always had."""
+    trimesh splits on every distinct (v, vt, vn) corner. Some checkpoints
+    store one normal per face, which turns the mesh into a triangle soup
+    with no shared edges (the cloth solver then shreds it). Normals are
+    unused, so the vn indices are dropped."""
     import io
 
     import trimesh
@@ -61,9 +50,7 @@ def load_template(path):
 
 @njit(cache=True)
 def _uv_binding_numba(triangles, resolution):
-    """The loop of `_uv_binding_python` compiled: the same pixel-centre test
-    in the same float64 arithmetic, later faces overwriting earlier ones
-    (~3 s of Python per garment load)."""
+    """Compiled `_uv_binding_python`: same pixel-centre test, later faces overwrite."""
     binding = np.full((resolution, resolution), -1, np.int32)
     for index in range(len(triangles)):
         ax, ay = triangles[index, 0, 0], triangles[index, 0, 1]
@@ -92,11 +79,9 @@ def _uv_binding_numba(triangles, resolution):
 def uv_binding(mesh, count):
     """Recover which face each Gaussian belongs to.
 
-    The checkpoints store splats but not their binding, so it is rebuilt the
-    way the model created it: rasterise the UV atlas and take one Gaussian
-    per covered texel. Resolution is recovered by trying the standard sizes
-    until the count matches exactly - it does match exactly, which is the
-    check that the reconstruction is right rather than merely plausible.
+    Checkpoints don't store the binding, so rasterise the UV atlas (one
+    Gaussian per covered texel) and pick the standard resolution whose
+    texel count matches `count`.
     """
     uvs = np.asarray(mesh.visual.uv)
     faces = np.asarray(mesh.faces)
@@ -137,8 +122,7 @@ def _uv_binding_python(mesh, count):
             if inside.any():
                 binding[ys[inside], xs[inside]] = index
         covered = int((binding >= 0).sum())
-        # `count=None` means "whatever this atlas yields" - used by tests and
-        # by callers with no checkpoint to match.
+        # count=None: accept whatever this atlas yields.
         if count is None or abs(covered - count) <= BINDING_TOLERANCE:
             return binding[binding >= 0], resolution
     raise SystemExit(

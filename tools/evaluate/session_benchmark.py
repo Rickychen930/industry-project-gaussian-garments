@@ -1,15 +1,11 @@
 """One recorded webcam session through the live pipeline, with numbers: a fixed benchmark.
 
-    .venv/bin/python -m tools.evaluate.session_benchmark ~/tryon-data/captures/session-....mp4 \\
-        --garment 00190_upper --out docs/baseline/session-<name>.json
+    .venv/bin/python -m tools.evaluate.session_benchmark ~/tryon-data/captures/session-....mp4 --garment 00190_upper --out docs/baseline/session-<name>.json
 
-A recording (`./live-tryon record`) has no ground truth, so what it can measure is what the live system
-can be checked against without one: how many frames are dressed, how far the fitted body is from
-MediaPipe's keypoints, whether the fitted shoulders are as wide as MediaPipe's when the wearer faces
-the camera or away from it, how much of the wearer's own clothing the garment does not cover, and how
-long a frame takes. The same recording before and after a change says whether the change helped.
-
-Run it with nothing else busy: the stage times are the machine's as much as the code's.
+A recording has no ground truth, so it measures what can be checked without one:
+frames dressed, fitted body vs MediaPipe keypoints, shoulder width facing and
+away from the camera, how much of the wearer's own clothing stays uncovered, and
+per-frame time. Run with nothing else busy: stage times are the machine's too.
 """
 
 from __future__ import annotations

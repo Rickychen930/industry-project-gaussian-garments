@@ -1,11 +1,10 @@
 """Which camera the live try-on opens: the laptop's own, never the phone's.
 
-macOS offers an iPhone near the Mac as a camera of its own (Continuity Camera), and it can take the
-place of index 0. `--source` therefore defaults to "builtin": the index of the laptop's camera, found by
-name. A number, or a video file, is used as given.
+macOS can offer a nearby iPhone as a camera (Continuity Camera) in place of index 0, so
+`--source` defaults to "builtin": the laptop camera's index, found by name. A number or
+a video file is used as given.
 
     list_cameras()       [(index, name)] of the video devices, in the order OpenCV numbers them
-    builtin_index()      the index of the laptop's camera (0 when it cannot be told)
     resolve_source(s)    "builtin" / "laptop" / "auto" -> the index as a string; anything else unchanged
 """
 
@@ -23,8 +22,8 @@ _DEVICE_LINE = re.compile(r"\[(\d+)\]\s+(.+?)\s*$")
 
 
 def parse_avfoundation_listing(text):
-    """[(index, name)] of the video devices in `ffmpeg -f avfoundation -list_devices true -i ""`'s output
-    (the screens it lists as 'Capture screen N' and the audio devices are left out)."""
+    """[(index, name)] of the video devices in `ffmpeg -f avfoundation -list_devices true -i ""`
+    (screens and audio devices left out)."""
     cameras, in_video = [], False
     for line in text.splitlines():
         if "AVFoundation video devices" in line:
@@ -52,8 +51,8 @@ def list_cameras():
 
 
 def choose_builtin(cameras):
-    """The index of the laptop's camera among `cameras` [(index, name)]: the first whose name is a built-in
-    one, else the first that is not a phone, else the first, else 0."""
+    """The index of the laptop's camera among `cameras`: the first built-in name, else the
+    first that is not a phone, else the first, else 0."""
     for index, name in cameras:
         if any(word in name.lower() for word in _BUILTIN) and not any(word in name.lower() for word in _PHONE):
             return index
@@ -63,13 +62,9 @@ def choose_builtin(cameras):
     return cameras[0][0] if cameras else 0
 
 
-def builtin_index():
-    return choose_builtin(list_cameras())
-
-
 def resolve_source(source):
-    """`source` with the names of `BUILTIN_ALIASES` replaced by the laptop camera's index (a string, as `--source`
-    is); a camera number or a file path comes back as it was."""
+    """`source` with `BUILTIN_ALIASES` replaced by the laptop camera's index (a string);
+    a camera number or file path comes back as it was."""
     if str(source).lower() in BUILTIN_ALIASES:
         cameras = list_cameras()
         index = choose_builtin(cameras)

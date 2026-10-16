@@ -1,16 +1,9 @@
 """Measuring a body track through video.
 
-The reference is VIBE (Kocabas et al., CVPR 2020). Its finding is that
-per-frame fitting "yields jittery, unstable results" on video, and that
-the position metrics (MPJPE) cannot see it: a prediction can be within a
-few millimetres every frame and still shake. The number that exposes it is
-**acceleration error** - "the difference in acceleration between the
-ground-truth and predicted 3D joints", in mm/s^2 (VIBE, Sec. 4).
-
-Acceleration is the second finite difference of position over time, so a
-sequence needs at least three frames to have one. A constant offset has
-zero acceleration and scores zero, which is correct: being 5 cm off is a
-position error and MPJPE reports it. This metric reports only the shaking.
+Following VIBE (Kocabas et al., CVPR 2020): per-frame fitting is jittery in a way
+position metrics (MPJPE) cannot see, so the number used is **acceleration error**, in
+mm/s^2. Acceleration is the second finite difference of position, so it needs at least
+three frames; a constant offset scores zero (that is a position error).
 """
 
 from __future__ import annotations
@@ -42,9 +35,9 @@ def acceleration_error(predicted, truth, fps):
 
 
 def joint_acceleration(joints, fps):
-    """Mean |accel| of a track on its own, mm/s^2 - for when there is no
-    ground truth, as with a live webcam. Lower is steadier; it cannot tell
-    steadiness from lag, so it is never reported without reprojection error."""
+    """Mean |accel| of a track on its own, mm/s^2, for when there is no ground truth (live
+    webcam). Lower is steadier; it cannot tell steadiness from lag, so always read it with
+    reprojection error."""
     joints = np.asarray(joints, np.float64)
     if joints.shape[0] < 3:
         raise ValueError("need at least 3 frames to measure acceleration")
@@ -54,16 +47,12 @@ def joint_acceleration(joints, fps):
 class OneEuroFilter:
     """One Euro filter (Casiez, Roussel & Vogel, CHI 2012) for landmarks.
 
-    A low-pass filter whose cutoff rises with speed: heavy smoothing while
-    the body is still (where detector jitter is what the viewer sees) and
-    little lag when it moves fast. Applied to MediaPipe's (33, 4) landmark
-    array: x and y in pixels (normalised by the person's height so the
-    parameters do not depend on image size or distance), and the world z
-    column as is. Visibility passes through unfiltered.
+    A low-pass filter whose cutoff rises with speed: heavy smoothing at rest, little lag
+    when fast. Applied to MediaPipe's (33, 4) landmark array: x and y in pixels (normalised
+    by the person's height), world z as is; visibility passes through.
 
-    `min_cutoff` Hz: the cutoff at rest. `beta`: how fast the cutoff grows
-    with speed (per person-height per second). `d_cutoff` Hz: cutoff of
-    the speed estimate itself.
+    `min_cutoff` Hz: cutoff at rest. `beta`: how fast the cutoff grows with speed (per
+    person-height per second). `d_cutoff` Hz: cutoff of the speed estimate.
     """
 
     def __init__(self, min_cutoff=1.0, beta=0.5, d_cutoff=1.0, relative=False):

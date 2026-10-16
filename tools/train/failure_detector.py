@@ -1,19 +1,17 @@
 """Can the live body path tell, per frame, when it is about to be badly wrong?
 
-A residual correction of the fitted joints does not help (docs/baseline/body-corrector.json:
-R^2 < 0 on the held-out subject), and ~15 % of the views carry half of the squared error. If
-those views were recognisable without ground truth, the live system could hold the last good
-pose instead of drawing a garment on a wrong body.
+A residual correction does not help (docs/baseline/body-corrector.json: R^2 < 0
+on the held-out subject) and ~15 % of views carry half the squared error. If
+those were recognisable without ground truth, the live system could hold the last
+good pose instead.
 
-Label: PA-MPJPE of the view > `THRESHOLD_MM`. Features are only what a live frame has:
+Label: view PA-MPJPE > `THRESHOLD_MM`. Features are live-only: MediaPipe joint
+visibilities, the fit's reprojection error and NLF-vs-MediaPipe 2D gap (torso
+lengths), and the fitted joints in the canonical torso frame.
 
-    visibility of the 12 joints (MediaPipe), the fit's reprojection error and the 2D gap between
-    NLF's and MediaPipe's joints (both in torso lengths), and the fitted joints in the canonical
-    torso frame.
-
-Scored as the system would use it, trained on one subject and applied to the other: the AUC of
-the label, and the mean error of the views that survive when the riskiest fraction is dropped
-(compared with dropping at random, and with dropping exactly the worst, the ceiling).
+Trained on one subject, applied to the other: reports the AUC and the mean error
+of the views kept after dropping the riskiest fraction, against random dropping
+and the oracle ceiling.
 
     .venv/bin/python -m tools.train.failure_detector
 """
@@ -101,7 +99,7 @@ def main() -> None:
             continue
         entry: dict = {"train_views": int(len(train)), "test_views": int(len(test)),
                        "test_positive_rate": float(label[test].mean()), "test_mean_mm": float(error[test].mean())}
-        # one feature at a time: how much does each live signal carry on its own (AUC, 0.5 = nothing)?
+        # each live signal alone (AUC; 0.5 = nothing)
         single = {}
         for i, name in enumerate(names[:5]):
             auc = roc_auc_score(label[test], x[test, i])

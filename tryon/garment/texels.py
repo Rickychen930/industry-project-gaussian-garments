@@ -1,9 +1,6 @@
-"""The appearance network's texture space: the garment template as the
-reference reads it, the binding of every Gaussian to a texel of the
-512 x 512 UV atlas (with its barycentric anchor on the face), and the
-ambient-occlusion and normal maps the network takes as input, baked in
-that atlas (`bake_maps`, the replacement for the reference's Blender
-bake; see `appearance.py`).
+"""Texture space of the appearance network: template reader, Gaussian-to-texel
+binding on the 512 x 512 UV atlas, and the AO / normal maps baked in it
+(`bake_maps`, replacing the reference's Blender bake; see `appearance.py`).
 """
 
 from __future__ import annotations
@@ -41,8 +38,7 @@ def read_template(path):
 
 
 def _rasterize(triangle, scale):
-    """`AvatarGaussianModel.rasterize`, line for line: scanline over pixel
-    centres, sorted by y, split at the middle vertex."""
+    """Port of `AvatarGaussianModel.rasterize`: scanline over pixel centres."""
     pixels = []
 
     def itp(end1, end2, target, axis):
@@ -71,18 +67,16 @@ def _rasterize(triangle, scale):
 
 @njit(cache=True)
 def _texture_binding_numba(triangles, res):
-    """`_texture_binding_python` compiled: `_rasterize`'s scanline per face,
-    later faces overwriting earlier ones (~1.1 s of Python per call, twice
-    per garment load). `triangles`: the UV triangles already scaled by
-    `res`, float32 as the reference has them. The arithmetic follows NumPy
-    1.x's promotion in `_rasterize` exactly - float32 throughout, except
-    `y - end1[1]` with the Python float y, which NumPy computes in float64
-    and rounds to float32 when it scales the float32 edge; float64
-    everywhere put one texel more or less on 2 of 15 garments."""
+    """Compiled `_texture_binding_python`; later faces overwrite earlier ones.
+
+    `triangles` are the UV triangles already scaled by `res`, float32. The
+    dtype promotion mirrors NumPy 1.x in `_rasterize` (float32 except
+    `y - end1[1]`, computed in float64 then rounded); plain float64 moves a
+    texel on some garments."""
     bind_map = np.full((res, res), -1, np.int64)
     for index in range(len(triangles)):
         tri = triangles[index]
-        # stable sort of the three corners by y (numpy's argsort of 3 values)
+        # stable sort of the corners by y
         a, b, c = 0, 1, 2
         if tri[b, 1] < tri[a, 1]:
             a, b = b, a
@@ -121,20 +115,16 @@ def _texture_binding_numba(triangles, res):
 
 
 def texture_binding(uvs, texture_faces, res=TEXTURE_SIZE):
-    """`get_texture_binding`: face id per texel, -1 where uncovered.
-    Compiled (`_texture_binding_numba`); `_texture_binding_python` is the
-    line-for-line port it is tested against."""
-    # scaled as `_rasterize` does: np.array(triangle) * scale keeps the uvs' dtype
+    """`get_texture_binding`: face id per texel, -1 where uncovered."""
     triangles = np.ascontiguousarray(np.asarray(uvs)[np.asarray(texture_faces)] * res, np.float32)
     return _texture_binding_numba(triangles, res)
 
 
 def _texture_binding_python(uvs, texture_faces, res=TEXTURE_SIZE):
-    """`get_texture_binding`: face id per texel, -1 where uncovered.
+    """Reference port of `get_texture_binding`; oracle for the compiled form.
 
-    Row = floor(v * res), column = floor(u * res), no vertical flip - the
-    same orientation Blender's `image.pixels` (bottom row first) gives the
-    baked maps, which is why the reference never flips either.
+    Row = floor(v * res), column = floor(u * res), no vertical flip (matches
+    Blender's bottom-row-first `image.pixels`).
     """
     bind_map = np.full((res, res), -1, np.int64)
     for index, face in enumerate(texture_faces):
@@ -199,9 +189,7 @@ _DILATION_CACHE = {}
 
 
 def _dilate_map(values, covered, margin):
-    """Fill texels within `margin` of a covered texel with the nearest
-    covered value, as Blender's bake margin does. The nearest-texel map
-    depends only on the (fixed) atlas, so it is computed once per atlas."""
+    """Fill texels within `margin` of a covered texel with the nearest covered value (Blender bake margin); cached per atlas."""
     from scipy import ndimage
 
     key = (covered.shape, margin, hash(covered.tobytes()))
@@ -217,18 +205,13 @@ def _dilate_map(values, covered, margin):
 
 def bake_maps(vertices, faces, binding: TexelBinding, occluders=(), rays=32, seed=0,
               max_distance=10.0, margin=TEXTURE_MARGIN, per_vertex=False):
-    """Ambient occlusion (res, res) and object-space normal (res, res, 3)
-    maps in [0, 1], laid out like the reference's PNGs.
+    """Ambient occlusion (res, res) and object-space normal (res, res, 3) maps in [0, 1].
 
-    `occluders`: extra (vertices, faces) meshes - the body, other garments
-    - that block light in the AO, as the reference passes the body PLY and
-    the other garments to Blender.
+    `occluders`: extra (vertices, faces) meshes (body, other garments) that
+    block light in the AO.
 
-    `per_vertex`: cast the AO rays from the mesh's vertices (area-weighted
-    normals) and interpolate them to the texels barycentrically, instead
-    of from every texel: ~8k ray origins instead of ~93k, for the live
-    loop (see `AsyncAppearance`). AO varies smoothly across a face, so
-    little is lost; measured in `AsyncAppearance`'s docstring.
+    `per_vertex`: cast AO rays from the mesh vertices and interpolate to
+    texels (~8k origins instead of ~93k), for the live loop.
     """
     import open3d as o3d
 

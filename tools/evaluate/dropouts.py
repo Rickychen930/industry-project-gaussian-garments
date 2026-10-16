@@ -1,16 +1,12 @@
 """How often the live garment disappears while a person is in view.
 
-Every frame of these clips shows the wearer, so every frame should be
-dressed. This runs the live loop's decision per frame - MediaPipe (video
-mode, as live), `person.dressable`, the body regressor, the fallback cold
-fit, `HOLD_FRAMES` - without rendering, and reports the fraction of frames
-that would carry a garment, and the longest run without one.
+Runs the live loop's per-frame decision (MediaPipe video mode, `person.dressable`,
+body regressor, fallback cold fit, `HOLD_FRAMES`) without rendering, and reports
+the fraction of frames that would carry a garment and the longest run without one.
 
-Clips: the release videos' left panels (people turn, lean, kick; every
-`--step`-th frame) and webcam-like variants made from two of them
-(`--scenarios`): a waist-high crop (wearer at a desk), a head-and-chest
-close-up, walking half out of the side, far away (small), dim light with
-noise, motion blur, and a bar passing in front of the torso.
+Clips: the release videos' left panels (every `--step`-th frame) and webcam-like
+variants of two of them (`--scenarios`): waist-high crop, close-up, half out of
+frame, far away, dim and noisy, motion blur, a bar across the torso.
 
     .venv/bin/python -m tools.evaluate.dropouts [--frames 150] [--step 2] [--out j.json]
 """

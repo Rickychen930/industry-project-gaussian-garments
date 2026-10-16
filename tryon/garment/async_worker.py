@@ -1,7 +1,7 @@
-"""One worker thread that turns the newest job into a result, at most every
-INTERVAL seconds: the scaffolding `shading_student.AsyncStudent` and
-`appearance.AsyncAppearance` share (the live loop submits every frame, draws
-with whatever finished last)."""
+"""Worker thread that turns the newest job into a result at most every INTERVAL seconds.
+
+Shared by `shading_student.AsyncStudent` and `appearance.AsyncAppearance`;
+the live loop submits every frame and draws the last finished result."""
 
 from __future__ import annotations
 
@@ -10,10 +10,8 @@ import time
 
 
 class IntervalWorker:
-    """Subclasses implement `_make_job(*args)` (copy what the thread needs;
-    runs under the lock) and `_compute(job)` (runs on the worker thread; the
-    value it returns is the new result). `_closed_on_thread()` runs once on
-    the worker's way out."""
+    """Subclasses implement `_make_job(*args)` (runs under the lock; copy what
+    the thread needs) and `_compute(job)` (worker thread; returns the result)."""
 
     INTERVAL = 0.0  # s between jobs: a submit sooner than this after the last accepted one is dropped
 

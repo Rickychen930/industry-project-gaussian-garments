@@ -1,12 +1,7 @@
-"""Tests for the hand-written Gaussian splat renderer.
+"""Tests for the hand-written Gaussian splat renderer: projection,
+covariance propagation, SH colour and depth-ordered compositing.
 
-A separate module because this is a distinct piece of computer vision from
-the live try-on pipeline: perspective projection, covariance propagation,
-spherical-harmonic colour and depth-ordered compositing, each implemented
-directly from its definition rather than delegated to a rasteriser.
-
-Every test here states the property being checked in geometric terms, so a
-failure says which piece of the maths broke rather than which pixel moved.
+Each test states a geometric property, so a failure names the maths that broke.
 """
 
 import unittest
@@ -50,12 +45,8 @@ class QuaternionTests(unittest.TestCase):
 
 
 class WorldPositionTests(unittest.TestCase):
-    """Stored `xyz` are offsets in each face's own tangent frame, not world
-    coordinates - every value sits within a few thousandths of zero. World
-    position is `R_face @ local * scale_face + centre_face`, mirroring
-    `MeshGaussianModel.get_xyz`. Rendering the raw offsets puts every
-    Gaussian at the origin.
-    """
+    """Stored `xyz` are offsets in each face's tangent frame; world position
+    is `R_face @ local * scale_face + centre_face` (`MeshGaussianModel.get_xyz`)."""
 
     def _unit_triangle(self):
         vertices = np.array(
@@ -71,8 +62,7 @@ class WorldPositionTests(unittest.TestCase):
         np.testing.assert_allclose(world[0], vertices.mean(axis=0), atol=1e-12)
 
     def test_offsets_move_along_the_face_frame_not_the_world_axes(self):
-        """A triangle rotated in the world must carry its Gaussians with it:
-        the same local offset has to produce a different world point."""
+        """A rotated triangle carries its Gaussians: the same offset gives a different world point."""
         vertices, faces = self._unit_triangle()
         rotated = vertices @ np.array(
             [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
@@ -93,13 +83,9 @@ class WorldPositionTests(unittest.TestCase):
 
 
 class FaceScalingTests(unittest.TestCase):
-    """Stored `scaling` is relative to the face a Gaussian is bound to, and
-    must be multiplied by that face's own scale - `MeshGaussianModel.
-    remember_scaling` does exactly this. Skipping it made every splat ~90x
-    too large: `exp(scaling)` has a median of 0.276 while face scale has a
-    median of 0.011, so splats covered a 646px radius each and rendering
-    95k of them exhausted memory before writing a single view.
-    """
+    """Stored `scaling` is relative to the bound face and must be multiplied
+    by that face's scale (`MeshGaussianModel.remember_scaling`); skipping it
+    made splats ~90x too large."""
 
     def _unit_triangle(self):
         vertices = np.array(
@@ -134,17 +120,9 @@ class FaceScalingTests(unittest.TestCase):
 
 
 class SplatCoverageTests(unittest.TestCase):
-    """A trained garment carries fewer Gaussians than the pixels it has to
-    fill - 93k splats over a ~160k pixel silhouette, 0.58 per pixel, at a
-    median screen radius of 1.29px. Rendered at their stored size they do
-    not quite meet, leaving 10.3% of the garment's own area thin or empty
-    and giving the fabric a grainy, speckled look rather than a woven one.
-
-    Measured dilations: x1.3 closes the gaps to 7.1%, x1.6 to 6.4% and x2.0
-    back up to 7.1% (too large to register detail), while sharpness falls
-    878 -> 569 -> 399 -> 270. x1.3 buys most of the coverage for the least
-    blur, so that is the default.
-    """
+    """A trained garment has fewer Gaussians than pixels, so stored-size splats
+    leave gaps and a grainy look; a 1.3x dilation is the default trade of
+    coverage against blur."""
 
     def test_dilation_is_applied_in_log_space(self):
         from tryon.rendering.splat_cpu import face_frames, face_scaled_log_scaling
@@ -210,8 +188,7 @@ class ProjectionTests(unittest.TestCase):
         self.assertAlmostEqual(float(depth[0]), 2.0, places=9)
 
     def test_further_points_project_closer_to_the_centre(self):
-        """Perspective, not orthographic: the same lateral offset must
-        subtend a smaller angle when it is further away."""
+        """Perspective: the same lateral offset subtends a smaller angle further away."""
         intrinsics = np.array([[100.0, 0, 64.0], [0, 100.0, 48.0], [0, 0, 1.0]])
         near, _, _ = project_points(
             np.array([[0.5, 0.0, 1.0]]), np.eye(4), intrinsics
@@ -324,8 +301,7 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(float(alpha.max()), 0.0)
 
     def test_a_nearer_splat_occludes_a_further_one(self):
-        """Depth ordering, not just accumulation: the front splat's colour
-        must win where they overlap."""
+        """Depth ordering: the front splat's colour wins where they overlap."""
         view, intrinsics = self._camera()
         scene = self._one_splat([0, 0, 0], colour=(1.0, 0.0, 0.0), opacity=8.0)
         behind = self._one_splat([0, 0, -0.5], colour=(0.0, 0.0, 1.0), opacity=8.0)
@@ -364,11 +340,7 @@ if __name__ == "__main__":
 
 
 class CompiledPrePassTest(unittest.TestCase):
-    """`_prepare`'s numba kernels against the numpy originals they replace.
-
-    Measured on the 93k-splat checkpoint: the two numpy passes took 417 ms,
-    the whole compiled pre-pass 157 ms, with max differences 1.8e-15
-    (covariance) and 0.0 (colour)."""
+    """`_prepare`'s numba kernels against the numpy originals they replace."""
 
     def _splats(self, n=500, bands=15):
         rng = np.random.default_rng(3)

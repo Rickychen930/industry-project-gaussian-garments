@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
-# Train a shading student for every garment, one after another, and make
-# each the live one when it is done (tools/train/shading_student.py), with
-# the multi-garment motions as extra training poses (--with-motions).
+# Train a shading student for every garment in turn and promote each when done
+# (tools/train/shading_student.py, with --with-motions).
 #
 #   tools/train/all_shading_students.sh [garment ...]     # default: all
 #   CYCLES=400 tools/train/all_shading_students.sh 00134_upper
 #
-# Runs under caffeinate: the training renders with OpenGL, and creating a
-# GL context aborted (exit 134) once the display had gone to sleep. Logs go
-# to $LOG (default ~/tryon-data/training_logs), one file a garment, and a
-# line per garment to progress.log there.
+# Runs under caffeinate: GL context creation aborted (exit 134) once the display
+# slept. Logs: $LOG/<garment>.log (default ~/tryon-data/training_logs), plus progress.log.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"

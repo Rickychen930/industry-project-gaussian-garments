@@ -1,18 +1,9 @@
 """The rasteriser must stay exact while it gets fast.
 
-`render_splats` was a per-Gaussian Python loop: 93k iterations, 30k
-`np.mgrid` calls, 2.0 s of a 2.3 s frame. The compositing is a painter's
-recurrence - back to front, `canvas = canvas*(1-w) + w*colour` - so it is
-order-dependent and cannot be a single `np.add.at`. What CAN be
-vectorised is everything within a tile: bin splats into 8x8 tiles, then
-composite each tile's splats in depth order as one dense stack. That is
-Kerbl et al.'s design (16x16, sized for a GPU thread block), on the CPU
-with a smaller tile - see `tryon/rendering/splat_cpu.py`'s `TILE` for why 8 measured
-faster here on both a synthetic and a real workload.
-
-The old loop is kept as `render_splats_reference` and is the oracle: the
-fast path must match it to a quarter of a grey level on a fixed splat
-set. Speed without exactness is a different renderer, not a faster one.
+Compositing is order-dependent, so only the work within a tile is
+vectorised (8x8 tiles; see `TILE` in `tryon/rendering/splat_cpu.py`). The old
+loop is kept as `render_splats_reference` and is the oracle: the fast path
+must match it to a quarter of a grey level.
 """
 
 from __future__ import annotations
@@ -88,17 +79,10 @@ class RasteriserExactnessTest(unittest.TestCase):
         self.assertEqual(float(a.max()), 0.0)
 
     def test_fast_is_substantially_faster(self):
-        """A conservative floor under real, noisy measurements on both workloads.
+        """A conservative floor under noisy timings on both workloads.
 
-        A single timed call of either path is too noisy to gate on: the
-        reference alone ranged 742-1640 ms across five back-to-back runs on
-        one input, and repeating the median-of-several measurement itself
-        moved between runs depending on what else was running on this
-        machine - 2.71x to 3.90x on 20,000 scattered splats (240x320) across
-        five separate measurements, 3.10x on the real garment (93k splats
-        bound to a body, same frame size). 5x was the first guess, unmeasured;
-        it did not hold. 2x is below every one of those numbers, so it is
-        asserted rather than the largest number seen once.
+        Measured speedups ranged 2.7x to 3.9x, so 2x is asserted rather than
+        the largest number seen once.
         """
         splats, (view, k, size) = _splats(20000), _camera((240, 320))
         render_splats(splats, view, k, size)

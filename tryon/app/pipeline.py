@@ -8,20 +8,13 @@
       -> own clothing erased and filled            (removal/remover.py)
       -> garment composited, face and hands kept   (app/compositing.py)
 
-Two numbers judge the body every frame and are shown in the HUD:
+The HUD shows two body numbers: `reproj` (mean pixel distance from the model's
+joints to the detected ones, accuracy) and `accel` (joint acceleration over the
+last 30 frames, smoothness; it cannot tell steady from lagging, hence reproj).
 
-    reproj   mean pixel distance from the model's joints to the detected
-             ones - accuracy
-    accel    mean joint acceleration in mm/s^2 over the last 30 frames -
-             smoothness (VIBE's metric). It has no ground truth live, so it
-             cannot tell steady from lagging; that is why reproj sits beside
-             it, always.
-
-A person is "lost" when MediaPipe stops seeing a torso; the next sighting
-triggers a fresh cold fit rather than tracking from a stale pose. A new
-fitter means the garment's skinning is stale too - `render()` re-binds
-automatically the first time it sees a different fitter object (see
-`GarmentRenderer.posed_mesh`). With no garment the fitted skeleton is drawn.
+A person is "lost" when MediaPipe stops seeing a torso; the next sighting cold
+fits rather than tracking from a stale pose. A new fitter makes `render()`
+re-bind the garment's skinning automatically. With no garment the skeleton is drawn.
 """
 
 from __future__ import annotations
@@ -49,33 +42,23 @@ from tryon.body.fitter import BodyFitter
 from tryon.body.regressor import box_from_joints, person_in_box
 from tryon.body.smoothing import OneEuroFilter, joint_acceleration
 
-# Multi-HMR below its native size resizes its position embeddings with a
-# bicubic kernel MPS lacks; that one op falls back to the CPU.
+# Multi-HMR below its native size needs a bicubic kernel MPS lacks; that op runs on CPU.
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 # Frames the garment stays on the last body when the person is lost.
 HOLD_FRAMES = 8
-# With MediaPipe blind, the share of the last box the parser must still see
-# as person to keep holding (an empty room measured 0 %; a torso behind a
-# bar 1-3 %).
+# With MediaPipe blind, the share of the last box the parser must still see as person
+# to keep holding (empty room 0 %, torso behind a bar 1-3 %).
 REFIND_GLIMPSE = 0.005
-# Consecutive frames the regressor may dress a wearer MediaPipe cannot see
-# (a bar or an arm across the torso is a frame or two). A camera being moved
-# or pointed at part of a body kept the guess for 64 frames of a recorded
-# session: an oversized, tilted garment over unerased skin and shirt. Past
-# the limit the frame is left as it is until MediaPipe finds the person.
+# Consecutive frames the regressor may dress a wearer MediaPipe cannot see; past the
+# limit the frame is left as is until MediaPipe finds the person.
 REFIND_LIMIT = 4
 # Input size of the --body-regressor on the live path (see run()).
 LIVE_REGRESSOR_SIZE = 518
-# Read the next frame and send it to NLF before this one is rendered, so
-# the worker regresses frame t+1 while the loop renders, erases and shows
-# frame t. Every shown frame still carries the garment fitted to it; it is
-# shown one frame later. See `LiveSession.prefetch`.
+# Send the next frame to NLF before this one is rendered, so the worker regresses
+# t+1 while t is rendered and shown (each shown frame is one frame late). See `LiveSession.prefetch`.
 PREFETCH = True
-# MediaPipe Pose model for the landmarks (0 lite, 1 full). The landmarks
-# give NLF its person box and the fit its keypoints; garment IoU against the
-# real shirt (00170_upper / 00190_upper / 00152_outer) 0.789 / 0.731 / 0.658
-# with lite against 0.788 / 0.731 / 0.657 with full, MediaPipe 18 -> 11-13 ms.
+# MediaPipe Pose model (0 lite, 1 full). Lite measures the same garment IoU and is faster.
 POSE_COMPLEXITY = 0
 
 
@@ -84,6 +67,10 @@ def learn_background(plate, labels, frame):
     frame) to the background plate, before removal edits it."""
     if plate is not None and labels is not None and labels.shape == frame.shape[:2]:
         plate.update(frame, labels != 0)
+
+
+# Start a frame's clothing parse as soon as its landmarks are found (True), or after its fit (False).
+EARLY_MASK = True
 
 
 class MaskJob:
@@ -175,33 +162,31 @@ class StageTimer:
         self._start = self._last = time.perf_counter()
 
 
-# Start a frame's clothing parse as soon as its landmarks are found
-# (`LiveSession.prefetch`: while the frame before it is erased, composited and
-# shown) when True, or only once its fit is done, beside the render, when False.
-EARLY_MASK = True
+# Start a frame's clothing parse as soon as its landmarks are found (True), or only
+# once its fit is done, beside the render (False).
 
 # Erase the wearer's clothing on a worker thread while the garment renders
 # (True), or only after the render (False).
 ERASE_BESIDE_RENDER = True
 
-# Clothing is erased only within this fraction of the frame height around
-# the fitted body (and on the arms); 0 turns the limit off.
+# Clothing is erased only within this fraction of the frame height around the fitted
+# body (and on the arms); 0 turns the limit off.
 ERASE_NEAR_BODY = 0.08
 
-# Blend the wearer's own collar, left below the chin, into the neck (compositing.repair_collar).
+# Blend the wearer's own collar into the neck (compositing.repair_collar).
 REPAIR_COLLAR = True
 
-# Show the wearer's own pixels in the gaps of the garment (lace, open knit) instead of the filled background (compositing.restore_inside_garment).
+# Show the wearer's own pixels in the gaps of the garment (compositing.restore_inside_garment).
 RESTORE_INSIDE = True
 
-# Rescale a regressed body whose shoulders are far from MediaPipe's in width, front and back views (person.match_shoulder_width).
+# Rescale a regressed body whose shoulder width disagrees with MediaPipe (person.match_shoulder_width).
 MATCH_SHOULDERS = True
 
-# Instead of blending it away, leave the wearer's own collar visible in the new neckline as a layer (compositing.restore_collar_layer);
-# False: blend it into the neck (compositing.repair_collar).
+# Keep the wearer's own collar visible in the new neckline (compositing.restore_collar_layer);
+# False blends it into the neck (compositing.repair_collar).
 LAYER_COLLAR = True
 
-# Leave the wearer's own shirt under a shorter garment's hem instead of the filled background (compositing.restore_below_hem).
+# Leave the wearer's shirt under a shorter garment's hem (compositing.restore_below_hem).
 RESTORE_BELOW_HEM = True
 
 
@@ -230,9 +215,7 @@ def load_body_regressor(name, garment):
 
     if name == "nlf":
         return name, NLF()
-    # MPS at 518 px: 194 ms a frame against 547 ms at the native 672 on the
-    # CPU (same answers to 0.001 deg), for 0.710 vs 0.716 garment IoU on the
-    # five release videos (docs/LOG.md, Multi-HMR).
+    # MPS at 518 px: 194 ms a frame vs 547 ms at the native 672 on CPU, similar IoU.
     return name, MultiHMR(name, device="mps" if torch.backends.mps.is_available() else "cpu", input_size=LIVE_REGRESSOR_SIZE)
 
 
@@ -250,10 +233,8 @@ def load_clothing_remover(parser, fill, background_plate):
     from tryon.removal.parsing_schp import ATR_CHECKPOINT
     from tryon.removal.remover import ClothingRemover
 
-    # SCHP is the default: it is the most accurate parser that is cheap
-    # enough for the live path (~0.1 s on CoreML, on the worker thread it
-    # costs nothing measurable) and the only one that removes fur sleeves;
-    # FASHN is more accurate but ~0.8 s a frame.
+    # SCHP: accurate enough, cheap on the live path, and the only parser that removes
+    # fur sleeves. FASHN is more accurate but ~0.8 s a frame.
     if parser is None:
         parser = "schp"
     schp = fashn = None
@@ -264,8 +245,8 @@ def load_clothing_remover(parser, fill, background_plate):
 
         fashn, schp = FASHN_CHECKPOINT, ATR_CHECKPOINT
     remover = ClothingRemover(schp_checkpoint=schp, fashn_checkpoint=fashn)
-    # The room behind the wearer, learned from the feed (see
-    # tryon/removal/background.py); needs the SCHP parser's person labels.
+    # The room behind the wearer, learned from the feed (tryon/removal/background.py);
+    # needs SCHP's person labels.
     plate = BackgroundPlate() if schp is not None and background_plate else None
     if fill is not None:
         remover.fill = fill
@@ -296,20 +277,15 @@ class LiveSession:
     """Everything that lives from one frame to the next: the models, the
     tracked body, its filters and histories. `process` dresses one frame."""
 
-    # Orientation check: every ORIENTATION_CHECK_INTERVAL frames of tracking, check
-    # whether the classifier's independent orientation estimate disagrees
-    # with the tracked pose (see BodyFitter.orientation_disagrees) - a
-    # stuck warm-started track otherwise has no way to notice it is
-    # wrong. Matches the history's 30-frame window as a cadence that is
+    # Every N tracked frames, check whether the classifier's orientation disagrees with
+    # the tracked pose (BodyFitter.orientation_disagrees); a stuck warm track cannot notice.
     # cheap (one small-MLP forward pass) without checking every frame.
     ORIENTATION_CHECK_INTERVAL = 30
 
     def __init__(self, garment=None, garment_subsample=None, orientation_regressor=None, remove_clothing=False, parser=None,
                  fill=None, appearance=False, background_plate=True, harmonize=False, body_regressor=None, headless=True):
         if garment is not None:
-            # open3d (the garment binding's body-cover ray cast) takes 3-7 s
-            # to import; the first frame with a person otherwise waited for
-            # it. Imported on a thread while the models below load.
+            # open3d (body-cover ray cast) takes 3-7 s to import: load it on a thread.
             import threading
 
             threading.Thread(target=lambda: __import__("open3d"), daemon=True).start()
@@ -365,17 +341,14 @@ class LiveSession:
         error, the garment's alpha or None). `untouched`: a copy of `frame`
         as read, if the caller already made one (it is only read)."""
         early_mask = self._take_early_mask(frame)
-        # The fitter sees the One Euro filtered landmarks; the mask, arm
-        # strokes and HUD keep the raw ones, which match the image.
+        # The fitter sees filtered landmarks; mask, arm strokes and HUD keep the raw ones.
         fit_points = self._filtered(points, stamp)
         status = self._update_body(frame, points, fit_points, stage)
         status, visible = self._handle_loss(frame, points, status)
         garment_alpha = None
         if not visible and status != "holding":
-            # Nothing to dress: the frame is left as it is. Erasing the
-            # wearer's clothing with no garment to put over it showed a
-            # grey, half-undressed figure (desk-height clip, the hips out of
-            # frame for 18 of 75 frames) - worse than the original clothes.
+            # Nothing to dress: leave the frame alone. Erasing clothing with no garment
+            # to cover it looked worse than the original.
             self.fitter = None  # next sighting starts from a cold fit
             if self.landmark_filter is not None:
                 self.landmark_filter.reset()
@@ -384,9 +357,8 @@ class LiveSession:
             garment_alpha = self._dress(frame, points, early_mask, stage, untouched)
             reprojection = self.fitter.reprojection_error(points) if points is not None else float("nan")
         else:
-            # A visible torso, but the fitter was just dropped by the
-            # orientation check - this frame has no trustworthy pose yet;
-            # the next frame cold-fits and resumes.
+            # Fitter just dropped by the orientation check: no trustworthy pose yet;
+            # the next frame cold-fits.
             reprojection = float("nan")
         if status == "no person" and points is not None:
             status = framing_hint(points)  # someone is there: say what to change
@@ -443,9 +415,8 @@ class LiveSession:
         status shown in the HUD."""
         if not dressable(points, self.fitter is not None, self.regression is not None):
             return "no person"
-        # On THIS frame, every frame: answers ~0.6 s late (a worker thread,
-        # or every 15th frame) scored below the keypoint tracker on the
-        # release videos (docs/LOG.md, Multi-HMR).
+        # On THIS frame, every frame: answers a worker thread delivers late scored
+        # below the keypoint tracker.
         prediction = None
         if self.regression is not None:
             # NLF takes its person box from MediaPipe (its own detector is 1.5 s)
@@ -472,11 +443,8 @@ class LiveSession:
     def _cold_fit(self, points, fit_points):
         self.fitter = BodyFitter()
         if self.orientation is not None:
-            # Seed the cold fit with the classifier's predicted yaw
-            # octants IN ADDITION TO the {0, pi} pair, rather than instead of
-            # it - covers the near-perpendicular case (fit()'s own pair has
-            # no seed there) without giving up the pair's front/back
-            # disambiguation.
+            # Seed the cold fit with the classifier's yaw octants in addition to {0, pi}
+            # (covers the near-perpendicular case).
             hypotheses = self.fitter.orientation_hypotheses_from_regressor(points, self.orientation, top_k=2)
             self.fitter.fit(fit_points, orientation_hypotheses=tuple(hypotheses) + (0.0, float(np.pi)))
         else:
@@ -495,8 +463,7 @@ class LiveSession:
         if status == "refit":
             self.history.clear()
             if self.landmark_filter is not None:
-                # a refit marks a discontinuity; the filter would otherwise
-                # blend the old pose in for frames
+                # a refit is a discontinuity; reset the filter
                 self.landmark_filter.reset()
             if self.renderer is not None:
                 self.renderer.reset_motion(self.fitter)
@@ -505,8 +472,7 @@ class LiveSession:
             if self.frames_since_orientation_check >= self.ORIENTATION_CHECK_INTERVAL:
                 self.frames_since_orientation_check = 0
                 if self.fitter.orientation_disagrees(points, self.orientation):
-                    # The "lost -> cold fit next frame" path: this frame has
-                    # no trustworthy pose, the next one cold-fits.
+                    # "lost -> cold fit next frame": no trustworthy pose now.
                     self.fitter = None
                     status = "reorienting"
         return status
@@ -517,12 +483,9 @@ class LiveSession:
         rescued, glimpsed = False, False
         if (status == "no person" and self.fitter is not None and self.regressor_name == "nlf"
                 and self.remover is not None and self.last_box is not None and self.refound < REFIND_LIMIT):
-            # MediaPipe lost the wearer outright (a bar or an arm across the
-            # torso: no landmarks, no mask) while they are still there. The
-            # clothing parser often still sees them in the last box: then
-            # NLF, given that box, finds the body. When it sees only a sliver
-            # (1-3 % of the box, the rest hidden) the garment holds; an empty
-            # room is 0 %.
+            # MediaPipe lost the wearer (bar or arm across the torso) but the parser
+            # often still sees them in the last box: NLF, given that box, finds the body.
+            # A mere sliver holds the garment; an empty room ends it.
             self.last_parse = self._start_mask(frame, None).result()
             labels = self.last_parse.labels
             if labels is not None and labels.shape == frame.shape[:2]:
@@ -540,11 +503,8 @@ class LiveSession:
         if visible:
             self.held = 0
         elif self.fitter is not None and (points is not None or glimpsed) and self.held < HOLD_FRAMES:
-            # A short, partial loss (a lean, a hand across the hips): someone
-            # is still there, and the garment stays on the last body rather
-            # than vanishing for a frame or two. Nobody in the frame at all
-            # ends it at once - a garment left floating over an empty room
-            # for 8 frames.
+            # Short partial loss: hold the garment on the last body. Nobody in frame
+            # ends the hold at once.
             self.held += 1
             status = "holding"
         return status, visible
@@ -560,9 +520,8 @@ class LiveSession:
         if self.renderer is None:
             draw_body(frame, self.fitter)
             return None
-        # The clothing parse only READS the frame and the render never
-        # touches it, so the two overlap on a worker thread (the parser's
-        # ONNX / CoreML call and numba both release the interpreter lock).
+        # The parse only reads the frame and the render never touches it, so they
+        # overlap on a worker thread (ONNX/CoreML and numba release the GIL).
         mask_job = early_mask
         if self.remover is not None and mask_job is None:
             # The arms are added from the keypoints (see ClothingRemover.parse_clothing).
@@ -570,10 +529,8 @@ class LiveSession:
         stage("fit")
         erase = None
         if mask_job is not None and ERASE_BESIDE_RENDER:
-            # The erase (plate update, mask limits, the fill) reads the frame
-            # and writes into a copy, and the render never touches the frame,
-            # so the two run side by side; the body fill is the one step that
-            # needs the GL context, so `_start_erase` does it here, first.
+            # The erase reads the frame and writes a copy, so it runs beside the render;
+            # the body fill needs the GL context, so `_start_erase` does it first.
             erase = self._start_erase(frame, points, mask_job, untouched)
             stage("erase start")
         height, width = frame.shape[:2]
@@ -630,9 +587,7 @@ class LiveSession:
         parse = mask_job.result()
         mask = parse.mask
         if points is not None and ERASE_NEAR_BODY:
-            # only the clothing the wearer has on: SCHP also labels shirts
-            # hanging in a wardrobe behind them, which were erased into flat
-            # patches on a webcam
+            # only the clothing the wearer has on: SCHP also labels shirts in a wardrobe behind
             mask = mask & (body_silhouette(self.fitter, frame.shape, grow=ERASE_NEAR_BODY, fill=fill) | arm_strokes(points, frame.shape))
         learn_background(self.plate, parse.labels, frame)
         body = None
@@ -697,8 +652,7 @@ class FrameSource:
                 return None
             time.sleep(0.02)
         if self.max_width and frame.shape[1] > self.max_width:
-            # a 1920 x 1080 webcam ran every stage at full size: render
-            # 577 ms, removal 373 ms, 0.7 fps (measured, --profile)
+            # downscale: a 1920 x 1080 webcam ran every stage at full size (0.7 fps)
             scale = self.max_width / frame.shape[1]
             frame = cv2.resize(frame, (self.max_width, int(round(frame.shape[0] * scale))), interpolation=cv2.INTER_AREA)
         return frame
@@ -814,9 +768,8 @@ def run(
     overlay = Overlay.for_garment(garment) if ui and not headless and channel is None else None
     out = FrameOutput(headless, output_video, channel, overlay)
     frames, read, hud = 0, 0, "no frames"
-    # Build the pose model before touching the camera. MediaPipe brings up
-    # its own GL context on start, and on this Mac a camera opened before
-    # that returned nothing on its first read - which ended the session.
+    # Build the pose model before touching the camera: MediaPipe's GL start-up made a
+    # camera opened first return nothing on its first read.
     with mp.solutions.pose.Pose(static_image_mode=False, model_complexity=POSE_COMPLEXITY) as pose:
         frames_in = FrameSource(source, max_width)
         recorder = []  # the writer, made on the first frame (its size is known then)

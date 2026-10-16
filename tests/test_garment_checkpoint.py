@@ -1,5 +1,4 @@
-"""tryon/garment/checkpoint.py: reading a garment checkpoint's template and
-binding its Gaussians to the template's faces through the UV atlas."""
+"""tryon/garment/checkpoint.py: reading a template and binding Gaussians to its faces via the UV atlas."""
 
 import unittest
 
@@ -7,13 +6,9 @@ import numpy as np
 
 
 class UvBindingTests(unittest.TestCase):
-    """Recovering the Gaussian-to-face binding requires reproducing the
-    texel count the model produced. Demanding an exact match rejected two
-    real checkpoints that were off by a single pixel - `00190_upper` gives
-    125759 against a stored 125758, `10004_outer` 99956 against 99955 - a
-    rounding difference on one boundary texel, while the next resolution up
-    is out by hundreds of thousands. A small tolerance accepts the former
-    without coming close to admitting the latter.
+    """The recovered texel count may be off by one boundary texel from the stored one.
+
+    A small tolerance accepts that without admitting the next resolution up.
     """
 
     def _square_mesh(self):

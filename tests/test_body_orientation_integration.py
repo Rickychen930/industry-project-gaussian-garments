@@ -1,9 +1,5 @@
-"""Integration into `BodyFitter` - verified on the exact
-case this layer exists to fix (a cold fit near-perpendicular to the
-camera, where `fit()`'s hardcoded {0, pi} hypotheses have no nearby
-seed), and on the periodic disagreement check `orientation_disagrees`
-that would trigger a re-fit during live tracking.
-"""
+"""Integration into `BodyFitter`: cold fits near-perpendicular to the
+camera, and the `orientation_disagrees` check used during tracking."""
 
 from __future__ import annotations
 
@@ -21,8 +17,7 @@ CHECKPOINT = ROOT / "models" / "pose_regressor.pt"
 
 
 def _turned_frame(yaw):
-    """A synthetic single-frame observation of a body at the given yaw -
-    same construction tests/test_body_fitter.py's TurningTest already uses."""
+    """A synthetic single-frame observation at the given yaw."""
     truth = BodyFitter()
     with torch.no_grad():
         truth.scale.fill_(180.0)
@@ -39,8 +34,7 @@ def _turned_frame(yaw):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 class FitBackwardCompatibilityTest(unittest.TestCase):
-    """`fit()`'s new `orientation_hypotheses` argument must not change
-    behaviour for every existing caller that doesn't pass it."""
+    """The new `orientation_hypotheses` argument changes nothing for callers that omit it."""
 
     def test_default_hypotheses_are_unchanged(self):
         points, _ = _turned_frame(0.0)
@@ -56,8 +50,7 @@ class FitBackwardCompatibilityTest(unittest.TestCase):
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(CHECKPOINT.exists(), "run tools/train/orientation.py first")
 class RegressorSeededFitTest(unittest.TestCase):
-    """The case the orientation classifier exists for: a cold fit at a near-perpendicular
-    yaw, where plain fit()'s {0, pi} hypotheses have no seed nearby."""
+    """A cold fit at a near-perpendicular yaw, where fit()'s {0, pi} seeds are far away."""
 
     @classmethod
     def setUpClass(cls):
@@ -69,11 +62,7 @@ class RegressorSeededFitTest(unittest.TestCase):
         cls.regressor.eval()
 
     def test_regressor_hypotheses_include_a_seed_near_the_true_yaw(self):
-        """The core claim: for a body near 70 degrees (squarely between
-        fit()'s two hardcoded hypotheses), the regressor's top-2
-        predicted yaw hypotheses should include one within half a bin
-        width of the true angle - the thing `fit()`'s hardcoded pair
-        cannot offer by construction."""
+        """For a body near 70 degrees the top-2 hypotheses include one within half a bin."""
         points, true_yaw = _turned_frame(np.radians(70))
         fitter = BodyFitter()
         hypotheses = fitter.orientation_hypotheses_from_regressor(points, self.regressor, top_k=2)
@@ -88,10 +77,7 @@ class RegressorSeededFitTest(unittest.TestCase):
         )
 
     def test_regressor_seeded_fit_reaches_lower_error_than_default_at_a_hard_yaw(self):
-        """The actual end-to-end claim (approved plan's step 4 recipe):
-        on a case where the default {0, pi} search is known to have no
-        good seed, fitting with the regressor's hypotheses added should
-        reach a lower final 3D orientation error than the default alone."""
+        """Fitting with the regressor's hypotheses reaches a lower 3D orientation error than the default."""
         points, true_yaw = _turned_frame(np.radians(70))
 
         default_fitter = BodyFitter()
@@ -113,15 +99,11 @@ class RegressorSeededFitTest(unittest.TestCase):
         )
 
     def test_orientation_disagrees_detects_a_stuck_track(self):
-        """Simulates the periodic sanity check's actual job: a fitter
-        whose tracked global_orient has drifted far from what the current
-        observation actually shows should be flagged."""
+        """A tracked global_orient far from the observation is flagged."""
         points, true_yaw = _turned_frame(np.radians(90))
         fitter = BodyFitter()
         with torch.no_grad():
-            # Simulate a track stuck near front-facing while the body is
-            # actually at 90 degrees - the exact failure mode this check
-            # exists to catch.
+            # Tracking stuck near front-facing while the body is at 90 degrees.
             fitter.global_orient[0, 1] = 0.0
         self.assertTrue(fitter.orientation_disagrees(points, self.regressor, threshold_deg=45.0))
 

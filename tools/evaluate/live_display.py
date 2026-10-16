@@ -1,20 +1,15 @@
 """End-to-end accuracy of the live display, in real time, against the real shirt.
 
-`tools.evaluate.async_display` simulates the display from per-frame
-renders. This runs the actual `tryon.app --smooth-display` processes on
-a release video played at its own frame rate (a camera's timing: frames
-the pipeline is too slow for are skipped), records the garment alpha the
-viewer sees on every frame (`--dump-alpha`), and scores it against the
-real shirt on that frame (the truth `tools.evaluate.async_display --save`
-captured: SCHP upper clothing, LIP inner layer removed; the same panel
-crop as `tools.evaluate.vs_registration`).
-
-Reported per video and mode: mean IoU over the frames after the first
-garment appeared, and how many frames that start-up took.
+Runs the actual `tryon.app --smooth-display` on a release video at its own frame
+rate (frames the pipeline cannot keep up with are skipped), records the garment
+alpha the viewer sees (`--dump-alpha`) and scores it against the truth
+`async_display --save` captured (SCHP upper clothing, same crop as
+`vs_registration`). Reports per video and mode the mean IoU after the first
+garment appeared and how many frames start-up took.
 
     .venv/bin/python -m tools.evaluate.live_display 00152_outer,00170_upper,00134_upper [--modes warp,reskin]
 
-Needs `~/tryon-data/captures/<video>.npz` (`tools.evaluate.async_display --save`).
+Needs `~/tryon-data/captures/<video>.npz` (`async_display --save`).
 """
 
 from __future__ import annotations

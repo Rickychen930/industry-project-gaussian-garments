@@ -1,19 +1,7 @@
-"""Fit a SMPL-X body to MediaPipe landmarks — the 3D prior everything rests on.
+"""Fit a SMPL-X body to MediaPipe landmarks (SMPLify-style reprojection fit).
 
-The 2D system placed garments from four anatomical anchors, which cannot
-express a limb rotation (measured: arms need -72 degrees while the torso
-needs 0, and one affine transform carries one rotation). A 3D body does not
-have that problem: limbs rotate because they are joints.
-
-Fitting follows SMPLify (Bogo et al.; Kolotouros et al. 1909.12828) -
-minimise the reprojection error between projected SMPL-X joints and the
-detected 2D keypoints, regularised so the pose stays plausible.
-
-The cost decides the architecture. Measured on this machine: a cold fit at
-30 iterations is 418 ms (2.4 fps, unusable per frame), while 3 iterations
-warm-started from the previous frame is 42 ms (23.9 fps) and tracking holds.
-So `BodyFitter` is stateful by design: `fit` cold-starts once, `track`
-continues.
+`BodyFitter` is stateful because a cold fit is too slow per frame: `fit`
+cold-starts once, `track` warm-starts from the previous frame.
 """
 
 from __future__ import annotations
@@ -128,14 +116,8 @@ if __name__ == "__main__":
 class DepthAmbiguityTest(unittest.TestCase):
     """A good 2D fit must not hide a body tipped over in depth.
 
-    Found by measuring against a synthetic body with exact 3D ground truth:
-    reprojection reached 12.9 px while the joints were 380 mm off. The fitted
-    global orientation was [1.13, 0.15, -0.08] - the body leaning 65 degrees
-    toward the camera. Under weak perspective a leaning body projects almost
-    like an upright one, so the 2D loss cannot see it. That is the classic
-    monocular depth ambiguity (Bogo et al. 2016), and it is what a prior on
-    the global orientation is for: a standing person is not tipped 65
-    degrees, and the fit must pay to claim otherwise.
+    A leaning body projects almost like an upright one under weak
+    perspective, so the orientation prior must make the fit pay for it.
     """
 
     def _upright_sequence_frame(self):
@@ -184,16 +166,8 @@ class DepthAmbiguityTest(unittest.TestCase):
 class FacingAwayTest(unittest.TestCase):
     """A wearer seen from behind must be fitted turned around, not stalled.
 
-    MediaPipe labels joints anatomically whatever the facing, so from the
-    back the LEFT shoulder sits on the LEFT of the image. The only way the
-    body model can reproduce that is a 180-degree yaw. The first orientation
-    prior anchored yaw at zero - it kept the fit upright, which is physical,
-    but also kept it facing the camera, which is not: people turn around.
-    Measured on the annotated back camera: 38 px stalled halfway at 32
-    degrees; started turned around, 11 px.
-
-    So the prior constrains pitch and roll (a standing person is upright)
-    and leaves yaw free, and the cold fit tries both facings.
+    The prior constrains pitch and roll and leaves yaw free; the cold fit
+    tries both facings.
     """
 
     def _turned_frame(self, yaw):
@@ -245,26 +219,10 @@ class FacingAwayTest(unittest.TestCase):
 
 
 class TurningTest(unittest.TestCase):
-    """A body turning through profile - the case a single frame cannot fit.
+    """A body turning through profile, the case a single frame cannot fit.
 
-    `tests/test_body_fitter_real_photos.py::test_a_profile_view_is_a_known_hard_case`
-    proved a single STATIC frame at a real profile yaw is not a stable
-    optimum of the reprojection loss - starting the optimiser AT the true
-    yaw, it drifts away. That test used 200 iterations from a fixed frame,
-    which is a different regime from tracking a body actually IN MOTION:
-    warm-started `track()` only gets a few iterations per frame before the
-    next frame's landmarks arrive.
-
-    Measured on a synthetic body turning from yaw=0 toward -68 degrees
-    (the real profile camera's yaw from the annotated data) with jittered
-    landmarks: at `track`'s own default of 3 iterations/frame, tracking
-    got stuck near +10 degrees over a 30-frame (1s at 30fps) turn and
-    barely moved. At 15 iterations/frame it reached -38.7 degrees over
-    the same fast turn, and -65.2 degrees (against a true -68) over a
-    more realistic 90-frame (3s) turn - moving the right way and mostly
-    converging, not stuck. `tryon/app/pipeline.py`'s `TRACK_ITERATIONS` uses 15
-    because the cost is small next to a garment render (~36ms against
-    ~360ms) - see that constant's docstring for the full numbers.
+    Warm-started `track()` gets few iterations per frame, so the default
+    iteration count must still follow a fast turn toward profile.
     """
 
     def _turning_sequence(self, frames, target_yaw_deg, noise_px=1.5, seed=0):
@@ -301,14 +259,7 @@ class TurningTest(unittest.TestCase):
         return float(fitter.global_orient.detach().numpy()[0, 1])
 
     def test_more_iterations_follows_the_turn_better_than_the_default(self):
-        """Pins the measured comparison, not just the live default's choice.
-
-        Since the camera scale is seeded from the torso height
-        (`BodyFitter._initial_scale`), the cold fit starts from a camera
-        that fits, and 3 iterations/frame are no longer stuck near +10
-        degrees: both counts reached -36 degrees on this fast turn
-        (errors 0.556 vs 0.560 rad). So the pin is now "15 is no worse
-        than 3", within one degree, rather than strictly better."""
+        """15 iterations a frame is no worse than 3, within one degree."""
         observations = self._turning_sequence(frames=30, target_yaw_deg=-68.0)
         default_yaw = self._track_through(observations, iterations=3)
         raised_yaw = self._track_through(observations, iterations=15)
@@ -323,9 +274,7 @@ class TurningTest(unittest.TestCase):
         )
 
     def test_a_realistic_turn_speed_converges_with_the_live_default(self):
-        """A 3-second turn (90 frames at 30fps) - not the unrealistically
-        fast 1-second turn the comparison test above uses - should
-        actually reach close to the true yaw at live.py's TRACK_ITERATIONS."""
+        """A 3-second turn reaches close to the true yaw at TRACK_ITERATIONS."""
         observations = self._turning_sequence(frames=90, target_yaw_deg=-68.0)
         final_yaw = self._track_through(observations, iterations=15)
         error_degrees = abs(np.degrees(final_yaw) - (-68.0))
@@ -384,11 +333,8 @@ class RefitTest(unittest.TestCase):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), f"no SMPL-X body models at {SMPLX_ROOT}")
 class BoneDepthTest(unittest.TestCase):
-    """An arm angled into depth projects like a shorter arm in the plane;
-    2D alone cannot tell them apart, and on camera 0004 it chose a
-    forearm 45 degrees into the screen for a wearer holding it sideways.
-    MediaPipe's world landmarks carry a depth estimate; a 4th column
-    passes it through and a bone-depth term uses it (DEPTH_BONES)."""
+    """Depth from MediaPipe's world landmarks (4th column, DEPTH_BONES)
+    resolves an arm angled into the screen that 2D alone cannot."""
 
     def _frame_with_an_arm_into_depth(self):
         import torch
@@ -431,8 +377,7 @@ class BoneDepthTest(unittest.TestCase):
         self.assertEqual(weights.sum(), 0.0)
 
     def test_the_depth_column_recovers_the_forearm_depth(self):
-        """With exact depth targets (DEPTH_SHRINK 1: the fixture's depth
-        is exact, unlike MediaPipe's) the forearm depth is recovered."""
+        """With exact depth targets the forearm depth is recovered."""
         import tryon.body.landmarks as landmarks
 
         points, truth_dz = self._frame_with_an_arm_into_depth()
@@ -454,13 +399,7 @@ class BoneDepthTest(unittest.TestCase):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), f"no SMPL-X body models at {SMPLX_ROOT}")
 class TorsoDepthTest(unittest.TestCase):
-    """The torso's facing from MediaPipe's world z (TORSO_DEPTH_BONES).
-    On the annotated profile clips with warm landmarks the 2D fit put
-    camera 0028's shoulders at 33-45 degrees against MediaPipe's own
-    73-89, and tracking on 0076 drifted from -103 to -140 against a
-    steady -100 to -104; with the shoulder and hip depth in the loss:
-    mean 70 / -106 degrees over 20 frames, front and back cameras
-    unchanged (see the constant's comment in tryon/body/fitter.py)."""
+    """The torso's facing from MediaPipe's world z (TORSO_DEPTH_BONES)."""
 
     def _profile_frame(self, yaw_deg):
         import torch
@@ -543,9 +482,7 @@ class MeshFitTest(unittest.TestCase):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), f"no SMPL-X body models at {SMPLX_ROOT}")
 class ProfileFacingTest(FacingAwayTest):
-    """A wearer seen in pure profile: the {0, pi} pair converged 35 degrees
-    short of sideways on the annotated profile cameras, so the cold fit
-    also seeds the two profiles."""
+    """A wearer in pure profile: the cold fit also seeds the two profiles."""
 
     def test_a_body_in_profile_is_fitted_sideways(self):
         for yaw in (np.pi / 2, -np.pi / 2):

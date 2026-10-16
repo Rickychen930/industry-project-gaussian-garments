@@ -1,14 +1,10 @@
-"""Recover the scan-frame SMPL-X pose of a Gaussian-Garments checkpoint
-from the authors' trajectory file and cache it next to the checkpoint.
+"""Recover the scan-frame SMPL-X pose of a checkpoint from the authors'
+trajectory file and cache it next to the checkpoint.
 
     .venv/bin/python -m tools.data.fit_scan_pose ~/tryon-data/garments/00152_outer
 
-The trajectory files (README link, `individual-garments/<name>_Take<N>.pkl`)
-hold `obstacle` (frames, 10475, 3): the SMPL-X body per frame, and
-`pred` (frames, V, 3): the simulated garment; frame 0 is the template
-pose (pred[0] equals stage1/template_uv.obj to 0.06 cm median). Fitting
-SMPL-X to obstacle[0] gives the pose the garment was scanned in, which
-`scan_pose.ScanPoseBinder.bind` otherwise has to guess.
+Fits SMPL-X to `obstacle[0]` of the trajectory, the body the garment was
+scanned in; `scan_pose.ScanPoseBinder.bind` otherwise has to guess it.
 """
 
 from __future__ import annotations
@@ -24,9 +20,8 @@ from tryon import paths
 
 TRAJECTORIES = paths.TRAJECTORIES / "individual-garments"
 CACHE_NAME = "scan_pose.npz"
-# Median distance (m) from the trajectory's first garment frame to the
-# checkpoint's template above which `obstacle[0]` is NOT the template's body:
-# 0.0-0.7 mm for 11 garments, 33-218 mm for the four that need refining.
+# Median distance (m) of trajectory frame 0 to the template above which
+# `obstacle[0]` is not the template's body (0.0-0.7 mm vs 33-218 mm in practice).
 MISMATCH_LIMIT = 0.01
 
 

@@ -97,9 +97,8 @@ class OccluderTest(unittest.TestCase):
         view = np.eye(4)
         view[2, 3] = 2.0  # camera 2 m in front of the z = 0 plane
         intrinsics = np.array([[300.0, 0, 64], [0, 300.0, 48], [0, 0, 1]])
-        # a wall 0.5 m nearer the camera over x < 0 (world), and one 1 cm
-        # behind the splats over x >= 0 (behind: must hide nothing)
-        # (the camera sits at world z = -2 looking along +z)
+        # A wall 0.5 m nearer the camera over x < 0, and one 1 cm behind
+        # the splats over x >= 0 (must hide nothing); camera at z = -2 looking along +z.
         wall = np.array([[-1, -1, -0.5], [0, -1, -0.5], [0, 1, -0.5], [-1, 1, -0.5],
                          [0, -1, 0.01], [1, -1, 0.01], [1, 1, 0.01], [0, 1, 0.01]], np.float64)
         faces = np.array([[0, 1, 2], [0, 2, 3], [4, 5, 6], [4, 6, 7]])

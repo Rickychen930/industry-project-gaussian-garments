@@ -1,10 +1,5 @@
-"""Evaluate the trained checkpoint on a held-out
-synthetic test set (a fresh seed the training run never saw), checking
-both overall accuracy and the specific hard-case metric the approved
-design plan names: accuracy on near-perpendicular (near-bin-boundary)
-poses, where the disambiguation problem this layer exists to solve is
-actually hard.
-"""
+"""Evaluate the trained checkpoint on a held-out synthetic set: overall
+accuracy and accuracy on near-bin-boundary (hard) poses."""
 
 from __future__ import annotations
 
@@ -33,8 +28,7 @@ class TrainedCheckpointEvaluationTest(unittest.TestCase):
         cls.model.load_state_dict(checkpoint["model_state"])
         cls.model.eval()
 
-        # A seed disjoint from every seed tools/train/orientation.py used
-        # (0, 1, 2 by default) - a genuinely held-out set.
+        # A seed disjoint from those used in training.
         cls.features, cls.yaws, cls.labels = make_dataset(3000, seed=999, noise_px=2.0)
         with torch.no_grad():
             logits = cls.model(torch.as_tensor(cls.features))
@@ -53,29 +47,17 @@ class TrainedCheckpointEvaluationTest(unittest.TestCase):
 
     def test_overall_accuracy_is_reasonable(self):
         overall_accuracy = (self.predictions == self.labels).mean()
-        # Measured on this exact checkpoint/seed: 0.845. A generous floor
-        # below that, not a re-assertion of the exact number, so a
-        # retrained checkpoint with minor variation does not spuriously
-        # fail this test.
+        # Generous floor below the measured 0.845, so retraining noise does not fail it.
         self.assertGreater(overall_accuracy, 0.70)
 
     def test_far_from_boundary_accuracy_is_high(self):
-        """The easy case (yaw solidly in the middle of an octant) should
-        be classified reliably - if this is also weak, something more
-        fundamental than "boundaries are hard" is wrong."""
+        """Poses solidly inside an octant are classified reliably."""
         mask = self._distance_to_boundary_deg() >= 15.0
         accuracy = (self.predictions[mask] == self.labels[mask]).mean()
         self.assertGreater(accuracy, 0.85)
 
     def test_near_boundary_is_the_hardest_but_still_above_baseline(self):
-        """The metric named directly in the approved design plan: how
-        well does the model do on the genuinely ambiguous cases this
-        layer exists to help with. It should be measurably worse than
-        the far-from-boundary case (confirms the model is behaving
-        sensibly, not just memorising screen-position artifacts) but
-        still clearly above the random/majority baseline (confirms it is
-        doing SOME real disambiguation work even in the hard region,
-        which is the actual point of this layer)."""
+        """Near-boundary poses are worse than easy ones but above the majority baseline."""
         near = self._distance_to_boundary_deg() < 10.0
         far = self._distance_to_boundary_deg() >= 15.0
         near_accuracy = (self.predictions[near] == self.labels[near]).mean()

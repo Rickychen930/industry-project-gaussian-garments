@@ -1,7 +1,7 @@
 """Every Python file of the package, the tools and the launchers at least compiles.
 
-The evaluation tools are not imported by the other tests; an edit that broke the syntax of one (10 Oct 2026:
-`tools/evaluate/vs_registration.py`, after removing a line by string replacement) shipped with a green suite.
+The evaluation tools are not imported by the other tests, so a syntax error
+in one would otherwise ship with a green suite.
 """
 
 import py_compile

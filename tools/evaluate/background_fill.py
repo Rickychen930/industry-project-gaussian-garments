@@ -1,24 +1,13 @@
-"""How well the removed region OUTSIDE the body is filled, with and without the background plate.
+"""How well the removed region outside the body is filled, with and without the background plate.
 
-On the release videos' "Ground Truth" panels (a fixed camera, a person
-moving), every pixel the person uncovers at some point has a known true
-background: its median over the frames where the parser calls it
-background. For evaluation frames spread over the clip, the wearer's
-clothing is removed as the live path does, and the error against that
-true background is measured on the removed pixels outside the fitted body
-(`background.body_silhouette`) - the only pixels where "the room" is the
-right answer. Two fills are compared:
+On the release videos' fixed-camera "Ground Truth" panels, every pixel the person
+uncovers has a known background (its median where the parser says background).
+Removed pixels outside the fitted body (`background.body_silhouette`) are scored
+against it for two fills: `fill` alone (`--fill` skin or lama) and `plate`
+(`BackgroundPlate` learned causally from earlier frames, then the fill on what
+it does not know). Reports mean absolute error (0-255) and plate coverage.
 
-  fill    the fill alone (`--fill`: skin, the live default - Telea toward
-          the skin colour - or lama) on the whole hole
-  plate   `BackgroundPlate` learned CAUSALLY from the frames before, then
-          the fill on what the plate does not know
-
-Reported: mean absolute error (0-255, BGR mean) over the evaluable pixels,
-and the plate's coverage of them.
-
-    .venv/bin/python -m tools.evaluate.background_fill \\
-        [--videos 00170_upper,00148_upper] [--frames 120] [--every 10]
+    .venv/bin/python -m tools.evaluate.background_fill [--videos 00170_upper,00148_upper] [--frames 120] [--every 10]
 """
 
 from __future__ import annotations

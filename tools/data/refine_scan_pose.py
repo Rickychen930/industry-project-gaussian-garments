@@ -1,26 +1,15 @@
-"""Refine a checkpoint's scan pose against its OWN template garment.
+"""Refine a checkpoint's scan pose against its own template garment.
 
-`tools/data/fit_scan_pose.py` fits SMPL-X to the trajectory file's
-`obstacle[0]`, which is right when the trajectory's `pred[0]` IS the
-checkpoint's template (00152_outer: 0.07 cm). On four checkpoints it is
-not (00122_outer 9, 00148_upper 32, 00176_outer 10, 10004_outer 12 cm
-mean, non-rigid), so that body sits in a different drape and the binding
-is off before any tracking (docs/LOG.md, "All 12 upper-body
-garments"). This starts from that pose and moves it until the template
-garment sits around the body:
+`fit_scan_pose.py` is right when the trajectory's `pred[0]` is the checkpoint's
+template; on four checkpoints (00122, 00148, 00176, 10004) it is not. This
+starts from that pose and moves it until the template sits around the body:
+one-sided ICP (each template vertex to its nearest body vertex, truncated at
+`truncate` m so loose fabric does not drag the body; vertices inside the body
+cost 4x). Shape stays; pose, root orientation and offset move, with a prior
+toward the starting pose.
 
-  ICP, one-sided: every template vertex is paired with its nearest body
-  vertex (re-paired every `repair` steps) and the squared distance is
-  minimised, truncated at `truncate` metres so loose fabric (a hem, an
-  open flap) does not drag the body; pairs whose garment vertex lies
-  INSIDE the body (behind the body vertex's normal) cost 4x, since a
-  garment cannot be inside its wearer. Shape stays (the scan subject's
-  betas); pose, root orientation and offset move, with a prior toward the
-  starting pose.
-
-The result is written as `scan_pose.npz` (the trajectory fit is kept as
-`scan_pose_trajectory.npz`), with `refined=1` and the before/after
-garment-to-body distances.
+Writes `scan_pose.npz` (`refined=1`, before/after distances) and keeps the
+trajectory fit as `scan_pose_trajectory.npz`.
 
     .venv/bin/python -m tools.data.refine_scan_pose ~/tryon-data/garments/00122_outer [--dry-run]
 """
@@ -84,9 +73,8 @@ def refine(checkpoint, iterations=300, learning_rate=0.01, truncate=0.10, repair
         distance = delta.norm(dim=1)
         inside = (delta * normals).sum(dim=1) < 0.0
         weight = torch.where(inside, torch.full_like(distance, 4.0), torch.ones_like(distance))
-        # coarse-to-fine: a wide cut-off for the first `coarse` steps, so a
-        # garment that starts far from the body (00148_upper: 27 cm median)
-        # is pulled in before loose fabric is excluded
+        # coarse-to-fine: a wide cut-off first, so a garment that starts far from the
+        # body (00148_upper: 27 cm) is pulled in before loose fabric is excluded
         keep = distance < (coarse_truncate if step < coarse else truncate)
         data = (weight * distance**2)[keep].mean()
         reg = prior * (((fitter.body_pose - start_pose) ** 2).mean() + ((fitter.global_orient - start_orient) ** 2).mean())

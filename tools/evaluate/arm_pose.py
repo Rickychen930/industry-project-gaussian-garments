@@ -1,10 +1,10 @@
-"""NLF's arm pose against MediaPipe's elbows and wrists, and the arm refinement that follows from it.
+"""NLF's arm pose against MediaPipe's elbows and wrists, and the arm refinement that follows.
 
-    record    one release video through MediaPipe (as vs_registration) and NLF every `--every`-th
-              frame; saves the filtered landmarks and NLF's prediction (one process, one video)
-    diagnose  from such a recording (no NLF): per frame the 2D distance, in torso lengths, between the
-              fitted body's elbows / wrists and MediaPipe's visible ones, with and without
-              `BodyFitter.ARM_REFINE`, the left / right swap test, and a contact sheet of the worst frames
+    record    one release video through MediaPipe (as vs_registration) and NLF every
+              `--every`-th frame; saves the filtered landmarks and NLF's prediction
+    diagnose  from a recording (no NLF): per-frame 2D elbow/wrist distance in torso
+              lengths with and without `BodyFitter.ARM_REFINE`, the left/right swap
+              test, and a contact sheet of the worst frames
 
     nice -n 15 .venv/bin/python -m tools.evaluate.arm_pose record 10004_outer --out $T/10004_outer.npz
     nice -n 15 .venv/bin/python -m tools.evaluate.arm_pose diagnose $T/10004_outer.npz --sheet docs/figures/arm-pose.jpg

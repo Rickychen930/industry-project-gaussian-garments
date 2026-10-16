@@ -1,10 +1,10 @@
-"""Record a guided camera session: the frames as read, with a cue for each pose.
+"""Record a guided camera session: the frames as read, with a spoken cue per pose.
 
     ./live-tryon record [seconds-per-pose=5] [basic|extended]
 
-Run it in your own terminal (the camera permission is the terminal's). The
-cues are printed and spoken (`say`); the file goes to the data root's
-captures/ folder and replays with `./live-tryon run 00190_upper --source FILE`.
+Run it in your own terminal (camera permission is the terminal's). Output goes
+to the data root's captures/ and replays with
+`./live-tryon run 00190_upper --source FILE`.
 """
 
 from __future__ import annotations

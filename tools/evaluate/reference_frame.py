@@ -1,46 +1,28 @@
 """Where is the quality lost against the reference? A three-level ablation on
-ONE ground-truth frame of the checkpoint's own release video.
+one ground-truth frame of the checkpoint's own release video.
 
     .venv/bin/python -m tools.evaluate.reference_frame ~/tryon-data/garments/00152_outer
 
-The release video (`~/tryon-data/release_videos/<name>.mp4`) shows the
-real 4D-DRESS camera image ("Ground Truth" panel) next to the authors'
-registration. The trajectory file (`individual-garments/<name>_Take<N>.pkl`)
-holds their SMPL-X body (`obstacle[k]`) and their ContourCraft cloth
-(`pred[k]`) in the scan world, and `stage1/cameras.json` the four
-4D-DRESS cameras (OpenCV `[R|t]`, intrinsics for the 940x1280 release
-images - the same convention `tryon/splat.render_splats` takes). So one
-frame can be rendered through our pipeline at three levels, each
-replacing one more stage with ours, and compared with the real photo:
+Inputs: the release video's "Ground Truth" panel (real 4D-DRESS image), the
+trajectory file's SMPL-X body `obstacle[k]` and ContourCraft cloth `pred[k]`,
+and `stage1/cameras.json` (OpenCV [R|t], 940x1280 intrinsics, the convention
+`tryon/splat.render_splats` takes). The frame is rendered at three levels, each
+replacing one more stage with ours:
+  L1  their body + their cloth, our renderer (static SH and appearance network)
+  L2  their body, our cloth (rigid LBS and the cloth solver)
+  L3  our tracking, our cloth (MediaPipe -> `BodyFitter.fit`, the live path)
 
-  L1  their body + their cloth, OUR renderer   (pred[k] through
-      `GarmentRenderer.splats` + `render_splats`; static SH, and with the
-      checkpoint's appearance network)
-  L2  their body, OUR cloth                     (`GarmentRenderer` bound and
-      posed on a `BodyFitter` set to the cached SMPL-X fit of obstacle[k];
-      rigid LBS and the cloth solver)
-  L3  OUR tracking, OUR cloth                   (MediaPipe on the photo ->
-      `BodyFitter.fit` -> the live path, `GarmentRenderer.render`)
+The GT panel is a zoomed crop of the camera image, so its pixel grid is
+`s * K + (ox, oy)` for an unknown similarity; it is fitted by maximising the
+silhouette IoU of the reference's body + cloth against the SCHP person mask, and
+the best camera is the one the panel shows. The same IoU over nearby trajectory
+frames finds which frame the video frame is.
 
-The GT panel is a zoomed crop of the camera image, so the panel's pixel
-grid is `s * K + (ox, oy)` for an unknown similarity: it is fitted by
-maximising the silhouette IoU of the reference's own body + cloth
-(obstacle[k] and pred[k]) projected with each camera against the SCHP
-parser's person mask, and the camera with the best IoU is the one the
-panel shows. The same IoU over the trajectory frames around k checks
-which trajectory frame the video frame is (video frame 0 = trajectory
-frame 0 on 00152_outer: 0.845, falling monotonically with k).
-
-Metrics per level, over the garment region (union of the parser's shirt
-mask on the photo and the render's alpha > 25): PSNR on that region,
-SSIM and DISTS on the region's crop resized to 256x341 (TryOffDiff's
-evaluation size; DISTS only when torchvision's VGG16 weights are already
-cached - they are 528 MB and this tool does not download), the
-silhouette IoU of alpha > 25 against the shirt mask, and the body
-silhouette IoU of the level's body against the person mask. Each level
-is composited over the photo directly (the real shirt underneath, as the
-reference's own video implicitly does) and over the photo with the
-shirt erased by `ClothingRemover` (SCHP + LaMa).
+Per level, over the garment region (parser shirt mask union render alpha > 25):
+PSNR, SSIM and DISTS on a 256x341 crop (DISTS only when VGG16 weights are
+cached; nothing is downloaded), silhouette IoU against the shirt mask and body
+IoU against the person mask. Each level is composited over the photo and over
+the photo with the shirt erased by `ClothingRemover`.
 """
 
 from __future__ import annotations
@@ -332,13 +314,10 @@ def evaluate(checkpoint, video, video_frame, trajectory_path, fits_cache, camera
     with open(Path(checkpoint) / "stage1" / "cameras.json") as handle:
         cameras = json.load(handle)
 
-    # Which camera, and how the panel crops it: the reference's own
-    # silhouette (their body + their cloth) against the person mask.
+    # Camera and panel crop: the reference silhouette against the person mask.
     cloth_faces = np.asarray(trajectory["cloth_faces"])
     if similarity_seed is not None:
-        # A later video frame: the crop is the one fitted on an earlier
-        # frame, and the trajectory frame this photo shows is unknown (the
-        # video and the trajectory differ in length) - search every frame.
+        # Later frame: reuse the earlier crop; the trajectory frame is unknown, search all.
         camera = cameras[camera_name]
         scores = [iou(union_silhouette([(obstacle[j], obstacle_faces), (pred[j], cloth_faces)], camera, similarity_seed, size), person) for j in range(len(obstacle))]
         found = int(np.argmax(scores))
@@ -412,11 +391,9 @@ def evaluate(checkpoint, video, video_frame, trajectory_path, fits_cache, camera
     timing["L1_appearance"] = time.perf_counter() - t0
     log(f"L1 rendered: static {timing['L1_static']:.1f} s, appearance {timing['L1_appearance']:.1f} s")
 
-    # L2: their body (the cached SMPL-X fit of obstacle[k]), our cloth. The
-    # garment is bound on frame 0's fit (the template pose) and the cloth
-    # solver replays the fitted frames 1..k at 25 fps, as
-    # tools/evaluate/cloth_trajectory.py does; at k = 0 it settles for
-    # `settle` steps on the static pose instead.
+    # L2: their body (cached fit of obstacle[k]), our cloth. Bound on the frame-0
+    # fit, the solver replays frames 1..k at 25 fps as cloth_trajectory.py does;
+    # at k = 0 it settles for `settle` steps on the static pose.
     fits = np.load(fits_cache)
     def fit_of(j):
         return {key: fits[key][int(np.where(fits["frames"] == j)[0][0])] for key in ("betas", "body_pose", "global_orient", "offset", "residual_m")}
@@ -453,11 +430,9 @@ def evaluate(checkpoint, video, video_frame, trajectory_path, fits_cache, camera
         renders[f"L2_{mode}_appearance"] = render_with_camera(r, mesh, view, intrinsics, size, body_fit, appearance_net=net_r)
         log(f"L2 {mode}: posed in {timing[f'L2_{mode}_pose']:.1f} s, {l2[mode]['vertex_distance_to_pred_cm']:.1f} cm from pred[{k}]")
 
-    # L3: our tracking (MediaPipe -> BodyFitter.fit), our cloth - the live path.
-    # The fitter is tuned for webcam-sized frames (`fit` starts the weak-
-    # perspective scale at 250 and its camera stage can only move it a few
-    # hundred), so the photo is fitted at `live_height` and the camera
-    # scaled back up - weak perspective is linear in the image size.
+    # L3: our tracking, our cloth (the live path). The fitter is tuned for
+    # webcam-sized frames, so fit at `live_height` and scale the camera back up
+    # (weak perspective is linear in image size).
     fit_by_size = {}
     for height in sorted({size[0], live_height, 640, 480}, reverse=True):
         f = height / size[0]
@@ -537,8 +512,7 @@ def evaluate(checkpoint, video, video_frame, trajectory_path, fits_cache, camera
     Path(out_png).parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(out_png), figure)
     if dump_dir is not None:
-        # full-resolution images, so other systems' outputs can be scored
-        # on exactly the same frame (docs/REFERENCE_RUNS.md)
+        # full-resolution images, so other systems score on the same frame (docs/REFERENCE_RUNS.md)
         dump = Path(dump_dir)
         dump.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(str(dump / "ground_truth.png"), panel)

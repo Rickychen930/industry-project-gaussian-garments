@@ -1,26 +1,23 @@
-"""Does the garment FIT the person, move naturally and look right? One audit, from every side.
+"""Does the garment fit the person, move naturally and look right? One audit, six sides.
 
-Drives the LIVE pipeline (`tryon.app.pipeline.LiveSession`: MediaPipe, NLF body, One Euro, fit /
-`track_step`, SmoothCloth, GL render, student shading, SCHP clothing removal and the composite)
-frame by frame on the authors' release videos (the left photo panel, 870 px tall as in
-`vs_registration`) and scores it from six sides:
+Drives the live pipeline (`tryon.app.pipeline.LiveSession`) frame by frame on the
+release videos (left photo panel, 870 px tall as in `vs_registration`) and scores:
 
-  A  body        PA-MPJPE on the annotated views, torso-landmark reprojection, body silhouette IoU,
-                 height / shoulder / chest ratios against the scan body and the authors' registration body
-  B  fit in 3D   garment vertices inside the fitted body (signed distance), penetration depth, gap by
-                 region, torn faces, strain; the authors' simulation on their body as the reference
-  C  silhouette  IoU vs the SCHP shirt, extra / missed split, boundary F-score at 2 / 5 px, Hausdorff-95
-  D  motion      jitter of the garment (body-local) and of its silhouette against the REAL shirt's, IoU
-                 frame to frame, lag, dropouts
-  E  texture     colour fidelity in the overlap (CIELAB dE76 with / without a per-frame gain-offset),
-                 PSNR / SSIM, detail (Laplacian variance), edge softness and holes
-  F  sheet       real | our composite | contour overlay, six frames per video
+  A  body        PA-MPJPE on annotated views, torso reprojection, silhouette IoU,
+                 height / shoulder / chest ratios vs scan and registration bodies
+  B  fit in 3D   vertices inside the body, penetration, gap by region, torn faces,
+                 strain; the authors' simulation is the reference
+  C  silhouette  IoU vs the SCHP shirt, extra / missed split, boundary F-score,
+                 Hausdorff-95
+  D  motion      jitter of garment and silhouette vs the real shirt's, lag, dropouts
+  E  texture     CIELAB dE76 with / without gain-offset, PSNR / SSIM, detail, holes
+  F  sheet       real | composite | contour overlay, six frames per video
 
     .venv/bin/python -m tools.evaluate.fit_audit collect [videos]     # slow: runs the live pipeline
     .venv/bin/python -m tools.evaluate.fit_audit body                 # A1 on the annotated views
     .venv/bin/python -m tools.evaluate.fit_audit report [videos]      # json + figures from the cache
 
-The pure metric helpers at the top are what `tests/test_tools_fit_audit.py` checks.
+The pure metric helpers at the top are checked by `tests/test_tools_fit_audit.py`.
 """
 
 from __future__ import annotations

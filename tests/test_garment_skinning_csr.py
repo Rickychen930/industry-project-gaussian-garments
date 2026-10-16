@@ -1,6 +1,5 @@
 """`SkinnedGarment.apply` skins over the non-zero weights only; its result is the dense einsum's."""
 
-import types
 import unittest
 
 import numpy as np

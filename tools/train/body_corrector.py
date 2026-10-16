@@ -1,24 +1,19 @@
 """Does a learned residual correction improve the live body path, on real ground truth?
 
-(Not the "close and truncated views" corrector sketched in docs/LOG.md, which needs synthetic
-cameras and is not built: this one corrects the fit of a studio-captured full body.)
+The live body is MediaPipe -> NLF-S -> `BodyFitter.fit_from_regression`
+(42 mm PA-MPJPE on 439 views of two 4D-DRESS subjects, from
+`evaluate/body_accuracy_4ddress.py`). This trains a small network that maps the
+fitted joints (plus MediaPipe visibilities) to the offset onto the capture's own
+SMPL-X, trained on one subject and scored on the other.
 
-The live body is MediaPipe keypoints -> NLF-S regression -> `BodyFitter.fit_from_regression`.
-`tools/evaluate/body_accuracy_4ddress.py` measured it at 42 mm PA-MPJPE on 439 views of two
-4D-DRESS subjects (24.6 mm on the 16-view sample). This trains a small network that maps the
-fitted joints (plus MediaPipe's visibilities) to the offset that would bring them onto the
-capture's own SMPL-X, and measures it the only way that says anything about generalisation:
-trained on one subject, scored on the other.
-
-Supervision: the fitted 12 JOINT_MAP joints are put in a canonical torso frame (origin pelvis,
-y shoulder-ward, scale torso length); the ground truth is similarity-aligned onto them (the
-metric's own alignment) and the offset in that frame is the regression target. A correction
-therefore improves PA-MPJPE exactly when it predicts that offset.
+Target: the 12 JOINT_MAP joints in a canonical torso frame (origin pelvis,
+y shoulder-ward, scale torso length); the ground truth is similarity-aligned onto
+them, so a correction improves PA-MPJPE exactly when it predicts that offset.
 
     .venv/bin/python -m tools.train.body_corrector extract [--stride 4] [--limit-takes N]
     .venv/bin/python -m tools.train.body_corrector train
 
-`extract` writes one .npz per take under `~/tryon-data/4d-dress/_features/parts/` (resumable).
+`extract` writes one resumable .npz per take under `~/tryon-data/4d-dress/_features/parts/`.
 """
 
 from __future__ import annotations
@@ -161,9 +156,7 @@ def extract(stride: int, limit_takes: int) -> None:
                     fitter.fit_from_regression(points, prediction)
                     with torch.no_grad():
                         fitted = fitter.joints().numpy()
-                    # Signals a live system also has, none of which needs the ground truth: how far the
-                    # fit lands from MediaPipe's own keypoints, and how far NLF's 2D joints disagree with
-                    # MediaPipe's, both in torso lengths (so they do not depend on the person's distance).
+                    # Live-only signals: fit-to-MediaPipe and NLF-to-MediaPipe 2D gaps, in torso lengths.
                     detected = points[order][:, :2]
                     torso_px = float(np.linalg.norm(
                         (detected[slot["LEFT_SHOULDER"]] + detected[slot["RIGHT_SHOULDER"]]) / 2
@@ -276,7 +269,7 @@ def train() -> None:
         test_rows = np.flatnonzero(data["subject"] == held_out)
         if len(train_rows) == 0 or len(test_rows) == 0:
             continue
-        # alpha chosen by leave-one-take-out on the TRAINING subject only
+        # alpha by leave-one-take-out on the training subject only
         takes = sorted(set(data["take"][train_rows]))
         scores = {}
         for alpha in (1.0, 10.0, 100.0, 1000.0):
@@ -310,7 +303,7 @@ def train() -> None:
         if best is None or entry["mlp"]["mean"] < best[0]:
             best = (entry["mlp"]["mean"], net, norm, held_out)
 
-    # leave-one-take-out WITHIN subject: optimistic (same person, same clothing), reported as such
+    # leave-one-take-out within subject: optimistic (same person, same clothing)
     within = []
     for take in sorted(set(data["take"])):
         rows_test = np.flatnonzero(data["take"] == take)

@@ -100,8 +100,8 @@ def check_scan_poses():
 
 
 def check_data():
-    # Neither blocks: the fit and the binding work without them. They are
-    # what the evaluation and the goal tests measure against.
+    # Neither blocks: the fit and the binding work without them; evaluation and goal tests
+    # measure against them.
     for root, what in ((ANNOTATED, "annotated photographs"), (CORPUS, "robustness corpus")):
         count = len(list(root.rglob("*.png"))) if root.is_dir() else 0
         state = "ok      " if count else "absent  "

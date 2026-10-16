@@ -1,5 +1,4 @@
-"""open3d ray casting against triangle meshes: the scene construction and the
-camera-to-splat occlusion test the garment code shares."""
+"""open3d ray casting: scene construction and the camera-to-splat occlusion test."""
 
 from __future__ import annotations
 

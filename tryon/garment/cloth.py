@@ -1,17 +1,10 @@
 """Cheap garment secondary motion for the live loop.
 
-An earlier position-based solver (GAPS energy terms; removed
-on 1 Oct 2026, see the archive/pre-cleanup-2026-10-01 tag) cost 140-190 ms
-a frame and, measured against the authors' own ContourCraft simulation of
-00152_outer, landed where plain skinning does (7.53 vs 7.57 cm mean vertex
-distance); what it bought was collision: skinning leaves 5.6 % of the
-vertices inside the body (sleeves 12 %). This keeps the collision and replaces the rest
-with what real-time cloth in games and AR try-on ships (Unity / Unreal /
-NvCloth style): every vertex follows its skinned position through a damped
-spring - loose where the garment hangs away from the body (a hem, a coat's
-front), stiff where it lies on it - never further from it than a
-per-vertex radius (a "max distance" / long-range attachment), then is
-pushed out of the body (`collision.push_out_of_body`).
+A full position-based solver was no more accurate than plain skinning and
+cost 140-190 ms a frame; only its collision mattered. Instead every vertex
+follows its skinned position through a damped spring (loose where the
+garment hangs off the body, stiff where it lies on it), is clamped to a
+per-vertex radius, then pushed out of the body (`collision.push_out_of_body`).
 """
 
 from __future__ import annotations
@@ -23,16 +16,15 @@ from scipy.spatial import cKDTree
 from tryon.garment.collision import BodySurface, push_out_of_body
 
 SUBSTEP = 1.0 / 120.0  # s: semi-implicit Euler is stable here for omega * SUBSTEP < ~1
-MAX_DT = 0.5  # s: a longer gap (a hitch, a lost person) restarts from the skin; the springs are stable and measured fine at the 0.4 s of a slow frame (tools/evaluate/cloth_smoothness.py), while 0.25 restarted them on every frame of a loaded machine, i.e. no cloth at all
+MAX_DT = 0.5  # s: a longer gap restarts from the skin; 0.25 reset every frame on a loaded machine
 
 
 @njit(cache=True)
 def _springs_serial(x, v, start, target, looseness, stiff_omega, loose_omega, stiff_radius, loose_radius, damping, n, h):
-    """`LightCloth._springs_numpy` in one serial pass per vertex (the same
-    scalar operations in the same order, so the result is bit-identical):
-    `n` semi-implicit Euler substeps of `h` toward the goal that moves
-    linearly from `start` to `target`, then the radius clamp. Returns the new
-    (x, v); `x`, `v` are not touched."""
+    """Serial, bit-identical form of `LightCloth._springs_numpy`.
+
+    `n` semi-implicit Euler substeps of `h` toward a goal moving linearly from
+    `start` to `target`, then the radius clamp. Returns new (x, v)."""
     count = len(x)
     x_new = np.empty((count, 3))
     v_new = np.empty((count, 3))
@@ -64,7 +56,6 @@ def _springs_serial(x, v, start, target, looseness, stiff_omega, loose_omega, st
             any_over = True
             clamp[p] = radius / max(length, 1e-12)
     if any_over:
-        # as the numpy form: every vertex is rebuilt as target + offset * clamp (1.0 where not over)
         for p in range(count):
             for c in range(3):
                 x_new[p, c] = target[p, c] + (x_new[p, c] - target[p, c]) * clamp[p]
@@ -76,9 +67,9 @@ def _springs_serial(x, v, start, target, looseness, stiff_omega, loose_omega, st
 def geodesic_from(count, edges, rest, anchors):
     """Shortest path along the mesh edges from each vertex to the nearest of `anchors`.
 
-    Returns (distance, anchor_of): `distance[i]` is the path length over the edges of `rest` (inf when no anchor
-    can be reached, e.g. a piece of cloth with no anchor on it), `anchor_of[i]` the anchor it is measured from
-    (-1 when unreachable). One Dijkstra over the whole mesh, `edges` as (E, 2) vertex pairs."""
+    Returns (distance, anchor_of): path length over the edges of `rest` (inf
+    when unreachable) and the anchor it is measured from (-1 when unreachable).
+    `edges` is (E, 2) vertex pairs."""
     import scipy.sparse as sp
     from scipy.sparse.csgraph import dijkstra
 
@@ -93,8 +84,7 @@ def geodesic_from(count, edges, rest, anchors):
 
 @njit(cache=True)
 def _long_range(x, anchor_of, limit):
-    """Pull every vertex back toward its anchor to at most `limit` (a long-range attachment, one-sided: a vertex
-    already inside its limit does not move). Returns a new array."""
+    """Pull each vertex toward its anchor to at most `limit` (one-sided). Returns a new array."""
     out = x.copy()
     for p in range(len(x)):
         a = anchor_of[p]
@@ -113,21 +103,19 @@ def _long_range(x, anchor_of, limit):
 
 
 class LightCloth:
-    """Per-vertex damped springs toward the skinned garment, a looseness
-    map from how far each vertex hangs off the body at rest, and a hard
-    collision projection."""
+    """Damped springs toward the skinned garment, a per-vertex looseness map, and body collision."""
 
     STIFF_OMEGA, LOOSE_OMEGA = 60.0, 14.0  # rad/s: natural frequency on / off the body
     DAMPING_RATIO = 0.55  # < 1: a little overshoot, i.e. swing
     STIFF_RADIUS, LOOSE_RADIUS = 0.005, 0.05  # m: how far a vertex may trail its skinned place
     LOOSE_FROM, LOOSE_SPAN = 0.01, 0.06  # m off the body at rest: where looseness starts / saturates
-    MARGIN = 0.01  # m: collision clearance (the fitted body is ~1.2 cm off the true one; 2 / 1 / 0.5 / 0 cm gave garment IoU 0.647 / 0.659 / 0.664 / 0.666 with sleeves inside the body 0.1 / 2.6 / 5.6 / 8.1 %)
+    MARGIN = 0.01  # m: collision clearance; the fitted body is ~1.2 cm off the true one
     PASSES = 3
-    # Long-range attachment from the garment's top ring (`set_long_range`): after the springs, a vertex is no
-    # farther from its anchor than its rest path along the mesh times (1 + LRA); a hem is pulled up when the
-    # shoulders rise and nothing happens when they do not. None = off. Default on since 9 Oct (anchors: the sleeve's border, `GarmentRenderer.LRA_ANCHORS`): loose-garment IoU +0.015 with `DRAPE_NARROW`, see docs/LOG.md.
+    # Long-range attachment (`set_long_range`): after the springs, a vertex is
+    # no farther from its anchor than its rest path times (1 + LRA), so a hem
+    # follows rising shoulders. None = off.
     LRA = 0.03
-    LRA_MARGIN = 0.06  # m: added to the limit (without it the vertices next to an anchor are tied to it and the panel narrows)
+    LRA_MARGIN = 0.06  # m: slack added to the limit; without it vertices next to an anchor are pinned and the panel narrows
 
     def __init__(self):
         self._long_range_state = None
@@ -153,15 +141,12 @@ class LightCloth:
         self.x = np.array(target, np.float64)
         self.v = np.zeros_like(self.x)
         self.target = self.x.copy()
-        # the looseness map is the garment's (how far each vertex hangs off
-        # the body), kept across resets: a frame longer than MAX_DT resets, and
-        # rebuilding this KD-tree query each time cost ~10 ms for nothing
+        # looseness belongs to the garment; kept across resets (rebuilding costs ~10 ms)
         if body_vertices is not None and (self.looseness is None or len(self.looseness) != len(self.x)):
             self.looseness = self._looseness(self.x, body_vertices)
 
     def _springs_numpy(self, target, dt, v):
-        """The original numpy form of the spring step: the oracle for
-        `_springs_serial`. Returns (x, v) from `self.x`, `self.target`."""
+        """Numpy spring step; oracle for `_springs_serial`. Returns (x, v)."""
         w = self.looseness[:, None]
         omega = self.STIFF_OMEGA + (self.LOOSE_OMEGA - self.STIFF_OMEGA) * w
         radius = self.STIFF_RADIUS + (self.LOOSE_RADIUS - self.STIFF_RADIUS) * w
@@ -169,7 +154,7 @@ class LightCloth:
         h = dt / n
         x = self.x
         for i in range(1, n + 1):
-            # the skinned target moves linearly across the frame
+            # the target moves linearly across the frame
             goal = self.target + (target - self.target) * (i / n)
             a = omega * omega * (goal - x) - 2.0 * self.DAMPING_RATIO * omega * v
             v = v + h * a
@@ -180,7 +165,7 @@ class LightCloth:
         if over.any():
             clamp = np.where(over, radius / np.maximum(length, 1e-12), 1.0)
             x = target + offset * clamp
-            v = v * np.where(over, 0.5, 1.0)  # lose some speed on hitting the limit
+            v = v * np.where(over, 0.5, 1.0)  # lose speed at the limit
         return x, v
 
     def step(self, target, dt, body_vertices, body_faces):
@@ -205,13 +190,11 @@ class LightCloth:
         return x
 
 class SmoothCloth(LightCloth):
-    """`LightCloth` with the parameters of a 30-sample random search against
-    the authors' ContourCraft trajectories (train: 00152_outer, 00170_upper,
-    00134_upper, 00148_outer, 00176_lower; stride 5). Held out (00122_outer,
-    00136_outer, 00170_lower, 00176_upper, 10004_outer), dt 0.2 s: distance
-    9.361 vs 9.398 cm, displacement jitter 0.26 vs 0.74 cm (tools/evaluate/
-    cloth_smoothness.py). Stiffer and less swinging than the default; opt in
-    with `GarmentRenderer.CLOTH = SmoothCloth`."""
+    """`LightCloth` with parameters searched against ContourCraft trajectories.
+
+    Stiffer and less swinging than the default, with much lower jitter on
+    held-out garments (tools/evaluate/cloth_smoothness.py). Opt in with
+    `GarmentRenderer.CLOTH = SmoothCloth`."""
 
     STIFF_OMEGA, LOOSE_OMEGA = 41.4, 32.5
     DAMPING_RATIO = 0.243

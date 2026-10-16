@@ -1,37 +1,25 @@
 """NLF (Sarandi et al., NeurIPS 2024) in its own process.
 
-The released TorchScript needs torch >= 2.4 (`aten::get_autocast_dtype`);
-the project's venv is pinned at 2.1, so this file runs under the venv in
-`models/pretrained/nlf/venv` and imports nothing from the project. It
-talks to `tryon.body.regressor.NLF` over stdin / stdout: each message is
-an 8-byte little-endian length and a pickle.
+The released TorchScript needs torch >= 2.4; the project's venv is pinned at 2.1, so this
+file runs under `models/pretrained/nlf/venv` and imports nothing from the project. It
+talks to `tryon.body.regressor.NLF` over stdin / stdout: each message is an 8-byte
+little-endian length and a pickle.
 
   request   {"frame": HxWx3 uint8 BGR, "box": [x, y, w, h] or None,
              "K": 3x3 float intrinsics}
   reply     {"rotvec": (55, 3), "betas": (10,), "joints3d": (J, 3) in the
              camera frame (metres)} for the most confident person, or None
 
-Stored in fp16 with casts to fp16 inside the graph, the model takes
-minutes an image on the CPU; the casts are rewritten to fp32 once and the
-result cached next to the weights. With a box handed in its YOLO detector
-is skipped: 0.23-0.30 s against 1.8 s an image.
+The model is stored in fp16 and slow on CPU, so the casts are rewritten to fp32 once and
+cached next to the weights. With a box handed in its YOLO detector is skipped.
 
-The rewrite edits the archive's TorchScript source (`_patch_source`): the
-eight fp16 casts are literal dtype 5 arguments in its code. The first
-rewrite (`_rewrite_dtype_casts`)
-edited the graphs after inlining every call, which grew the saved code
-from 1.7 to 47 MB - 34-49 s to load at every start, against 1.7 s now,
-with bit-identical answers (4 frames, every output). It stays as the
-fallback.
+The rewrite edits the archive's TorchScript source (`_patch_source`): the fp16 casts are
+literal dtype 5 arguments. The older graph rewrite (`_rewrite_dtype_casts`) inlines every
+call and grows the saved code ~30x (slow to load); it stays as the fallback.
 
-On Apple silicon the image backbone (EfficientNetV2-S, 54 of the ~92 ms
-a call on a 960 px frame) runs on the GPU (`_backbone_on_mps`): one more
-source edit moves the crop batch to MPS and the features back, the rest
-(heads, body-model fit) stays on the CPU, where its many small ops are
-fast. The whole model on MPS took 894 ms, the backbone alone 28 ms. The
-answers move by at most 0.33 mm in the joints and ~0.5 degrees in the
-body joints' rotations (the finger joints, which nothing here uses, are
-ill-conditioned and swing more).
+On Apple silicon the image backbone runs on the GPU (`_backbone_on_mps`): one more
+source edit moves the crop batch to MPS and the features back; heads and body-model fit
+stay on the CPU, where many small ops are fast. Answers move by <0.5 mm in the joints.
 """
 
 from __future__ import annotations
@@ -61,9 +49,8 @@ def _argument_names(node):
 
 
 def _rewrite_dtype_casts(module, mapping, device="cpu"):
-    """{5: 6}: every hard-coded fp16 cast becomes fp32 (and fp16 tensor
-    constants become fp32); traced "cuda" device constants become
-    `device`."""
+    """{5: 6}: every hard-coded fp16 cast becomes fp32 (and fp16 tensor constants become
+    fp32); traced "cuda" device constants become `device`."""
     import torch
 
     seen, alive = set(), []
@@ -120,10 +107,9 @@ _EXPECTED_BACKBONE_EDITS = 2
 
 
 def _patch_source(weights, out):
-    """The released archive with its fp16 casts edited to fp32 in the
-    TorchScript source (no inlining), loaded, its weights made fp32 and
-    saved to `out`. Returns False if the archive is not the one the edits
-    were written for."""
+    """The released archive with its fp16 casts edited to fp32 in the TorchScript source,
+    loaded, weights made fp32 and saved to `out`. Returns False if the archive is not the
+    one the edits were written for."""
     import io
     import re
     import zipfile
@@ -175,8 +161,7 @@ def _backbone_on_mps(patched, out):
 
 
 def _warm_up(model):
-    """A call on a blank frame, so the first person does not pay for the
-    first call's allocations (0.5 s)."""
+    """A call on a blank frame, so the first person does not pay for first-call allocations."""
     import numpy as np
 
     frame = np.zeros((480, 360, 3), np.uint8)
@@ -247,10 +232,8 @@ def answer(model, request):
     frame = cv2.cvtColor(request["frame"], cv2.COLOR_BGR2RGB)
     x = torch.from_numpy(frame.transpose(2, 0, 1).copy())[None].to(device)
     k = torch.as_tensor(np.asarray(request["K"], np.float32))[None].to(device)
-    # Without TorchScript's graph optimisation: its first calls on a new
-    # process took ~9-11 s (profiling and fusing the graph); unoptimised
-    # the first is 0.5 s, later ones 0.21-0.22 s as before, and the answers
-    # are bit-identical (4 frames of 00152_outer, every output).
+    # Without TorchScript's graph optimisation: its first calls on a new process took
+    # ~10 s (profiling and fusing); unoptimised answers are bit-identical.
     with torch.inference_mode(), torch.jit.optimized_execution(False):
         if request.get("box") is not None:
             box = torch.as_tensor(np.asarray(request["box"], np.float32)).reshape(1, 4).to(device)

@@ -1,21 +1,15 @@
-"""Body accuracy of the live path on the full 4D-DRESS captures (more subjects, layers and takes
-than the 16 annotated sample photographs).
+"""Body accuracy of the live path on the full 4D-DRESS captures.
 
-Same protocol as `fit_audit.body_accuracy` (A1): MediaPipe keypoints -> NLF-S regression ->
-`BodyFitter.fit_from_regression`, PA-MPJPE of the 12 JOINT_MAP joints against the capture's own
-ground-truth SMPL-X. It only changes WHICH views are scored: a few evenly spaced frames of every
-take of every extracted archive under `~/tryon-data/4d-dress/<subject>/<Inner|Outer>/<Take>/`, all
-four cameras, reported per subject and per layer.
-
-The raw capture layout (`Capture/<cam>/images/capture-fNNNNN.png`, `SMPLX/mesh-fNNNNN_smplx.pkl`,
-`Capture/cameras.pkl`) is exposed to `tools.evaluate.real_fit` in its annotated-sample layout
-through a directory of symlinks (outside the repository; nothing is copied). Resolution and
-calibration were checked against the sample: both 1280 x 940, focal ~1119 px, same rig.
+Same protocol as `fit_audit.body_accuracy` (MediaPipe -> NLF-S ->
+`BodyFitter.fit_from_regression`, PA-MPJPE of the 12 JOINT_MAP joints against
+the capture's SMPL-X), over a few frames of every take under
+`~/tryon-data/4d-dress/<subject>/<Inner|Outer>/<Take>/`, all four cameras,
+reported per subject and layer. The raw capture layout is exposed to
+`real_fit` through a directory of symlinks outside the repository.
 
     .venv/bin/python -m tools.evaluate.body_accuracy_4ddress [--frames 3] [--limit N] [--control DIR]
 
-`--control DIR` also scores the original annotated sample (`data/annotated`-style directory) with
-the same code in the same run, so the new numbers can be read against a like-for-like reference.
+`--control DIR` also scores the annotated sample in the same run for comparison.
 """
 
 from __future__ import annotations

@@ -1,20 +1,16 @@
 """Pretrained human parsing: SCHP (Li et al. 2020) ATR / LIP models, ONNX.
 
-The parser IDM-VTON and VTON360 use (`preprocess/humanparsing` in
-yisol/IDM-VTON, weights `humanparsing/parsing_atr.onnx` and
-`parsing_lip.onnx` on HuggingFace). Same conventions as their
-`parsing_api.py`, read from the source: the image is letterboxed into a
-512x512 (ATR) or 473x473 (LIP) square with an aspect-preserving affine
-warp, normalised in BGR with mean (0.406, 0.456, 0.485) and std
-(0.225, 0.224, 0.229), the logits are upsampled bilinearly to the square,
-warped back per channel and argmax'd LAST - labels are never resampled.
+The parser IDM-VTON and VTON360 use (weights `humanparsing/parsing_atr.onnx` and
+`parsing_lip.onnx` in yisol/IDM-VTON on HuggingFace), with the conventions of their
+`parsing_api.py`: the image is letterboxed into a 512x512 (ATR) or 473x473 (LIP) square
+with an aspect-preserving affine warp, normalised in BGR with mean (0.406, 0.456, 0.485)
+and std (0.225, 0.224, 0.229); logits are upsampled to the square, warped back per
+channel and argmax'd LAST - labels are never resampled.
 
-ATR classes (18): 0 Background, 1 Hat, 2 Hair, 3 Sunglasses,
-4 Upper-clothes, 5 Skirt, 6 Pants, 7 Dress, 8 Belt, 9 Left-shoe,
-10 Right-shoe, 11 Face, 12 Left-leg, 13 Right-leg, 14 Left-arm,
-15 Right-arm, 16 Bag, 17 Scarf - the same scheme as this project's own
-U-Net, so the two are directly comparable and the merged upper-clothing
-region is classes 4 and 7 for both.
+ATR classes (18): 0 Background, 1 Hat, 2 Hair, 3 Sunglasses, 4 Upper-clothes, 5 Skirt,
+6 Pants, 7 Dress, 8 Belt, 9 Left-shoe, 10 Right-shoe, 11 Face, 12 Left-leg, 13 Right-leg,
+14 Left-arm, 15 Right-arm, 16 Bag, 17 Scarf. The merged upper-clothing region is
+classes 4 and 7.
 """
 
 from __future__ import annotations
@@ -34,11 +30,9 @@ _STD = np.array([0.225, 0.224, 0.229], np.float32)
 
 
 def _coreml_cache(checkpoint):
-    """Where ONNX Runtime keeps the CoreML compilation of `checkpoint`: it
-    compiled the graph on every start (ATR 7.6 s, LIP about as long) and
-    reuses it from here (0.5 s, the same output). The directory is named by
-    the file's size and time, so a changed model never meets a stale
-    compilation (ORT keys its cache by the model's path only)."""
+    """Where ONNX Runtime keeps the CoreML compilation of `checkpoint` (it recompiled every
+    start otherwise). The directory is named by the file's size and time, so a changed
+    model never meets a stale compilation (ORT keys its cache by path only)."""
     import os
 
     stat = os.stat(checkpoint)
@@ -49,11 +43,9 @@ def _coreml_cache(checkpoint):
 
 class SCHPParser:
     def __init__(self, checkpoint=ATR_CHECKPOINT, size=512, providers=None):
-        """`providers`: ONNX Runtime execution providers, by preference.
-        Default: CoreML (NeuralNetwork format - the MLProgram format fails
-        to compile this graph's AveragePool) with the CPU as fallback.
-        Measured on the 870x640 camera-0004 frame: CoreML 304 ms vs CPU
-        2,125 ms a pass, argmax labels 99.995% identical."""
+        """`providers`: ONNX Runtime execution providers, by preference. Default: CoreML
+        (NeuralNetwork format - MLProgram fails to compile this graph's AveragePool) with CPU
+        as fallback; CoreML is several times faster with the same labels."""
         import onnxruntime as ort
 
         if providers is None:
@@ -124,9 +116,8 @@ class SCHPParser:
         return logits, cv2.invertAffineTransform(matrix)
 
     def fast_labels(self, frame_bgr):
-        """`labels` for the live loop: one pass, no flip, the argmax taken
-        on the network's square and carried to the frame by nearest
-        neighbour - instead of every class warped to the frame first."""
+        """`labels` for the live loop: one pass, no flip, the argmax taken on the network's
+        square and carried to the frame by nearest neighbour."""
         logits, inverse = self._square_logits(frame_bgr)
         height, width = frame_bgr.shape[:2]
         window, inverse = self._window(logits, inverse, height, width)
@@ -139,9 +130,8 @@ class SCHPParser:
         return cv2.warpAffine(logits.argmax(axis=0).astype(np.uint8), inverse, (width, height), flags=cv2.INTER_NEAREST)
 
     def _window(self, logits, inverse, height, width):
-        """(contiguous window of the square the picture occupies, the
-        square -> frame affine from the window's origin). A contiguous copy:
-        numpy's reductions over axis 0 are 9x faster on it than on a slice."""
+        """(contiguous window of the square the picture occupies, the square -> frame affine from
+        the window's origin). A contiguous copy: numpy reductions over axis 0 are much faster."""
         y0, y1, x0, x1 = self._content_window(height, width, self._letterbox(height, width))
         window = np.ascontiguousarray(logits[:, y0:y1, x0:x1])
         inverse = inverse.copy()
@@ -150,17 +140,15 @@ class SCHPParser:
 
     @staticmethod
     def _first_argmax(window, peak):
-        """`window.argmax(axis=0)` as uint8, 3x faster: numpy returns the
-        first maximum, so walking the classes downwards lets the lowest index
-        have the last word."""
+        """`window.argmax(axis=0)` as uint8, faster: numpy returns the first maximum, so walking
+        the classes downwards lets the lowest index have the last word."""
         best = np.zeros(peak.shape, np.uint8)
         for c in range(window.shape[0] - 1, -1, -1):
             best[window[c] == peak] = c
         return best
 
     def fast_clothing_reference(self, frame_bgr, classes):
-        """The original `fast_clothing` (the oracle `fast_clothing` is tested
-        equal to, and the baseline of the parser study of 9 Oct, docs/LOG.md)."""
+        """The original `fast_clothing` (the oracle it is tested equal to)."""
         logits, inverse = self._square_logits(frame_bgr)
         height, width = frame_bgr.shape[:2]
         shifted = np.exp(logits - logits.max(axis=0, keepdims=True))
@@ -170,9 +158,8 @@ class SCHPParser:
         return probability, labels
 
     def _content_window(self, height, width, matrix):
-        """(y0, y1, x0, x1) of the letterboxed picture inside the square, 2 px
-        wider than it: a wide or tall frame leaves up to half of the square
-        as padding that no frame pixel reads (bilinear reads one pixel past)."""
+        """(y0, y1, x0, x1) of the letterboxed picture inside the square, 2 px wider than it: a
+        wide or tall frame leaves padding no frame pixel reads (bilinear reads one past)."""
         scale = float(matrix[0, 0])
         x0 = max(int(np.floor(matrix[0, 2])) - 2, 0)
         y0 = max(int(np.floor(matrix[1, 2])) - 2, 0)
@@ -187,22 +174,19 @@ class SCHPParser:
         return buffer
 
     def fast_clothing(self, frame_bgr, classes):
-        """(summed probability of `classes`, labels) at frame size, for the
-        live loop: `probabilities(flip=False)` with the softmax and argmax
-        on the network's square and only those two maps warped. Labels
-        bit-identical to `fast_clothing_reference`, the probability within one
-        float32 ulp of the exponential (the thresholded mask equal), in under
-        half the time: only the window of the square the picture occupies is
-        touched, as a contiguous copy, the exponentials go into one reused
-        buffer, and the argmax is a per-class comparison with the running
-        maximum instead of numpy's strided argmax."""
+        """(summed probability of `classes`, labels) at frame size, for the live loop:
+        `probabilities(flip=False)` with softmax and argmax on the network's square and only
+        those two maps warped. Labels are bit-identical to `fast_clothing_reference`, the
+        probability within one float32 ulp (thresholded mask equal), in under half the time:
+        only the picture's window of the square is touched, exponentials go into one reused
+        buffer, and the argmax is a per-class running-maximum comparison."""
         logits, inverse = self._square_logits(frame_bgr)
         height, width = frame_bgr.shape[:2]
         window, inverse = self._window(logits, inverse, height, width)
         peak = window.max(axis=0)
         np.subtract(window, peak, out=self._buffer(window.shape))
         shifted = self._exp_buffer
-        # cv2.exp: 2.1 ms against numpy's 5.6, within one float32 ulp of it
+        # cv2.exp: faster than numpy's, within one float32 ulp
         cv2.exp(shifted.reshape(-1, shifted.shape[-1]), shifted.reshape(-1, shifted.shape[-1]))
         numerator = shifted[classes[0]].copy()
         for c in classes[1:]:

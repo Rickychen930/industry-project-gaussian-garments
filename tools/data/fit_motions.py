@@ -1,20 +1,10 @@
-"""Fit SMPL-X to the bodies of the authors' other simulations, as extra
-training poses for the shading students: docs/baseline/motion-fits/
-<source>-<outfit>-<motion>.npz, every STRIDE-th frame.
+"""Fit SMPL-X to the bodies of the authors' other simulations, as extra poses
+for the shading students: docs/baseline/motion-fits/<source>-<outfit>-<motion>.npz,
+every STRIDE-th frame.
 
-Each garment's own trajectory is one motion on one body. The authors'
-other simulation sets add, with the SMPL-X body of every frame:
-
-  mg  multigarment-outfits/  15 CMU motions, each on 4 body shapes
-                             (1.67-1.75 m tall): one take per motion and
-                             body shape
-  rs  resize/                4 more motions on 10 bodies of other sizes
-  ob  one-by-one-draping/    1 more motion (15_09)
-
-`tools/train/shading_student.py --with-motions` trains on all of them but
-the motions in `TEST_MOTIONS`, which `tools/evaluate/shading_students.py`
-keeps unseen. Fitted with the trajectory fitter
-(`cloth_trajectory.fit_frames`); files already fitted are kept.
+Sources: mg (multigarment-outfits), rs (resize), ob (one-by-one-draping).
+`shading_student.py --with-motions` trains on all but `TEST_MOTIONS`, which
+`evaluate/shading_students.py` keeps unseen. Already-fitted files are kept.
 
     .venv/bin/python -m tools.data.fit_motions [--stride 17] [--sources mg,rs,ob]
 """

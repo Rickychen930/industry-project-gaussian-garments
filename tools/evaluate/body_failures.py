@@ -1,26 +1,17 @@
 """Where a wrong fitted body comes from: NLF's prediction, its box, or the tracking.
 
-Runs `vs_registration.evaluate` on one release video (the live NLF path) with
-probes on the side, and for every scored frame records
-
-  iou            the garment's IoU against the real shirt (the evaluator's number)
-  body_person    IoU of our fitted body's silhouette with the person mask (SCHP ATR, any non-background label)
-  body_in        share of the body silhouette that is person; person_in: share of the person the body covers
-  nlf_torso      NLF's raw projected shoulders / hips against MediaPipe's, mean px over the torso length
-  body_torso     the same for the fitted body (after the camera placement)
-  yaw, mp_yaw    fitted body's yaw and MediaPipe's world-landmark yaw (degrees)
-  box            the box NLF was given, and the share of the person mask outside it
-  nlf_ok         whether NLF answered, and how many of its 22 joints fall in the image
-
-and writes a contact sheet of the worst and best frames (the body mesh contour over the frame).
+Runs `vs_registration.evaluate` on one release video (live NLF path) with probes,
+recording per scored frame: iou (garment vs real shirt), body_person / body_in /
+person_in (fitted-body silhouette vs the SCHP person mask), nlf_torso / body_torso
+(projected shoulders and hips vs MediaPipe, px over torso length), yaw / mp_yaw,
+box (NLF's box and the person mask outside it) and nlf_ok. Writes a contact sheet
+of the worst and best frames.
 
     .venv/bin/python -m tools.evaluate.body_failures 00176_outer --every 5 --out a.json --sheet a.npz
     .venv/bin/python -m tools.evaluate.body_failures --merge a.npz,b.npz --image docs/figures/body-failures.jpg
 
-`--box landmarks|mask|union|detector` swaps the box NLF gets (mask: the person
-mask's bounding box, union: both, detector: NLF's own YOLO), `--num-aug N` its
-test-time crops, `--set module.NAME=value` any module constant (a candidate
-gate's switch).
+`--box landmarks|mask|union|detector` swaps NLF's box, `--num-aug N` its
+test-time crops, `--set module.NAME=value` any module constant.
 """
 
 from __future__ import annotations
@@ -203,7 +194,7 @@ def frame_record(probe, row):
 
 
 def tile(shot, box, label, height=420):
-    image = shot["panel"][..., ::-1].copy() if False else cv2.cvtColor(shot["panel"], cv2.COLOR_RGB2BGR)
+    image = cv2.cvtColor(shot["panel"], cv2.COLOR_RGB2BGR)
     contours, _ = cv2.findContours(shot["body"].astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     if box is not None:

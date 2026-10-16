@@ -1,21 +1,12 @@
 """Would an asynchronous display keep the garment on the body?
 
-Live, the full pipeline takes ~0.65 s a frame; an asynchronous display
-shows every camera frame and draws the newest FINISHED garment layer on it.
-That layer belongs to an earlier frame. This scores, on the release
-videos against the real shirt (the same truth as
-`tools/evaluate/vs_registration.py`, whose per-frame garment it reuses),
-what the viewer would see at every frame t:
-
-  sync   the garment rendered for frame t itself (the upper bound: what a
-         pipeline as fast as the camera would draw)
-  hold   the newest finished layer as it is
-  warp   the same layer carried to frame t with the torso's similarity
-         (`tryon.app.layer_warp.torso_transform`)
-
-with keyframes every `period` frames whose layers finish `period` frames
-later (a pipeline taking `period` frames per frame; the release videos run
-at 25 fps, so 16 frames is the live pipeline's ~0.65 s).
+An async display draws the newest finished garment layer, which belongs to an
+earlier frame. On the release videos, against the real shirt (same truth and
+per-frame garment as `vs_registration.py`), each frame t is scored three ways:
+sync (garment rendered for t itself, the upper bound), hold (newest finished
+layer as is), warp (that layer carried to t by the torso similarity,
+`tryon.app.layer_warp.torso_transform`). Keyframes every `period` frames finish
+`period` frames later (videos run at 25 fps; 16 frames is the live ~0.65 s).
 
     .venv/bin/python -m tools.evaluate.async_display 00152_outer,00170_upper [--frames 150] [--periods 8,16] [--regressor nlf]
 """

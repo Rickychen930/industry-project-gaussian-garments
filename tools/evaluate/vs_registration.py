@@ -1,22 +1,16 @@
 """Our live pipeline against the authors' own registration, frame by frame.
 
-Each Gaussian-Garments release video shows the captured person ("Ground
-Truth", left) beside the authors' registration of the garment ("Ours -
-Registration", right: their body in grey, their garment colour-coded) -
-a reference that demonstrably works. This scores both against the real
-shirt on every `every`-th frame of the whole clip, not only frame 0:
-
-  truth     the parser's upper clothing (SCHP ATR 4 / 7) on the left panel
-  theirs    the registration's saturated pixels (the colour-coded garment;
-            its body is grey), mapped into the left panel by one similarity
-            found on the first frame by matching the two person silhouettes
-  ours      the garment `GarmentRenderer` draws on the left panel, driven by
-            the live body logic (MediaPipe, One Euro, fit / `track_step`),
-            cloth solver on
-
-and reports silhouette IoU per frame and on average. Theirs is a 4-camera
-photometric registration; ours is one camera, live. Where the two curves
-part is where we lose.
+Each release video shows the captured person ("Ground Truth", left) beside the
+authors' registration ("Ours - Registration", right). Both are scored against
+the real shirt on every `every`-th frame:
+  truth   the parser's upper clothing (SCHP ATR 4 / 7) on the left panel
+  theirs  the registration's saturated pixels (garment is colour-coded, body
+          grey), mapped to the left panel by one similarity from matching the
+          two person silhouettes on frame 0
+  ours    the garment `GarmentRenderer` draws on the left panel, driven by the
+          live body logic (MediaPipe, One Euro, fit / `track_step`), cloth on
+Reports silhouette IoU per frame and on average. Theirs is 4-camera photometric
+registration; ours is one camera, live.
 
     .venv/bin/python -m tools.evaluate.vs_registration [00152_outer] [--every 5] [--out j.json] [--png sheet.jpg]
 """
@@ -95,15 +89,14 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
 
     lip = SCHPParser(LIP_CHECKPOINT, size=473)
     renderer = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=subsample)
-    # `sweep`: more fractions to score on the very same fitted bodies (a uniform subset each); see GarmentRenderer.subsample
+    # `sweep`: more fractions on the same fitted bodies (see GarmentRenderer.subsample)
     variants = {}
     for spec in sweep:
         fraction = float(spec)
         variants[spec] = GarmentRenderer(GARMENTS / name, dynamics=dynamics, subsample=fraction if fraction < 1.0 else None)
-    # `export`: save every frame's fitted body (model space) and the frame-0
-    # garment for an offline simulator (none in the repo now); `cloth`: an
-    # npz of such a simulator's garment per frame (reference 7972-vertex
-    # order) to render instead of our own skinning / cloth solver.
+    # `export`: save each frame's fitted body and the frame-0 garment for an offline
+    # simulator; `cloth`: an npz of such a simulator's garment per frame (reference
+    # 7972-vertex order) rendered instead of our skinning / cloth solver.
     exported_bodies, exported_cloth0 = [], None
     replay = None if cloth is None else np.load(cloth)["cloth"]
     from tools.evaluate.cloth_trajectory import reference_vertex_map
@@ -138,8 +131,7 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
             import tryon.body.fitter as _bf
 
             if _bf.SILHOUETTE_WEIGHT > 0 and fitter is not None:
-                # live has the PREVIOUS frame's parse when it tracks (the
-                # mask runs on its own thread after), so that is what is used
+                # live uses the previous frame's parse when tracking (the mask runs on its own thread)
                 fitter.set_silhouette(previous_person)
             if points is not None and torso_visible(points, tracking=fitter is not None):
                 prediction = None
@@ -174,12 +166,9 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
             if _bf.SILHOUETTE_WEIGHT <= 0:
                 labels = parser.labels(panel)
             person, shirt = labels != 0, np.isin(labels, (4, 7))
-            # The OUTER garment only: ATR calls an undershirt "upper clothes"
-            # too (00152_outer's yellow top under the open shirt), which
-            # credited a garment drawn over it and penalised the
-            # registration for leaving it bare. Same rule as the removal
-            # (ClothingRemover.KEEP_INNER_LAYER): with a LIP coat present,
-            # LIP's upper-clothes / jumpsuit pixels are the inner layer.
+            # Outer garment only: ATR also calls an undershirt "upper clothes". Same rule as
+            # ClothingRemover.KEEP_INNER_LAYER: with a LIP coat, LIP upper-clothes /
+            # jumpsuit pixels are the inner layer.
             lip_labels = lip.labels(panel)
             coat, inner = lip_labels == 7, np.isin(lip_labels, (5, 10))
             if coat.sum() >= 0.5 * max(int((coat | inner).sum()), 1):
@@ -214,9 +203,8 @@ def evaluate(name, every=5, frames=None, png=None, dynamics=True, export=None, c
                          # garment area over the real shirt's: > 1 means drawn too big
                          "ours_area_ratio": float(ours.sum() / max(shirt.sum(), 1)),
                          "theirs_area_ratio": float(theirs.sum() / max(shirt.sum(), 1)),
-                         # where our extra pixels fall, as fractions of the real shirt's area:
-                         # outside the person (outline too big) or on the person's
-                         # other parts, by ATR class group
+                         # where our extra pixels fall, as fractions of the real shirt area: off the
+                         # person (outline too big) or on other parts, by ATR class group
                          "ours_extra_background": float((ours & ~shirt & ~person).sum() / max(shirt.sum(), 1)),
                          "ours_extra_skin": float((ours & ~shirt & np.isin(labels, (11, 14, 15, 12, 13))).sum() / max(shirt.sum(), 1)),
                          "ours_extra_lower": float((ours & ~shirt & np.isin(labels, (5, 6))).sum() / max(shirt.sum(), 1)),

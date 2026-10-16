@@ -246,7 +246,6 @@ class RestoreCollarLayerTest(unittest.TestCase):
 
         frame, original, alpha, labels, points = self._scene()
         frame[50, 100] = (1, 1, 1)  # above the chin line, the erase changed it (it must not come back)
-        covered = frame[130, 100].copy()
         frame[130, 100] = (9, 9, 9)
         restore_collar_layer(frame, original, alpha, labels, points)
         self.assertTrue((frame[50, 100] == (1, 1, 1)).all())

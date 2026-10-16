@@ -14,42 +14,20 @@ import numpy as np
 
 from tryon.body.landmarks import VISIBILITY_FLOOR
 
-# Shoulders and hips (MediaPipe 11, 12, 23, 24). This used to be
-# `sorted(JOINT_MAP)[:4]`, which is shoulders and ELBOWS: on 00176_outer
-# the far elbow hidden behind the body in profile (visibility 0.14) made
-# the wearer "lost" for 19 of 120 frames - no garment, and the removal
-# still erased her jacket, leaving a headless ghost.
+# Shoulders and hips (MediaPipe 11, 12, 23, 24). Not shoulders and elbows: a far elbow
+# hidden in profile would mark the wearer lost.
 TORSO = (11, 12, 23, 24)
 
-# `track`'s own default (3) is tuned for the case its docstring measures:
-# a body moving sideways, where 3 iterations/frame holds up (see
-# test_tracking_keeps_up_with_a_moving_body). A body TURNING is a
-# different regime: a synthetic sequence turning 68 degrees over 30
-# frames (1s at 30fps - a fast turn) with 3 iterations/frame got stuck
-# near +10 degrees and barely moved; 15 iterations/frame reached -38.7
-# degrees (still short, but moving the right way); over a more realistic
-# 90-frame turn (3s), 15 iterations/frame reached -65.2 degrees against
-# a true -68. The cost is small next to a garment render (~360ms): 15
-# iterations measured at ~36ms/frame, negligible in that budget. This is
-# what makes tracking recover the yaw a single cold fit provably cannot
-# (see docs/PLAN.md and tests/test_body_fit_real_photos.py) - not a fix
-# to the per-frame optimisation itself, more iterations to let the
-# warm-started chain actually follow the turn instead of getting stuck
-# a few frames in.
+# Per-frame tracking iterations. A turning body needs more than `track`'s default (3)
+# or the warm-started chain stalls; 15 follows a 3 s turn to within a few degrees
+# for ~36 ms a frame.
 TRACK_ITERATIONS = 15
-# A tracked frame whose reprojection exceeds REFIT_RATIO x the median of
-# the last ten, and REFIT_FLOOR x the frame height, triggers
-# `BodyFitter.refit` (a cold fit that may only improve). On the
-# four-camera turn clip every cut spiked 2.4-4x (8 -> 19-27 px at 870 px
-# tall) while steady tracking stayed within 1.5x; ratio 2.5 missed the
-# 0 -> 69 degree cut. A refit costs ~4 s, only on a spike.
+# A tracked frame whose reprojection exceeds REFIT_RATIO x the median of the last ten,
+# and REFIT_FLOOR x the frame height, triggers `BodyFitter.refit`. Camera cuts spike
+# 2.4-4x; steady tracking stays within 1.5x.
 REFIT_RATIO = 2.0
-# One Euro filter on the landmarks the fitter sees (tryon/body/smoothing.py),
-# about the hip midpoint so position is never delayed. On the 15 release
-# clips (tools/evaluate/tracking_jitter.py) with hip recentring: joint
-# shake 24.39 -> 21.92, 3D limb acceleration 34.5 -> 24.3 mm/frame^2,
-# reprojection 2.23 -> 2.49% of height; the rendered garment's on-screen
-# acceleration 15.2 -> 12.9 (3 clips, cloth solver on). None = off.
+# One Euro filter on the landmarks the fitter sees (tryon/body/smoothing.py), about the
+# hip midpoint so position is never delayed. None = off.
 LANDMARK_FILTER = {"min_cutoff": 4.0, "beta": 5.0, "relative": True}
 REFIT_FLOOR = 0.014
 # A tracked body facing more than this far from MediaPipe's own torso yaw
@@ -57,12 +35,6 @@ REFIT_FLOOR = 0.014
 # adopted, the check rests YAW_COOLDOWN frames.
 YAW_DISAGREE_DEG = 45.0
 YAW_COOLDOWN = 10
-# Re-measured 2026-09-25 when 15 iterations cost ~80-100 ms of a ~560 ms
-# frame: on the 90-frame synthetic -68 degree turn, 15 iterations end 2.8
-# degrees off (79 ms/frame), 10 end 6.7 off (44 ms), 8 end 25 off (35
-# ms); on the fast 30-frame turn 15 / 10 / 8 end 29 / 42 / 61 degrees
-# off. On a straight-on real clip 10 iterations cost only +0.33 px of
-# reprojection - which is why the turn, not the clip, decides: 15 stays.
 
 
 def track_step(fitter, points, errors, height, regressor=None, raw_points=None):
@@ -75,9 +47,8 @@ def track_step(fitter, points, errors, height, regressor=None, raw_points=None):
     status = "tracking"
     error = fitter.reprojection_error(points)
     spike = len(errors) >= 3 and error > max(REFIT_RATIO * float(np.median(errors)), REFIT_FLOOR * height)
-    # The refit and the facing check read the RAW landmarks: right after a
-    # jump the filtered ones still blend the old pose in (the back view
-    # refit landed at 116 instead of ~170 degrees on filtered input).
+    # The refit and the facing check read the RAW landmarks: filtered ones still blend
+    # in the old pose right after a jump.
     raw = points if raw_points is None else raw_points
     target_yaw = landmark_yaw(raw)
     cooldown = getattr(fitter, "_yaw_cooldown", 0)
@@ -102,11 +73,8 @@ def track_step(fitter, points, errors, height, regressor=None, raw_points=None):
 
 
 # A regressed fit's shoulders, projected, against MediaPipe's: the regressor has no
-# metric anchor for a wearer far from the camera or cut off below the chest, and drew
-# a garment 1.8-2.5 times as wide as its wearer for the first 14 frames of a recorded
-# session (and 4-6 % of the front and back frames of two sessions are off by more
-# than 1.5). Corrected only when the wearer faces the camera or turns their back to
-# it (a profile's shoulders overlap and say nothing about the width).
+# metric anchor for a distant or cut-off wearer and can draw a garment far too wide.
+# Corrected only front or back on; a profile's shoulders overlap and say nothing.
 SHOULDER_RATIO_HIGH = 1.35
 SHOULDER_RATIO_LOW = 0.74
 SHOULDER_FRONT_BACK_DEG = 35.0
@@ -169,12 +137,9 @@ def landmarks_from(result, width, height):
     )
 
 
-# Torso visibility a TRACKED body needs to keep tracking. MediaPipe reports
-# 0.02-0.06 for the shoulders and hips of a wearer seen in profile when it
-# starts cold, but 0.6-0.9 once it has been tracking (measured on the
-# annotated profile cameras 0028 / 0076, warm_probe.json): the landmarks
-# are on the body, only the confidence is low. Gating every frame at the
-# cold-fit floor (0.4) dropped the wearer the moment they turned sideways.
+# Torso visibility a TRACKED body needs. MediaPipe reports low confidence for a
+# profile when cold but high once tracking, so the cold floor would drop a wearer
+# the moment they turn sideways.
 TRACKING_VISIBILITY_FLOOR = 0.2
 
 
@@ -188,18 +153,13 @@ def shoulders_visible(points, floor=VISIBILITY_FLOOR):
 
 
 def dressable(points, tracking, regression):
-    """Whether this frame's person can be dressed: the torso (shoulders and
-    hips) as before, or - with the image regressor, which recovers the
-    whole body from a truncated view - the shoulders alone, so a wearer at
-    a desk with the hips below the frame is still dressed."""
+    """Whether this frame's person can be dressed: the torso visible, or - with the
+    image regressor, which recovers a truncated body - the shoulders alone."""
     return torso_visible(points, tracking=tracking) or (regression and shoulders_visible(points))
 
 
 def framing_hint(points):
-    """What to tell a person MediaPipe sees but who cannot be dressed, or
-    None. The garment needs the shoulders (and, without the image
-    regressor, the hips) in view; a person cut off at the shoulders, or
-    too close, just saw the garment vanish."""
+    """Hint for a person MediaPipe sees but who cannot be dressed, or None."""
     if points is None:
         return None
     if not shoulders_visible(points):

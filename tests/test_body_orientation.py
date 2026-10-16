@@ -29,31 +29,19 @@ class OrientationClassifierShapeTest(unittest.TestCase):
 
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 class TrainingPipelineSanityTest(unittest.TestCase):
-    """Not a claim the model works on real, noisy data (that is step 3's
-    job, on a proper held-out synthetic test set) - just a check that the
-    training pipeline itself is wired correctly, as one checks a solver
-    against simple analytic cases before trusting it on real data."""
+    """Checks the training pipeline is wired correctly, not real-data accuracy."""
 
     def test_overfits_a_tiny_noiseless_dataset(self):
         from tools.train.orientation import run_epoch, _to_loader
         from tryon.body.orientation_data import make_dataset
 
-        # noise_px=0: a small, perfectly clean dataset. If the pipeline
-        # (data generation, model, loss, optimiser step) is wired
-        # correctly, a model this small should memorise it to near-100%
-        # train accuracy given enough epochs. Measured: reaches ~99% by
-        # epoch ~135 on this exact seed/setup, with some epoch-to-epoch
-        # fluctuation typical of a high learning rate on a tiny dataset -
-        # so this checks the BEST accuracy seen, not the final epoch's
-        # (which could land on a temporary dip and fail a fine pipeline).
+        # A small clean dataset should be memorised; the best epoch's
+        # accuracy is checked because the final one can hit a dip.
         features, _, labels = make_dataset(200, seed=0, noise_px=0.0)
         loader = _to_loader(features, labels, batch_size=32, shuffle=True)
 
-        # Seeded: OrientationClassifier's weight init and the loader's
-        # shuffling both draw from torch's global RNG, left unseeded this
-        # test's outcome varied run to run (measured 94.0% on one run,
-        # under the 0.95 threshold, though the pipeline itself was fine -
-        # just an unlucky initialisation/shuffle order on a tiny dataset).
+        # Seeded: init and loader shuffling use torch's global RNG, and an
+        # unseeded run fell under the threshold once.
         torch.manual_seed(0)
         model = OrientationClassifier()
         optimiser = torch.optim.Adam(model.parameters(), lr=1e-2)

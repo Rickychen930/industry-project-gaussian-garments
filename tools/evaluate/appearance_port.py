@@ -1,20 +1,11 @@
 """Static SH against the checkpoint's own appearance network, side by side.
 
-Renders the rest (template) mesh of a garment checkpoint through our
-rasteriser four ways, so each change is isolated:
-
-  1. what the pipeline draws today: static SH, splats anchored at the
-     face CENTRE (`GarmentRenderer.splats`);
-  2. static SH, splats anchored at their texel's barycentric point - the
-     anchor the stage-3 model was trained with (`get_barycentric_3d`);
-  3. `shadow_net` colours, at the face-centre anchor (colours only);
-  4. the reference's full output: `shadow_net` colours AND its per-texel
-     position offsets about the barycentric anchor (`get_final_xyz`).
-
-The camera is the capture rig's frontal camera (`cameras.json`, id
-0004) at half resolution, so the picture can be put next to the release
-video's "Ours - Registration" panel. Prints the network's forward time on
-MPS (float32 and float16) and on CPU, and the AO/normal bake time.
+Renders a checkpoint's rest mesh four ways to isolate each change: (1) static SH
+at the face-centre anchor (today's pipeline), (2) static SH at the texel's
+barycentric anchor, (3) `shadow_net` colours at the face-centre anchor,
+(4) the reference's full output (colours plus per-texel offsets). Camera is the
+capture rig's frontal one (`cameras.json`, id 0004) at half resolution. Also
+prints network forward time on MPS and CPU and the AO/normal bake time.
 
     .venv/bin/python -m tools.evaluate.appearance_port [--out /tmp/appearance_ab.png]
 """

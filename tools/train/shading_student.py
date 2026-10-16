@@ -1,34 +1,25 @@
 """Distil a garment's appearance network into `tryon.garment.shading_student`.
 
-Online distillation, nothing written to disk but checkpoints (the teacher's
-target for one pose is 93k x 51 values): a pool of POOL (student input,
-teacher output) pairs is kept in memory; each cycle makes one new pair and
-takes TRAIN_STEPS gradient steps on random batches from the pool.
+Online distillation, nothing on disk but checkpoints (one teacher target is
+93k x 51 values): a pool of POOL (student input, teacher output) pairs is kept in
+memory; each cycle adds one pair and takes TRAIN_STEPS steps on random batches.
 
-Poses: the garment's own trajectory fits (docs/baseline/trajectory-fits-
-<name>.npz; the last HOLDOUT of the frames are never trained on), each
-turned by a random yaw of up to +-YAW degrees and jittered by Gaussian
-pose noise, so the student sees the body from the sides too. The teacher
-is `AppearanceNet` (fp16 on MPS) with its AO baked at 8 rays (42.6 dB from
-the 32-ray bake, see AsyncAppearance).
+Poses come from the garment's trajectory fits (docs/baseline/trajectory-fits-
+<name>.npz; the last HOLDOUT frames are never trained on), each turned by a random
+yaw up to +-YAW degrees with Gaussian pose noise. The teacher is `AppearanceNet`
+(fp16 on MPS) with AO baked at 8 rays (42.6 dB from the 32-ray bake).
 
-Measured every EVAL_EVERY cycles on fixed held-out poses: the render of
-the garment with the student's shading against the render with the
-teacher's (PSNR, 640 x 870, GPU compositor), next to the static (no
-network) render against the teacher, and the student's time a frame.
+Every EVAL_EVERY cycles, on fixed held-out poses: PSNR of the student-shaded
+render vs the teacher-shaded one (640 x 870, GPU compositor), the static render
+vs the teacher, and the student's time a frame.
 
     .venv/bin/python -m tools.train.shading_student 00190_upper [--hours 4]
 
-`--mean-poses K` (default 32) first averages the teacher's output per
-Gaussian over K training poses and stores it with the student, which then
-predicts only the residual around it (see `shading_student`); 0 trains the
-original, mean-free student.
-
-`--resume` continues from the garment's saved student (a second cosine
-schedule, usually at a lower `--lr`) and only overwrites it when the
-held-out score beats the one it was saved with; the held-out poses are
-fixed, so the two scores are comparable. The log then goes to
-`shading-student-<name>-resumed.json`.
+`--mean-poses K` (default 32) first averages the teacher's output per Gaussian
+over K poses and stores it; the student then predicts only the residual. 0 trains
+the mean-free student. `--resume` continues the saved student (second cosine
+schedule, usually lower `--lr`), overwrites it only when the held-out score beats
+the saved one, and logs to `shading-student-<name>-resumed.json`.
 """
 
 from __future__ import annotations
@@ -47,11 +38,9 @@ SIZE = (870, 640)
 POOL, TRAIN_STEPS, BATCH = 80, 3, 4  # pool ~0.8 GB: a 160 pool with other jobs running was killed under memory pressure
 HOLDOUT, YAW, POSE_NOISE = 0.2, 60.0, 0.06
 EVAL_EVERY = 100
-# Motions from the multi-garment simulations (tools/data/fit_motions.py):
-# `--with-motions` trains on all of them but these, which stay unseen for
-# tools/evaluate/shading_students.py. On 00148_upper the student trained
-# on its own motion alone scored 37.9 dB on its own held-out poses but
-# 32.5 / 31.0 on these; with the other 13 motions added, 37.5 / 36.1 / 35.8.
+# Multi-garment motions (tools/data/fit_motions.py) held out of `--with-motions`
+# training; evaluate/shading_students.py scores on them. Training on a
+# garment's own motion alone gave 37.9 dB on-motion but 32.5 / 31.0 on these.
 TEST_MOTIONS = ("02_02", "02_04")
 
 
@@ -90,11 +79,9 @@ class Poser:
         fit["global_orient"] = (Rotation.from_euler("y", yaw_deg, degrees=True) * orient).as_rotvec().astype(np.float32)
         fit["body_pose"] = (np.asarray(fit["body_pose"], np.float64) + rng.normal(0, noise, np.shape(fit["body_pose"]))).astype(np.float32)
         self.set_fitter(self.fitter, fit)
-        # Skinned AND pushed out of the body, as the live loop draws it (each
-        # pose a fresh start for the cloth: the poses are unrelated). Skinning
-        # alone left 26 % of 00134_upper's texels inside the body; the AO bake
-        # (the teacher's input) went black there (0.05) and the teacher
-        # painted green / red / magenta patches the students then learned.
+        # Skinned and pushed out of the body as live. Skinning alone left 26 % of
+        # 00134_upper's texels inside the body, which blacked out the AO bake and
+        # produced coloured patches the students learned.
         self.renderer.reset_motion(self.fitter)
         mesh = self.renderer.posed_mesh(self.fitter)
         frame_camera(self.fitter, mesh)
@@ -187,7 +174,7 @@ def main():
         x = inputs.maps(mesh, view, body)
         return x, target, (mesh, view, intrinsics, result)
 
-    # fixed held-out poses: trajectory frames never trained on, yaw spread over the range
+    # fixed held-out poses: unseen trajectory frames, yaw spread over the range
     held = []
     eval_rng = np.random.default_rng(123)
     for i in range(args.eval_poses):
@@ -204,11 +191,9 @@ def main():
     static_psnr = float(np.mean([psnr(h[7], h[6]) for h in held]))
     print(f"held-out: static (no shading) vs teacher {static_psnr:.2f} dB", flush=True)
 
-    # The teacher's output averaged per Gaussian over training poses: most of
-    # its fine detail is fixed to the garment (a texture-like pattern a
-    # network that sees no surface coordinates cannot place), and the mean
-    # carries it; the student predicts the pose-dependent residual. The
-    # targets double as the pool's first entries.
+    # Per-Gaussian mean of the teacher's output: its fine detail is fixed to the
+    # garment and the student cannot place it without surface coordinates. The
+    # student predicts the pose-dependent residual; targets seed the pool.
     pool, mean = [], None
     if args.mean_poses > 0 and not args.resume:
         targets = []
@@ -277,8 +262,7 @@ def main():
             yb = torch.stack([b[1] for b in batch]).float().to(device)
             out = model(xb)
             pred = torch.stack([predict(out[i:i + 1]) for i in range(len(batch))])
-            # Charbonnier (a smooth L1): L1's gradient (sign) falls back to
-            # the CPU on MPS in torch 2.1, 1270 vs 997 ms a step
+            # Charbonnier: L1's gradient falls back to the CPU on MPS (torch 2.1), 1270 vs 997 ms a step
             loss = torch.sqrt((pred - yb) ** 2 + 1e-6).mean()
             optimiser.zero_grad()
             loss.backward()

@@ -1,11 +1,10 @@
 """Open-front garments (jackets, outer shirts): where the front panels go wrong, and which fix helps.
 
-The live body logic (NLF regressor, MediaPipe, fit) is the expensive part and is the same for every cloth /
-skinning variant, so `record` runs `vs_registration.evaluate` ONCE per video and keeps, for every call the
-renderer gets, the fitted body (joint transforms, vertices, camera) and the clip's real shirt mask. `replay`
-then drives a `GarmentRenderer` with those recorded bodies (a stand-in fitter) under any class-attribute
-variant, scoring garment IoU against the real shirt and, per frame, the 3D fit (signed distance of the posed
-mesh to the fitted body) and the cost of the cloth step. `pieces` is the per-cloth-piece diagnosis.
+`record` runs `vs_registration.evaluate` once per video and keeps, per renderer
+call, the fitted body and the real shirt mask (the body logic is the expensive
+part and identical across cloth variants). `replay` drives a `GarmentRenderer`
+with those bodies under any class-attribute variant and scores IoU, 3D fit and
+cloth-step cost. `pieces` diagnoses per cloth piece.
 
     .venv/bin/python -m tools.evaluate.open_front record 00122_outer [--cache DIR]
     .venv/bin/python -m tools.evaluate.open_front replay 00122_outer [--rigid] [--set Class.ATTR=value ...] [--out j.json]
@@ -289,8 +288,8 @@ def piece_report(name, frames, rigid=False, assignments=(), cache=CACHE):
     replay(name, 5, rigid, assignments, cache, keep_meshes=meshes)
     renderer = GarmentRenderer(GARMENTS / name)
     data = load_record(name, cache)
-    # pieces: components over the faces the renderer never culls for the sleeve seam; the seam is a property of
-    # the bound garment, so bind once on the first recorded body
+    # pieces: components over faces never culled for the sleeve seam; bind once on
+    # the first recorded body (the seam belongs to the bound garment)
     from tryon.body.fitter import BodyFitter
 
     fitter = RecordedFitter(BodyFitter().faces)

@@ -1,25 +1,10 @@
-"""A joints-only SMPL-X forward for tracking: the same math, without the mesh.
+"""A joints-only SMPL-X forward for tracking: same math, no mesh skinning.
 
-Profiling a live frame put `track` at 29 ms of a 51 ms frame - the
-difference between choppy and smooth. Each of its three iterations ran the
-library's full forward, skinning 10,475 vertices to read 12 joints, because
-SMPL-X regresses its joints from the posed template inside `lbs`.
+Two inputs differ from what the model's public attributes suggest, so both
+are pinned:
 
-The joints do not need the skinned mesh. `lbs` computes them as
-`rigid_transform(rodrigues(pose), regressor @ (template + shape_blend))`,
-which is a kinematic chain over 55 joints - a few hundred multiply-adds.
-Measured: 2.2 ms against 9.7 ms per forward+backward, and 0.0000000 m
-difference from the library once the inputs match.
-
-Matching the inputs is the whole difficulty, and two of them are not what
-the model's public attributes suggest. Both are pinned here so they cannot
-silently drift:
-
-* the shape blend uses the 20-wide `shapedirs` (betas AND expression),
-  not the 10-wide tensor the attribute of that name returns
-* the hand pose has `left_hand_mean` / `right_hand_mean` ADDED to it.
-  Zeros are not the rest hand; the mean is. Omitting it bent the wrists
-  by 4 cm - exactly the joints a sleeve hangs from.
+* the shape blend uses the 20-wide `shapedirs` (betas and expression)
+* the hand pose has `left_hand_mean` / `right_hand_mean` added to it
 """
 
 from __future__ import annotations

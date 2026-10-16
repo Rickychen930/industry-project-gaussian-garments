@@ -1,20 +1,9 @@
 """Train the orientation (facing) classifier on synthetic data.
 
-Supervision: fully supervised, cross-entropy against the yaw octant a
-synthetic sample was generated from (`tryon/body/orientation_data.py`).
-No real dataset - see that module's docstring for why 48 real annotated
-photos is far too little to train a generalising classifier on, and why
-synthetic data with exact ground truth (the same pattern
-tests/synthetic_sequence.py already established) is the right approach
-for this narrow a problem.
-
-Algorithm: a plain MLP (`tryon.body.orientation.OrientationClassifier`),
-Adam optimiser, per-sample cross-entropy loss - the standard choice for
-multi-class classification.
-
-Checkpointing: best-val-accuracy model state saved to
-models/pose_regressor.pt (a crash or a later worse epoch does not lose
-the best result).
+Cross-entropy against the yaw octant each synthetic sample was generated from
+(`tryon/body/orientation_data.py`, which explains why 48 real photos are too few).
+Model: a plain MLP (`tryon.body.orientation.OrientationClassifier`), Adam. The
+best-val-accuracy state is saved to models/pose_regressor.pt.
 """
 
 from __future__ import annotations
@@ -56,14 +45,9 @@ def run_epoch(model, loader, optimiser, dev, train):
         if train:
             optimiser.zero_grad()
         logits = model(features)
-        # label_smoothing=0.1: measured, not assumed - on a held-out
-        # synthetic set (docs/baseline/pose-regressor-training.json),
-        # this improved validation accuracy from ~0.82-0.83 to 0.844.
-        # Cheap (built into PyTorch, no custom soft-target scheme needed)
-        # and directly addresses the near-bin-boundary ambiguity noted in
-        # pose_regressor.py's docstring - a true yaw near a boundary
-        # could plausibly belong to either adjacent bin, and smoothing
-        # expresses that without hand-building a soft-label distribution.
+        # label_smoothing=0.1 raised held-out validation accuracy from ~0.83 to 0.844
+        # (docs/baseline/pose-regressor-training.json): a yaw near a bin boundary
+        # can belong to either bin.
         loss = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=0.1)
         if train:
             loss.backward()
@@ -97,8 +81,7 @@ def main():
     dev = device(force_cpu=args.cpu)
     print(f"device: {dev}")
 
-    # Disjoint seeds for train/val/test: held-out splits by RNG seed rather
-    # than a fixed pool split, since the data is generated, not finite.
+    # Disjoint RNG seeds per split: the data is generated, not a finite pool.
     print("generating synthetic training data...")
     t0 = time.perf_counter()
     train_features, _, train_labels = make_dataset(args.train_samples, seed=args.seed, noise_px=args.noise_px)

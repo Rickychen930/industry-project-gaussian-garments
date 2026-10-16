@@ -1,12 +1,9 @@
 """Erasing the wearer's real clothing before compositing.
 
-Two kinds of check. Synthetic: a frame with a known solid-colour "garment"
-region and a hand-built mask (and, where a parser is involved, a small
-fake one), so the erase step can be judged against an exact answer with no
-network involved. Real: the project's own annotated photo, parsed by the
-pretrained SCHP parser, judged by (a) how many exposed real-garment pixels
-actually changed and (b) the parser's own clothing probability in that
-region before vs after.
+Synthetic checks use a known solid-colour garment region and a hand-built
+mask against an exact answer. Real checks run the pretrained SCHP parser on
+the project's annotated photo and compare changed pixels and the parser's
+own clothing probability before and after.
 """
 
 from __future__ import annotations
@@ -22,8 +19,7 @@ REAL_FRAME = ROOT / "data" / "annotated" / "Take1" / "0004" / "rgb_images" / "00
 
 
 def bare_remover(schp=None, fashn=None):
-    """A ClothingRemover without loading any parser: `schp` / `fashn` are
-    fakes exposing the methods the real parsers do."""
+    """A ClothingRemover without loading any parser; `schp` / `fashn` are fakes."""
     from tryon.removal.remover import ClothingRemover
 
     remover = ClothingRemover.__new__(ClothingRemover)
@@ -58,9 +54,8 @@ class RemoveSyntheticTest(unittest.TestCase):
         np.testing.assert_array_equal(clean[~mask], frame[~mask])
 
     def test_fill_comes_from_the_surroundings(self):
-        # With a green background all around the hole, Telea's fill of the
-        # hole must itself be green-ish - the whole point of inpainting
-        # over e.g. painting the hole black.
+        # A green background all round the hole means the Telea fill must be
+        # green-ish, unlike painting the hole black.
         frame, mask = self._frame_with_red_shirt()
         clean = self.remover.remove(frame, mask)
         filled = clean[mask].astype(int)
@@ -76,8 +71,7 @@ class RemoveSyntheticTest(unittest.TestCase):
 @unittest.skipUnless(ATR.exists(), "run tools/data/download_pretrained.py schp")
 @unittest.skipUnless(REAL_FRAME.exists(), "no annotated frame")
 class RemoveRealFrameTest(unittest.TestCase):
-    """The full step on the project's real annotated photo: the parser
-    finds the wearer's jacket, the erase removes it."""
+    """The parser finds the wearer's jacket and the erase removes it."""
 
     @classmethod
     def setUpClass(cls):
@@ -91,16 +85,13 @@ class RemoveRealFrameTest(unittest.TestCase):
         cls.clean = cls.remover.remove(cls.frame, cls.mask)
 
     def test_the_parser_finds_a_torso_sized_garment(self):
-        # The wearer's jacket in this wide shot is a few % of the frame.
-        # Not empty, not the whole frame.
+        # The jacket is a few % of the frame: not empty, not the whole frame.
         fraction = self.mask.mean()
         self.assertGreater(fraction, 0.005)
         self.assertLess(fraction, 0.15)
 
     def test_the_mask_sits_on_the_upper_body(self):
-        # The person stands centred; the jacket's mask centroid should be
-        # in the upper-middle of the frame, above the mid-height where the
-        # trousers start. Coarse on purpose - a placement sanity check.
+        # Coarse placement check: centroid in the upper-middle of the frame.
         ys, xs = np.nonzero(self.mask)
         height, width = self.mask.shape
         self.assertLess(ys.mean(), height * 0.5, "mask centroid below mid-frame - not the upper body")
@@ -111,8 +102,7 @@ class RemoveRealFrameTest(unittest.TestCase):
         self.assertGreater(changed[self.mask].mean(), 0.8)
 
     def test_the_parser_no_longer_sees_clothing_there(self):
-        """Judged by the same parser, the erased region should look far
-        less like clothing afterwards. Generous bounds."""
+        """The parser sees far less clothing in the erased region (generous bounds)."""
         before = self.remover.clothing_probability(self.frame)[self.mask].mean()
         after = self.remover.clothing_probability(self.clean)[self.mask].mean()
         self.assertGreater(before, 0.3)
@@ -360,11 +350,7 @@ class ArmStrokesTest(unittest.TestCase):
 
 
 class HemLeakTest(unittest.TestCase):
-    """`hem_leak`: the parser's upper-clothing region below the hip line
-    that is really trousers (its own lower-body labels, or "dress" on a
-    wearer in trousers) - the round blob below the hem measured on the
-    annotated profile camera 0076 (4,865 px below the hips, 3,570 of
-    them removed by this; the front camera's mask changes by 6 px)."""
+    """`hem_leak`: upper-clothing pixels below the hip line that are really trousers are not erased."""
 
     def _labels(self, dress_blob=True, pants=True):
         labels = np.zeros((100, 60), np.uint8)
@@ -412,8 +398,7 @@ class HemLeakTest(unittest.TestCase):
         self.assertFalse(hem_leak(self._labels(), keypoints)[:56].any())
 
     def _long_shirt(self):
-        """A long shirt over shorts: upper clothes to row 60, its hem labelled dress down to row
-        78 at the torso's full width, the shorts and legs beside and below it."""
+        """A long shirt over shorts: hem labelled dress down to row 78, shorts and legs beside and below."""
         labels = np.zeros((120, 60), np.uint8)
         labels[20:60, 15:45] = 4
         labels[60:78, 15:45] = 7  # the hem, below the hip line (row 60)
@@ -450,8 +435,7 @@ class HemLeakTest(unittest.TestCase):
 
 
 class HemRescueTest(unittest.TestCase):
-    """`hem_rescue`: a long shirt's hem the parser labels as LEG (measured on 00152_outer: 4-9k px a
-    frame) is given back to the erase by its colour, a real trouser blob under a short jacket (camera 0076) is not."""
+    """`hem_rescue`: a long shirt's hem labelled LEG is given back to the erase by colour; a real trouser blob under a short jacket is not."""
 
     RED, GREY = (30, 30, 200), (150, 140, 130)
 
@@ -597,9 +581,7 @@ class LamaFillTest(unittest.TestCase):
 
 
 class CompositeChannelOrderTest(unittest.TestCase):
-    """`GarmentRenderer.render` returns BGR + alpha (the rasteriser's
-    order); the composite must NOT reverse it. Until 25 Sep 2026 it did,
-    and the red plaid 00152_outer was drawn blue in every frame."""
+    """`GarmentRenderer.render` returns BGR + alpha; the composite must not reverse it."""
 
     def test_a_pure_blue_garment_stays_blue_in_the_bgr_frame(self):
         from tryon.app.compositing import composite_garment
@@ -679,9 +661,7 @@ class LipRecheckTest(unittest.TestCase):
 
 
 class PlateFillTest(unittest.TestCase):
-    """Hole pixels the background plate knows (outside the body) come from
-    the plate with either fill; until 7 Oct the default (skin) fill ignored
-    the plate the live loop was learning."""
+    """Hole pixels the background plate knows come from the plate with either fill."""
 
     class Plate:
         def fill(self, frame, hole, body):

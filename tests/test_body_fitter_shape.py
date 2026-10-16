@@ -1,20 +1,8 @@
 """Body shape is estimated from many frames, then held.
 
-"Bentuk belum ter-recognize" - the body shape was wrong. Measured: a
-single-frame fit reaches beta 1.9 on a person whose betas should be near
-zero, and the same person fitted from four cameras gets four DIFFERENT
-shapes (spread 0.75). Twelve skeleton keypoints carry almost no shape
-information, so the optimiser spends beta chasing pixel error instead.
-
-Holding ONE shape across all four cameras costs 1.0 px of reprojection -
-the per-view "shape" was noise buying a pixel. So:
-
-* during the first frames after a person appears, shape is estimated by
-  accumulating evidence - the running mean of per-frame estimates, which
-  is what VIBE's sequence pooling does
-* once enough frames are in, shape is frozen and only pose and camera
-  track. This is the beta-freeze from before, made correct: it was wrong
-  to freeze a single frame's guess, and right to freeze an estimate.
+A single-frame fit chases pixel error with beta, and the same person fitted
+from four cameras gets four different shapes. So shape is the running mean
+of per-frame estimates until enough frames are in, then frozen.
 """
 
 from __future__ import annotations

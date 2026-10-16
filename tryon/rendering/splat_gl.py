@@ -1,24 +1,10 @@
-"""The Gaussian compositing of `tryon/rendering/splat_cpu.py`'s `render_splats`, on the GPU.
+"""The Gaussian compositing of `splat_cpu.render_splats`, on the GPU (moderngl).
 
-`render_splats` spends most of a frame in `_composite_tiles`, a numba loop
-over every (splat, pixel) pair on the CPU (~360 ms for a 93k-splat garment
-at 480 x 640, and it grows with splat pixels). This draws the same thing
-with OpenGL (moderngl, a standalone context - Metal-backed GL 4.1 on the
-M1): the per-splat pre-pass is `splat._prepare`, shared unchanged, then
-every splat is one instanced quad over exactly the pixel box the CPU path
-uses, drawn farthest first, and its fragment evaluates the same Gaussian:
-
-  power  = -0.5 (c dx^2 - 2 b dx dy + a dy^2) / det, clamped to <= 0
-  weight = opacity * exp(power), discarded at <= 1/255
-  out    = (weight * bgr, weight)  blended ONE, ONE_MINUS_SRC_ALPHA
-
-Back-to-front "over" with premultiplied colour is the same recurrence as
-the CPU's front-to-back transmittance sum, so the result matches it up to
-float32 rounding (the CPU path is float64); the target is float32 RGBA so
-nothing is quantised. Pixel (col, row) is sampled at its integer
-coordinates, as on the CPU (dx = col - x_splat), by subtracting the 0.5
-that gl_FragCoord carries. One difference: the CPU sorts by depth within
-each tile, this sorts all splats once - the same order wherever two
+The per-splat pre-pass is `splat_cpu._prepare`, shared unchanged. Each splat
+is one instanced quad over the CPU path's pixel box, drawn farthest first;
+the fragment evaluates the same Gaussian and blends premultiplied colour
+ONE, ONE_MINUS_SRC_ALPHA into a float32 target. Matches the CPU to float32
+rounding. The CPU sorts per tile, this sorts once; same order wherever
 splats overlap.
 
     image, alpha = render_splats_gl(splats, view, intrinsics, (height, width))
@@ -34,16 +20,11 @@ from tryon.rendering.splat_cpu import _prepare, camera_coordinates
 
 @njit(cache=True)
 def _instances(out, order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, opacity, xyz, rotation, translation, with_distance):
-    """Fill `out[:len(order)]` with the per-instance attribute rows, in draw
-    order, float32 - one pass instead of a numpy gather per column (22 -> ~1
-    ms at 121k splats). Column 14 is the camera -> splat distance the
-    body-occlusion test wants (0 without an occluder): computed here from the
-    centres, with `camera_coordinates` (the matmul's arithmetic) and
-    `sqrt(x x + y y + z z)` as `np.linalg.norm` adds it, so the
-    values are the numpy ones bit for bit, without a gather, a BLAS gemm
-    (10-19 ms when the cores are busy) and a float64 copy of the centres.
-    Column 15 is padding. Serial: the loop is cheap, and a numba parallel
-    region must not meet another thread's."""
+    """Fill `out[:len(order)]` with per-instance float32 attribute rows in draw order.
+
+    Column 14 is the camera -> splat distance for the body-occlusion test (0
+    without an occluder), computed to match numpy bit for bit; column 15 is
+    padding. Serial so it never overlaps another thread's numba parallel region."""
     for i in range(len(order)):
         k = order[i]
         out[i, 0], out[i, 1], out[i, 2], out[i, 3] = x0[k], y0[k], x1[k], y1[k]
@@ -61,11 +42,11 @@ def _instances(out, order, x0, y0, x1, y1, pixels, cov2d, determinant, colours, 
 
 
 def far_to_near(depth):
-    """Indices that order `depth` farthest first: a least-significant-digit radix sort on a 32-bit key of the
-    depth (two stable passes on 16 bits, numpy's O(n) radix sort), 8.8 ms -> ~2 ms for 121k splats
-    against `np.argsort(-depth)`. The key spans the depths' own range at 2^-32 of it (metres at 1e-10: far
-    below a float32's step), so the order is the float one except for depths closer than that, whose order
-    on the screen is not visible."""
+    """Indices ordering `depth` farthest first.
+
+    Two stable 16-bit radix passes on a 32-bit key spanning the depth range,
+    ~4x faster than `np.argsort(-depth)`; order differs only for depths closer
+    than 2^-32 of the range."""
     count = depth.shape[0]
     if count < 2048:
         return np.argsort(-depth)
@@ -78,13 +59,11 @@ def far_to_near(depth):
     return low_order[np.argsort((key[low_order] >> 16).astype(np.uint16), kind="stable")]
 
 
-_INSTANCE_ROWS = []  # one entry: the (capacity, 16) float32 array every frame fills a prefix of
+_INSTANCE_ROWS = []  # one entry: the (capacity, 16) float32 array each frame fills a prefix of
 
 
 def _instance_rows(count):
-    """A (count, 16) float32 view of one array kept across frames: a fresh
-    5 MB `np.zeros` a frame cost page faults and a memset (the GL buffer
-    copies it on upload, so nothing keeps a reference)."""
+    """A (count, 16) float32 view of one array reused across frames (avoids a fresh 5 MB allocation per frame)."""
     if not _INSTANCE_ROWS or len(_INSTANCE_ROWS[0]) < count:
         _INSTANCE_ROWS[:] = [np.empty((max(count, 1024) + count // 4, 16), np.float32)]
     return _INSTANCE_ROWS[0][:count]
@@ -199,8 +178,7 @@ void main() {
 
 
 class _GL:
-    """One standalone context, program and target, grown to the largest
-    frame asked for (one per process: the context belongs to its thread)."""
+    """One standalone context, programs and targets (one per process; the context belongs to its thread)."""
 
     def __init__(self):
         import moderngl
@@ -232,8 +210,7 @@ class _GL:
         return self.fbo
 
     def body_distance(self, vertices, faces, view, intrinsics, height, width):
-        """Draw the occluder's camera distance per pixel into `body_texture`
-        (nearest surface wins by the depth test; no surface: 1e9)."""
+        """Draw the occluder's camera distance per pixel into `body_texture` (no surface: 1e9)."""
         vertices = np.ascontiguousarray(vertices, np.float32)
         camera_z = vertices @ np.asarray(view[2, :3], np.float32) + np.float32(view[2, 3])
         near = max(float(camera_z.min()) - 1.0, 1e-3)
@@ -261,11 +238,10 @@ _STATE = None
 
 
 def fill_triangles(pixels, faces, shape):
-    """uint8 (H, W) mask, 1 inside the union of the 2D triangles
-    `pixels[faces]` (pixel coordinates, centres at integers), rasterised on
-    the GPU: a pixel is in when its centre is. For the body silhouette
-    (21k triangles), where cv2.fillPoly took 15-98 ms and, drawing them all
-    in one call, left holes where triangles overlap."""
+    """uint8 (H, W) mask, 1 inside the union of the 2D triangles `pixels[faces]`.
+
+    Rasterised on the GPU (pixel in when its centre is), for the body
+    silhouette; cv2.fillPoly was slower and left holes where triangles overlap."""
     global _STATE
     height, width = shape[:2]
     if _STATE is None:
@@ -294,18 +270,15 @@ def fill_triangles(pixels, faces, shape):
 
 
 def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occluder=None, margin=0.03):
-    """(BGR float image, alpha), as `tryon.rendering.splat_cpu.render_splats`.
+    """(BGR float image, alpha), as `splat_cpu.render_splats`.
 
     `occluder`: (vertices, faces) of a mesh that hides splats but is not
-    drawn (the wearer's body under a garment composited onto a photo). A
-    splat is skipped when the occluder's surface under its centre pixel is
-    more than `margin` nearer the camera than the splat - the ray cast of
-    `GarmentRenderer.occluded_by_body`, done with a depth pass on the GPU.
+    drawn. A splat is skipped when the occluder's surface under its centre
+    pixel is more than `margin` nearer the camera (the GPU form of
+    `GarmentRenderer.occluded_by_body`).
 
-    `bgra8`: return one (H, W, 4) uint8 array instead - the image and alpha
-    rounded to 8 bits by the GPU on read-back, which is what a caller
-    compositing onto a video frame wants (skips two float64 frame copies
-    and the conversion, ~15 ms at 870 x 640)."""
+    `bgra8`: return one (H, W, 4) uint8 array instead, rounded on the GPU
+    (skips float64 frame copies)."""
     global _STATE
     height, width = size
     if bgra8:
@@ -317,10 +290,9 @@ def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occl
         return empty if bgra8 else (image, alpha)
     pixels, depth, valid, cov2d, determinant, colours, opacity, radius = _prepare(splats, view, intrinsics, tile)
     if splats.get("keep") is not None:
-        # every Gaussian was handed in, the dropped ones masked (see
-        # `GarmentRenderer.splats(full=True)`)
+        # all Gaussians handed in, dropped ones masked (`GarmentRenderer.splats(full=True)`)
         valid &= np.asarray(splats["keep"], bool)
-    # the CPU path's per-splat pixel box, clipped to the image
+    # same per-splat pixel box as the CPU path
     x0 = np.maximum(np.floor(pixels[:, 0] - radius), 0)
     x1 = np.minimum(np.ceil(pixels[:, 0] + radius) + 1, width)
     y0 = np.maximum(np.floor(pixels[:, 1] - radius), 0)
@@ -343,7 +315,7 @@ def render_splats_gl(splats, view, intrinsics, size, tile=3.0, bgra8=False, occl
     use_body = occluder is not None and len(occluder[1]) > 0
     if use_body:
         gl.body_distance(occluder[0], occluder[1], view, intrinsics, height, width)
-    gl.body_texture.use(location=0)  # bound either way: an empty sampler unit logs a GL warning
+    gl.body_texture.use(location=0)  # bound even when unused, to avoid a GL warning
     buffer = gl.ctx.buffer(instances)
     vao = gl.ctx.vertex_array(
         gl.prog,

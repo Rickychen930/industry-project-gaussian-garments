@@ -17,6 +17,16 @@
 *.tgz
 *.tar
 
+# Weights, videos and arrays belong under ~/tryon-data, not in the repository
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.mp4
+*.npy
+*.pkl
+
 # Python
 __pycache__/
 *.py[cod]
@@ -40,3 +50,9 @@ aws_credentials
 credentials
 *.pem
 *_accessKeys.csv
+
+# Derived from the garment authors' released simulations and from the 4D-DRESS sample: not redistributed.
+# Regenerate with tools/data/fit_motions.py and tools/data/fit_trajectories.py (see docs/DATASETS.md).
+/docs/baseline/motion-fits/
+/docs/baseline/trajectory-fits-*.npz
+/docs/baseline/idm-vton-vs-ours-camera0004-frame4.png

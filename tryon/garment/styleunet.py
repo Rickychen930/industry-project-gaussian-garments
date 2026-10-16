@@ -1,15 +1,11 @@
 """The StyleUNet of a Gaussian Garments checkpoint's appearance network
 (`shadow_net`), ported to plain PyTorch.
 
-The architecture is the rosinality StyleGAN2 port (MIT) as adapted by
-StyleAvatar / Animatable Gaussians and shipped by Gaussian Garments
-(`scene/styleunet/styleunet.py` of https://github.com/eth-ait/Gaussian-Garments).
-Module and parameter names match the reference so `shadow_net.*` keys of
-the checkpoint load with `strict=True`. The CUDA kernels (`upfirdn2d`,
-`fused_bias_act`) are replaced by plain tensor ops that compute the same
-thing on any device; the reference's own CPU fallbacks are the oracle
-(`tests/test_garment_appearance.py::UpFirDnTests`). Research and
-evaluation use only (see `appearance.py`).
+Follows `scene/styleunet/styleunet.py` of eth-ait/Gaussian-Garments (a
+StyleGAN2 port, MIT). Names match the reference so checkpoint keys load with
+`strict=True`. The CUDA kernels (`upfirdn2d`, `fused_bias_act`) are plain
+tensor ops here; the reference's CPU fallbacks are the test oracle. Research
+and evaluation use only (see `appearance.py`).
 """
 
 from __future__ import annotations
@@ -404,8 +400,7 @@ class SWGAN_unet(nn.Module):
             out = conv2(out, latent[:, i + 1], noise=noise2)
             skip = to_rgb(out, latent[:, i + 2], skip)
             if view_feature is not None and i == 8:
-                # Kept as in the reference. `out` is not read again after
-                # this point, so the view feature never reaches `skip`.
+                # As in the reference; `out` is never read again, so this has no effect on `skip`.
                 view_feature = F.interpolate(view_feature, out.shape[-2:], mode="bilinear")
                 out = out + view_feature
             i += 2

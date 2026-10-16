@@ -1,7 +1,6 @@
-"""repair_collar and restore_below_hem work in a small window; their output is the whole-frame version's, bit for bit.
-
-The whole-frame versions (the first implementations, 9-10 Oct 2026) are kept here as the oracle.
-"""
+"""repair_collar and restore_below_hem work in a small window; their output
+is the whole-frame version's, bit for bit. The whole-frame versions are kept
+here as the oracle."""
 
 import unittest
 
@@ -13,12 +12,9 @@ from tryon.app.compositing import COLLAR_CHIN, COLLAR_DISTANCE, COLLAR_GROW, COL
 
 def _reference_restore_below_hem(frame, original, garment_alpha, margin=0):
     """Put the wearer's own pixels back below the garment's lower edge, in place.
-    A wearer whose shirt is longer than the garment (a T-shirt under a cropped
-    sweater) had everything under the hem erased and filled from the room's
-    learned background, which came out as grey, green and purple blocks (a
-    recorded session, arms raised, 9 Oct); the real shirt continuing under the
-    hem reads as a layer. Only the columns the garment covers, only below its
-    lowest covered row in that column, only the pixels the erase changed."""
+
+    Only columns the garment covers, below its lowest covered row, and only
+    pixels the erase changed."""
     covered = garment_alpha >= 25
     if not covered.any():
         return
@@ -33,14 +29,11 @@ def _reference_restore_below_hem(frame, original, garment_alpha, margin=0):
 
 
 def _reference_repair_collar(frame, garment_alpha, labels, points):
-    """Blend the wearer's own collar into the neck, in place, after the
-    garment is composited. SCHP labels the dark stripe or band of the shirt
-    under the chin "face", so it is not erased, and `keep_in_front` restores
-    it; it then showed above the new neckline (a recorded session, 9 Oct).
-    The face-labelled pixels below the chin that no garment covers and whose
-    Lab colour is far from the face's skin are inpainted from the skin above
-    and the garment below (filling them with a flat colour, or erasing them
-    with the general fill, left blocks that read worse than the line)."""
+    """Blend the wearer's own collar into the neck, in place, after compositing.
+
+    Face-labelled pixels below the chin that no garment covers and whose Lab
+    colour is far from the skin are inpainted from the skin above and the
+    garment below."""
     if labels is None or points is None or labels.shape != frame.shape[:2]:
         return
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
@@ -99,7 +92,7 @@ def _scene(seed):
 
 
 def _reference_composite_garment(frame, bgra):
-    """The numpy form before the numba kernel (10 Oct 2026)."""
+    """The numpy form that preceded the numba kernel."""
     x, y, w, h = cv2.boundingRect(bgra[..., 3])
     if w == 0 or h == 0:
         return

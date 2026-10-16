@@ -60,10 +60,9 @@ def scale_of(width):
 
 
 def layout(width, height, count, page, hidden):
-    """Where every control sits in a frame of `width` x `height`, as
-    {name: (x0, y0, x1, y1)} with the garment chips under "chip:<index>"
-    and the bar behind them under "bar". Also returns how many chips fit
-    on a page."""
+    """Where every control sits in a frame of `width` x `height`, as {name: (x0, y0, x1, y1)}
+    with chips under "chip:<index>" and the bar under "bar". Also returns how many chips
+    fit on a page."""
     s = scale_of(width)
     margin, gap, button = int(MARGIN * s), int(CHIP_GAP * s), int(BUTTON_HEIGHT * s)
     rects = {}

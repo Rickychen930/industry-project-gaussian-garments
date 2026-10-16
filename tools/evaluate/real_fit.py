@@ -1,26 +1,13 @@
-"""How accurate is BodyFitter on a REAL photo, not a synthetic skeleton?
+"""How accurate is BodyFitter on a real photo, not a synthetic skeleton?
 
-Every existing test in `tests/test_body_fitter.py` drives `BodyFitter` with
-`_landmarks()` — hand-placed pixel coordinates for a made-up pose. That
-proves the optimiser converges; it says nothing about MediaPipe's actual
-detector noise, occlusion, or a real body's proportions. `data/annotated/`
-holds exactly what is missing: real 4D-DRESS photographs with calibrated
-cameras (`cameras.json`) and the real SMPL-X parameters those photos were
-fit from (`smplx/*.pkl`) — genuine ground truth, not a synthetic stand-in.
+`data/annotated/` holds real 4D-DRESS photographs with calibrated cameras
+(`cameras.json`) and the SMPL-X parameters they were fit from (`smplx/*.pkl`).
+For each photo: run MediaPipe on the real pixels, fit BodyFitter from those
+detections, and compare against the ground-truth SMPL-X in 2D (joints projected
+by the fit's own camera vs the real calibrated one) and in 3D (MPJPE after
+Procrustes alignment, the field-standard protocol; docs/PLAN.md ref #8).
 
-This script:
-  1. loads a real photo and its camera calibration
-  2. runs MediaPipe pose on the real pixels (the actual detector, not a
-     hand-typed landmark dict)
-  3. fits BodyFitter from those detections
-  4. compares the fitted body against the REAL SMPL-X ground truth two ways:
-       - 2D: project both the fit's joints (its own weak-perspective camera)
-         and the ground truth's joints (the REAL calibrated camera) into
-         pixel space, compare
-       - 3D: MPJPE after Procrustes alignment (root + scale + rotation),
-         the field-standard protocol (see docs/PLAN.md, survey ref #8)
-
-Run: .venv/bin/python -m tools.evaluate.real_fit
+    .venv/bin/python -m tools.evaluate.real_fit
 """
 
 from __future__ import annotations

@@ -1,31 +1,21 @@
-"""How natural is the ERASED region? A ground-truth test and a no-ground-truth test of the fill.
+"""How natural is the erased region? A ground-truth and a no-ground-truth test of the fill.
 
-The fit audit named the erased real clothing as the weakest thing on screen: grey patches at the
-shoulder and armpit, bare arms filled with one flat pale colour, shorts erased into grey. There is
-no photograph of "what is under the shirt", so two measurements stand in for it.
+SYNTHETIC (ground truth). On the release videos' photo panels, holes shaped like
+the real erase masks are cut where the pixels are known, the live fill
+(`ClothingRemover.remove`, as `LiveSession._erase` calls it) runs, and the result
+is scored against the original pixels:
+  arm    the live arm stroke on an arm that wears nothing
+  graft  the real erase mask shifted to a clothing-free place straddling person and room
+Scores: psnr, ssim (local), dE76 (CIELAB), seam (gradient mismatch in the 3 px
+band around the hole's edge).
 
-SYNTHETIC (ground truth). On the release videos' photo panels, holes with the shapes of the real
-erase masks are cut where the pixels are known, the live fill (`ClothingRemover.remove`, with the
-causally learned background plate and the fitted body, as `LiveSession._erase` calls it) runs on
-them, and the result is scored against the original pixels in the hole:
+REAL (no ground truth). Live masks on the same frames: `skin_de` is the CIELAB
+distance of the fill under the arm tube to the person's visible bare skin,
+`texture` the Laplacian-variance ratio (1 = as much grain; flat is ~0),
+`lower_erased` the share of lower-body pixels the mask covers.
 
-  arm     the live arm stroke (0.45 shoulder widths, hand kept) on an arm that wears nothing: the
-          truth is the bare arm and the room beside it
-  graft   the frame's real erase mask (torso, shoulder, sleeve, without the strokes) shifted to a
-          place free of clothing that straddles the person and the room: the truth is whatever the
-          shifted hole covers (legs, arm, floor, wall)
-
-  psnr, ssim (local, over the hole), dE76 (CIELAB, mean), seam (mean |gradient of the fill -
-  gradient of the truth| in the 3 px band around the hole's edge: what a visible seam adds).
-
-REAL (no ground truth). The live masks on the same frames; the fill under the arm tube
-(`ARM_TUBE_WIDTH` strokes) against the bare skin the same person shows in that frame (SCHP arm
-labels outside the hole, else the face): `skin_de` the CIELAB distance of the two mean colours,
-`texture` the Laplacian variance of the fill over that of the visible skin (1 = as much grain; a flat
-fill is ~0). The wearer's own lower body kept: `lower_erased` is the share of the parser's lower-body pixels (shorts, trousers) the mask covers.
-
-Variants are class-attribute settings of `ClothingRemover`, interleaved frame by frame so a load
-spike hits all of them alike; `baseline` is the committed fill.
+Variants are `ClothingRemover` class-attribute settings, interleaved frame by
+frame so load spikes hit all alike; `baseline` is the committed fill.
 
     .venv/bin/python -m tools.evaluate.fill_quality prepare 00176_upper     # one video per process
     .venv/bin/python -m tools.evaluate.fill_quality score 00176_upper --variants baseline,skin_model

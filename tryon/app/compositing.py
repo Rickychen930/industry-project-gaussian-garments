@@ -39,18 +39,13 @@ def draw_body(frame, fitter, colour=(60, 220, 60)):
             cv2.line(frame, tuple(by_index[a].astype(int)), tuple(by_index[b].astype(int)), colour, 2)
 
 
-# ATR labels of the wearer that always stay in front of the rendered
-# garment: hat, hair, sunglasses, face. The fitted body has no face
-# landmarks, so its head is not a trustworthy occluder: on 00176_outer a
-# dancer's bowed head put the collar across her chin; and long hair over
-# a shirt collar is the physical order anyway.
+# ATR labels that always stay in front of the garment: hat, hair, sunglasses, face.
+# The fitted body has no face landmarks, so its head is not a trustworthy occluder.
 IN_FRONT_CLASSES = (1, 2, 3, 11)
 
 COLLAR_CHIN = 1.3  # the chin is this many nose-to-mouth distances below the mouth
-# The chin line comes from the nose and mouth landmarks; with the head bowed, turned, or the shoulders collapsed
-# by a blurred or cut-off frame (a shoulder width of 37 px, the mouth 2.3 shoulder widths above the shoulders),
-# it is nonsense and the collar repair pasted pieces of a floral collar beside the face. In normal frames the
-# mouth is 0.2-0.55 shoulder widths above the shoulder line and the nose-to-mouth gap 0.08-0.13 of them.
+# The chin line comes from the nose and mouth landmarks and is nonsense for a bowed or
+# turned head or collapsed shoulders (normal: mouth 0.2-0.55 shoulder widths above them).
 COLLAR_MOUTH_ABOVE = (0.12, 1.0)
 COLLAR_NOSE_MOUTH = (0.04, 0.2)
 COLLAR_MIN_SHOULDERS = 40.0  # px
@@ -71,8 +66,7 @@ COLLAR_DISTANCE = 12.0  # Lab distance from the face's skin that marks a pixel a
 
 
 def _in_classes(labels, classes):
-    """`np.isin(labels, classes)`; a 256-entry lookup for 8-bit labels
-    (1.4 ms against 11.7 at 1280 x 938, same mask)."""
+    """`np.isin(labels, classes)` via a 256-entry lookup for 8-bit labels (faster, same mask)."""
     if labels.dtype != np.uint8:
         return np.isin(labels, classes)
     table = np.zeros(256, bool)
@@ -81,12 +75,9 @@ def _in_classes(labels, classes):
 
 
 def collar_pixels(original, labels, points):
-    """The face-labelled pixels below the chin whose colour is far from the
-    face's skin: the wearer's own collar stripes, which SCHP calls "face".
-    `keep_in_front` must not restore them over the new garment: the disc it
-    restores a face in reaches below the chin for a close camera, and they
-    came back as hard-edged pale shards in the neckline (a recorded session,
-    9 Oct). A boolean mask of the frame, or None (no face found, or none)."""
+    """The face-labelled pixels below the chin whose colour is far from the face's skin: the
+    wearer's own collar stripes, which SCHP calls "face" and `keep_in_front` must not
+    restore over the new garment. A boolean mask of the frame, or None."""
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
     if min(points[0, 2], points[9, 2], points[10, 2]) < 0.3 or not np.isfinite(mouth[:2]).all():
         return None
@@ -118,10 +109,8 @@ def collar_pixels(original, labels, points):
 def keep_in_front(frame, original, labels, points=None):
     """Restores `original` where the parser saw the wearer's face or hair.
 
-    "Face" only within a disc around MediaPipe's head landmarks (nose,
-    eyes, ears; radius 0.6 shoulder widths) when they are given: the
-    parser has called a fur collar "face" (docs/LOG.md, clothing removal), and
-    that must not be painted back over the new garment."""
+    "Face" only within a disc around MediaPipe's head landmarks (radius 0.6 shoulder widths)
+    when given: the parser has called a fur collar "face"."""
     if labels is None or labels.shape != frame.shape[:2]:
         return
     front = _in_classes(labels, IN_FRONT_CLASSES)
@@ -130,8 +119,7 @@ def keep_in_front(frame, original, labels, points=None):
         if head and points[11, 2] >= 0.3 and points[12, 2] >= 0.3:
             radius = 0.6 * float(np.linalg.norm(points[11, :2] - points[12, :2]))
             centre = points[head, :2].mean(axis=0)
-            # front &= near | (labels != 11), with the disc worked out only
-            # in its own bounding box (outside it `near` is false)
+            # front &= near | (labels != 11), the disc worked out only in its own bounding box
             height, width = frame.shape[:2]
             if np.isfinite(radius) and np.isfinite(centre).all():
                 r0, r1 = max(int(centre[1] - radius) - 1, 0), min(int(centre[1] + radius) + 3, height)
@@ -144,25 +132,19 @@ def keep_in_front(frame, original, labels, points=None):
                 near = (rows - centre[1]) ** 2 + (cols - centre[0]) ** 2 <= radius**2
                 face_outside[r0:r1, c0:c1] &= ~near
             front &= ~face_outside
-        # Hands: the parser's arm skin (ATR 14 / 15) within a disc of a
-        # quarter shoulder width at each extended wrist. A sleeve longer than the wearer's arm
-        # otherwise ran over the hand (00122_outer, 10004_outer); a hand
-        # seen in the photo is in front of the clothing, and a real sleeve
-        # would bunch at the wrist, not cover it.
+        # Hands: the parser's arm skin (ATR 14 / 15) within a disc of a quarter shoulder
+        # width at each extended wrist; a hand in the photo is in front of the clothing.
         from tryon.removal.remover import arm_strokes, hand_discs
 
-        # An arm raised across the head is in front of it: the parser
-        # called 00122_outer's plaid sleeve over the face "hair", and it
-        # was painted back over the new garment. Nothing inside the arm
-        # strokes is restored as face or hair.
+        # An arm raised across the head is in front of it: nothing inside the arm strokes
+        # is restored as face or hair.
         front &= ~arm_strokes(points, frame.shape)
         collar = collar_pixels(original, labels, points)
         if collar is not None:
             front &= ~collar
         hands = hand_discs(points, frame.shape, hand_fraction=0.25) & _in_classes(labels, (14, 15))
         front |= hands
-    # only inside the restored pixels' bounding box (they are a face and
-    # two hands, a small part of the frame)
+    # only inside the restored pixels' bounding box
     rows = np.flatnonzero(front.any(axis=1))
     if rows.size == 0:
         return
@@ -176,14 +158,11 @@ COLLAR_RADIUS = 6  # inpainting radius
 
 
 def repair_collar(frame, garment_alpha, labels, points):
-    """Blend the wearer's own collar into the neck, in place, after the
-    garment is composited. SCHP labels the dark stripe or band of the shirt
-    under the chin "face", so it is not erased, and `keep_in_front` restores
-    it; it then showed above the new neckline (a recorded session, 9 Oct).
-    The face-labelled pixels below the chin that no garment covers and whose
-    Lab colour is far from the face's skin are inpainted from the skin above
-    and the garment below (filling them with a flat colour, or erasing them
-    with the general fill, left blocks that read worse than the line)."""
+    """Blend the wearer's own collar into the neck, in place, after compositing. SCHP labels
+    the band of the shirt under the chin "face", so it is not erased and `keep_in_front`
+    restores it above the new neckline. The face-labelled pixels below the chin that no
+    garment covers and whose Lab colour is far from the skin are inpainted from the skin
+    above and the garment below."""
     if labels is None or points is None or labels.shape != frame.shape[:2]:
         return
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
@@ -217,7 +196,7 @@ def repair_collar(frame, garment_alpha, labels, points):
     marked = (neck & far & open_air).astype(np.uint8)
     if not marked.any():
         return
-    # the grow and the inpainting only reach COLLAR_GROW / COLLAR_RADIUS px from a marked pixel: work in that box
+    # grow and inpainting reach only COLLAR_GROW / COLLAR_RADIUS px from a marked pixel: work in that box
     x, y, w, h = cv2.boundingRect(marked)
     reach = COLLAR_GROW + COLLAR_RADIUS + 1
     y0, y1 = max(y - reach, 0), min(y + h + reach, marked.shape[0])
@@ -234,13 +213,10 @@ INSIDE_HEAL_SHARE = 0.03  # gaps up to this share of the garment are painted ove
 
 
 def restore_inside_garment(frame, original, garment_alpha):
-    """The wearer's own pixels back wherever the garment has a gap inside its own outline, in place.
-    A lace or open-knit panel, a hole the splats leave, the opening of a collar: the pixels behind
-    them were erased and filled from the room's learned background (beige wall and brown patches
-    through the lace of a sweater, 10 Oct); what lies under a layer is the wearer's shirt, which
-    is what `restore_collar_layer` and `restore_below_hem` already show at the neck and under the
-    hem. Gaps are the pixels with no garment inside the outline's closing (`INSIDE_CLOSE` px) whose
-    hole does not reach the image border, each at most INSIDE_MAX_SHARE of the garment's area."""
+    """The wearer's own pixels back wherever the garment has a gap inside its outline, in place
+    (lace, open knit, a collar opening), instead of the room's learned background. Gaps are
+    the pixels with no garment inside the outline's closing (`INSIDE_CLOSE` px) whose hole
+    does not reach the image border, each at most INSIDE_MAX_SHARE of the garment's area."""
     import cv2
 
     covered = (garment_alpha >= 25).astype(np.uint8)
@@ -288,17 +264,13 @@ LAYER_FEATHER = 14  # px over which the collar fades out at either end of its co
 
 
 def restore_collar_layer(frame, original, garment_alpha, labels, points):
-    """The wearer's own collar left visible in the new neckline, in place: the
-    pixels of the neck window the erase changed, that no garment covers and that
-    are not hair, go back to the frame as read. A crew neck under a sweater reads as
-    a layer; blending it into the neck's skin (`repair_collar`) or filling it from
-    the room smeared it (a dark T-shirt under a pale sweater, a striped one under a
-    pale one, 10 Oct). The window: below the chin line (mouth + `COLLAR_CHIN` nose-to-
-    mouth distances) down `LAYER_DEPTH` shoulder widths, in the columns of the neck
-    (the face-labelled pixels below the chin, `LAYER_SPAN` shoulder widths either
-    side), fading out over `LAYER_FEATHER` px at both ends of the columns. Not
-    'above the garment's top edge': a thick collar close to the camera encloses the
-    opening from three sides."""
+    """The wearer's own collar left visible in the new neckline, in place: the pixels of the
+    neck window the erase changed, that no garment covers and that are not hair, go back as
+    read (a crew neck under a sweater reads as a layer). The window: below the chin line
+    (mouth + `COLLAR_CHIN` nose-to-mouth distances) down `LAYER_DEPTH` shoulder widths, in the
+    neck columns (face-labelled pixels below the chin, `LAYER_SPAN` shoulder widths either
+    side), fading over `LAYER_FEATHER` px at both ends. Not tied to the garment's top edge: a
+    thick collar close to the camera encloses the opening from three sides."""
     if labels is None or points is None or labels.shape != frame.shape[:2]:
         return
     nose, mouth = points[0], 0.5 * (points[9] + points[10])
@@ -331,8 +303,8 @@ def restore_collar_layer(frame, original, garment_alpha, labels, points):
 
 @njit(cache=True)
 def _restore_below(frame, original, alpha, x0, x1, margin):
-    """`restore_below_hem`'s loop: per column, from the row under the garment's last covered pixel to the bottom,
-    copy `original` over the pixels the erase changed. One pass, no temporaries (9 -> 0.4 ms at 960 x 540)."""
+    """`restore_below_hem`'s loop: per column, from the row under the garment's last covered
+    pixel down, copy `original` over the pixels the erase changed. One pass, no temporaries."""
     rows = alpha.shape[0]
     for x in range(x0, x1):
         bottom = -1
@@ -350,13 +322,9 @@ def _restore_below(frame, original, alpha, x0, x1, margin):
 
 
 def restore_below_hem(frame, original, garment_alpha, margin=0):
-    """Put the wearer's own pixels back below the garment's lower edge, in place.
-    A wearer whose shirt is longer than the garment (a T-shirt under a cropped
-    sweater) had everything under the hem erased and filled from the room's
-    learned background, which came out as grey, green and purple blocks (a
-    recorded session, arms raised, 9 Oct); the real shirt continuing under the
-    hem reads as a layer. Only the columns the garment covers, only below its
-    lowest covered row in that column, only the pixels the erase changed."""
+    """Put the wearer's own pixels back below the garment's lower edge, in place: a shirt
+    longer than the garment reads as a layer instead of a filled background. Only the
+    columns the garment covers, below its lowest covered row, where the erase changed pixels."""
     columns = np.flatnonzero((garment_alpha >= 25).any(axis=0))
     if columns.size == 0:
         return
@@ -365,9 +333,8 @@ def restore_below_hem(frame, original, garment_alpha, margin=0):
 
 @njit(cache=True)
 def _blend(frame, bgra, x0, y0, x1, y1):
-    """Alpha-blend `bgra` over `frame` inside the box, float32 as the numpy form was (a / 255 first, then
-    g a + f (1 - a), truncated to 8 bits): the same bytes, without the float32 copies of the box and the pixels
-    whose alpha is 0 (7.7 -> ~1 ms at 960 x 540)."""
+    """Alpha-blend `bgra` over `frame` inside the box, float32 as the numpy form (a / 255 first,
+    then g a + f (1 - a), truncated to 8 bits): same bytes, without the float32 copies."""
     one, full = np.float32(1.0), np.float32(255.0)
     for y in range(y0, y1):
         for x in range(x0, x1):
@@ -382,13 +349,9 @@ def _blend(frame, bgra, x0, y0, x1, y1):
 def composite_garment(frame, bgra):
     """Alpha-blend a rendered BGRA garment over a BGR frame, in place.
 
-    `GarmentRenderer.render` returns the rasteriser's BGR (tryon/rendering/splat_cpu.py
-    stores colours BGR "as everywhere here") plus alpha. Until 25 Sep 2026
-    this reversed the channels as if they were RGB, which painted the red
-    plaid 00152_outer BLUE in every composite - found by comparing with
-    the checkpoint's own ground-truth video, not by reading the code."""
-    # only inside the garment's bounding box: outside it alpha is 0 and the
-    # blend returns the frame unchanged
+    `GarmentRenderer.render` returns BGR colours (tryon/rendering/splat_cpu.py) plus alpha;
+    they must not be treated as RGB."""
+    # only inside the garment's bounding box: outside it alpha is 0
     x, y, w, h = cv2.boundingRect(bgra[..., 3])
     if w == 0 or h == 0:
         return

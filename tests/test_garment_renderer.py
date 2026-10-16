@@ -1,17 +1,9 @@
 """Render a garment onto the tracked body.
 
-The checkpoint stores 93,491 Gaussians in FACE-LOCAL frames: each splat's
-position is relative to the mesh face it was bound to. Deform the mesh and
-the splats follow, which is exactly how Gaussian Garments (Rong et al.
-2409.08189) animates a reconstructed garment. So the pipeline is:
-
-    garment mesh --bind--> body --pose--> posed mesh --face frames--> splats
-                                                    --camera--> pixels
-
-Everything below is hand-written: `bind.py` for skinning, `splat.py` for
-the face frames and the EWA rasteriser. What is tested is that the pieces
-compose - a garment that renders at rest must also render posed, turned,
-and onto a real fitted body.
+Splats are stored in face-local frames, so deforming the mesh moves them
+(Gaussian Garments, Rong et al.). The tests check the pieces compose: a
+garment that renders at rest must also render posed, turned, and on a real
+fitted body.
 """
 
 from __future__ import annotations
@@ -30,11 +22,8 @@ GARMENT = garment("00152_outer")
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class GarmentRendererTest(unittest.TestCase):
-    """`dynamics=False`: these tests check the skinning and rendering behaviour (rigid
-    skinning, splat rendering, scaling, placement). With cloth motion on,
-    a shared renderer's springs integrate the real wall-clock time between
-    consecutive calls, which these rigid-follow assertions and the frame
-    timing do not want; `GarmentRendererDynamicsTest` covers that path."""
+    """`dynamics=False`: cloth springs would integrate wall-clock time between
+    calls, which rigid-follow assertions and frame timing do not want."""
 
     @classmethod
     def setUpClass(cls):
@@ -78,13 +67,9 @@ class GarmentRendererTest(unittest.TestCase):
             wrist_after = fitter._forward().joints[0, 20].numpy().copy()
         after = self.renderer.posed_mesh(fitter)
         up = self.renderer.render(fitter, (240, 320))
-        # The vertices skinned to the left arm must travel with it. (An
-        # earlier version asserted >1% of the frame's alpha changed; that
-        # passed only because the old T-pose binding dragged the torso's
-        # side panels along with the arms - with sleeves bound correctly
-        # the true sleeves are ~4% of the garment and 0.4% of this small
-        # frame. Measured now: sleeve vertices move a median 0.36 m for a
-        # 0.57 m wrist swing.)
+        # Vertices skinned to the left arm must travel with it. Sleeves are
+        # only ~0.4% of this small frame, so the vertex displacement is
+        # checked rather than alpha change.
         weights = self.renderer._binding.weights
         sleeve = weights[:, [16, 18, 20]].sum(axis=1) > 0.5
         self.assertGreater(int(sleeve.sum()), 200, "no vertices bound to the left arm")
@@ -107,16 +92,10 @@ class GarmentRendererTest(unittest.TestCase):
         self.assertLess(abs(ys.mean() - 150.0), 80.0, f"garment centred at y={ys.mean():.0f}, torso at ~150")
 
     def test_the_garment_scales_with_an_unusually_sized_body(self):
-        """A garment sized for an average body must still cover the right
-        FRACTION of a taller or shorter one, not the same absolute size.
+        """A garment must cover the same fraction of a taller body, not the same absolute size.
 
-        `align_to_body` only translates - it never scales - so a coat
-        that covers 60% of an average body's height covered only 38% of
-        a body 1.45x taller (measured on a real annotated frame, camera
-        0028 in Take1, where the fitted beta drifts furthest from zero;
-        see tryon/garment/renderer.py's `bind` docstring). Reproduced synthetically
-        here so the fix does not depend on that specific external
-        checkpoint or annotated photo being present.
+        `align_to_body` only translates, so this is reproduced synthetically
+        rather than depending on an external checkpoint.
         """
         import torch
 
@@ -146,28 +125,10 @@ class GarmentRendererTest(unittest.TestCase):
         )
 
     def test_it_stays_within_a_measured_frame_budget(self):
-        """A floor under real numbers, not the 250 ms first guessed.
+        """A floor under measured numbers, not a guess.
 
-        250 ms was written down before anything was timed. The tile
-        compositing loop (`tryon/rendering/splat_cpu.py`'s `render_splats`) was originally
-        pure numpy with a Python-level loop per tile, measured at 268-546 ms
-        median-of-5 at 320x240 on a quiet machine, up to 1218 ms under full
-        test-suite contention - so 2.0 s was set as the threshold, well
-        below the un-tiled reference path's 1379-1517 ms floor on the same
-        workload.
-
-        Compiling that loop with numba (see `render_splats`'s docstring)
-        roughly halved it: three separate median-of-5 trials on a quiet
-        machine measured 249-321 ms. 900 ms keeps the same margin the 2.0 s
-        threshold had - about 3x the noisiest quiet-machine median seen -
-        while actually catching a regression to the old uncompiled path
-        (400-550 ms typical, up to 1218 ms contended) or the reference
-        loop (1.4-1.5 s), neither of which this would let through anymore
-        at the old 2.0 s. The garment checkpoint here is 93k splats; a
-        real-time frame rate at that density still needs either fewer
-        splats (`GarmentRenderer(subsample=...)`) or more compiled work
-        than just this loop (see PLAN.md's status section) - this test
-        says the actual number rather than hiding it behind a guess.
+        900 ms is about 3x the noisiest quiet-machine median of the compiled
+        tile loop and still catches a regression to the uncompiled path.
         """
         import statistics
         import time
@@ -188,8 +149,7 @@ class GarmentRendererTest(unittest.TestCase):
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class GarmentRendererDynamicsTest(unittest.TestCase):
-    """The cloth in the renderer: `dynamics=True` (`LightCloth` springs plus
-    body collision) on a real garment checkpoint and a real SMPL-X body."""
+    """The cloth in the renderer: `dynamics=True` on a real checkpoint and body."""
 
     @classmethod
     def setUpClass(cls):
@@ -207,20 +167,16 @@ class GarmentRendererDynamicsTest(unittest.TestCase):
             mesh = self.renderer.posed_mesh(fitter)
         self.assertFalse(np.isnan(mesh).any())
 
-        # Proves the cloth step is doing something (at rest: the collision
-        # push), not silently falling back to the rigid skinning output.
+        # The cloth step must do something, not fall back to rigid skinning.
         self.assertGreater(float(np.mean(np.linalg.norm(mesh - rigid_target, axis=1))), 1e-4)
 
-        # Proves it hasn't flown off away from the body - bounded relative
-        # to the garment's own size.
+        # And must not fly off: bounded relative to the garment's size.
         rigid_diagonal = np.linalg.norm(rigid_target.max(axis=0) - rigid_target.min(axis=0))
         mesh_diagonal = np.linalg.norm(mesh.max(axis=0) - mesh.min(axis=0))
         self.assertLess(mesh_diagonal, rigid_diagonal * 3.0)
 
     def test_reacts_smoothly_to_a_sudden_pose_change(self):
-        """A sudden pose change (arm raised) across consecutive calls with
-        increasing wall-clock gaps must produce a bounded, not-exploding
-        response - the direct proxy for 'reacts to motion, stays stable.'"""
+        """A sudden pose change across calls gives a bounded, non-exploding response."""
         import time
 
         import torch
@@ -245,9 +201,7 @@ class GarmentRendererDynamicsTest(unittest.TestCase):
             max_step_displacement = max(max_step_displacement, step_displacement)
             previous = current
 
-        # A generous bound on any single measured gap's displacement -
-        # not tuned to a specific number, just ruling out an unbounded
-        # blow-up of the spring integration.
+        # A generous bound that only rules out an unbounded spring blow-up.
         garment_scale = np.linalg.norm(previous.max(axis=0) - previous.min(axis=0))
         self.assertLess(max_step_displacement, garment_scale * 2.0)
 
@@ -255,12 +209,8 @@ class GarmentRendererDynamicsTest(unittest.TestCase):
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class ScanPoseBindingTest(unittest.TestCase):
-    """The scanned coat has its arms hanging; bound on a T-posed body its
-    sleeves sat beside the hips (axes 57 / 67 degrees off the arms on a
-    T-pose frame, hanging to the hip) and never rose with the arms.
-    Bound on a body posed like the scan, two-pass (see
-    `scan_pose.ScanPoseBinder.bind`), they follow the arms: 27 / 16
-    degrees, 278 torn edges instead of 2,903 for a naive scan-pose bind."""
+    """The scanned coat has hanging arms; bound on a body posed like the scan
+    (two-pass, see `scan_pose.ScanPoseBinder.bind`) the sleeves follow the arms."""
 
     @classmethod
     def setUpClass(cls):
@@ -296,11 +246,9 @@ class ScanPoseBindingTest(unittest.TestCase):
         self.assertLess(int(torn.sum()), 600, f"{torn.sum()} torn faces on a T-pose")
 
     def test_the_binding_reproduces_the_scan_pose(self):
-        """Zero-frame rest re-posed to the bind pose must give the aligned
-        scan back. Checked on a binding built the way the renderer builds
-        it, before the renderer scales it to the wearer's size (scaling
-        the zero-pose rest does not commute with the joint translations,
-        so the scaled binding reproduces the scan only up to that)."""
+        """Zero-frame rest re-posed to the bind pose returns the aligned scan.
+
+        Checked before the renderer scales the binding to the wearer."""
         from tryon.garment.skinning import SkinnedGarment
 
         bind_fitter, _theta, aligned, sleeve = self.renderer.scan_binder.bind(self.fitter)
@@ -312,13 +260,10 @@ class ScanPoseBindingTest(unittest.TestCase):
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class TornFaceCullingTest(unittest.TestCase):
-    """A splat scales with its face, so a face torn open by the solver
-    (measured: a few dozen edges per frame past +100% strain, at the
-    seams) painted blobs the size of the tear. Those splats are skipped."""
+    """A face torn open by the solver would paint blobs the size of the tear; those splats are skipped."""
 
     def test_the_default_threshold_keeps_a_stretch_of_150_percent_and_drops_one_of_250_percent(self):
-        """Every edge stretched together (the garment scaled about its centroid): +150 % is kept (a cropped
-        sweater under raised arms stretches that far and was torn open at its hem at 1.0), +250 % is not."""
+        """Uniform stretch: +150% is kept, +250% is not."""
         renderer = GarmentRenderer(GARMENT, dynamics=False)
         self.assertEqual(GarmentRenderer.TORN_FACE_STRAIN, 2.0)
         rest = renderer.rest_vertices
@@ -327,9 +272,7 @@ class TornFaceCullingTest(unittest.TestCase):
         self.assertTrue(renderer.torn_faces(centre + (rest - centre) * 3.5).all())
 
     def test_the_compiled_placement_matches_the_numpy_oracle(self):
-        """`splats` runs a numba kernel; `_splats_numpy` is the original.
-        Measured on the checkpoint: max diff 1e-16 (xyz), 0 (rotation),
-        3.6e-15 (scaling); 110 -> 24 ms for 93k splats."""
+        """`splats` (numba kernel) matches `_splats_numpy`."""
         renderer = GarmentRenderer(GARMENT, dynamics=False)
         vertices = renderer.rest_vertices.copy()
         vertices[100] += np.array([1.0, 0.0, 0.0])  # include a torn face in the comparison
@@ -361,8 +304,7 @@ class TornFaceCullingTest(unittest.TestCase):
 @unittest.skipUnless(SMPLX_ROOT.is_dir(), "no SMPL-X body models")
 @unittest.skipUnless(GARMENT.exists(), f"no garment checkpoint at {GARMENT}")
 class SubsampleTest(unittest.TestCase):
-    """Thinning the checkpoint for speed - see GarmentRenderer's docstring
-    for the measured render-time/quality trade this exists for."""
+    """Thinning the checkpoint for speed; see GarmentRenderer's docstring."""
 
     def test_it_keeps_the_requested_fraction(self):
         full = GarmentRenderer(GARMENT)
@@ -409,9 +351,7 @@ if __name__ == "__main__":
 
 @unittest.skipUnless(GARMENT.is_dir() and (GARMENT / "stage3" / "ckpt" / "net.pt").exists(), "no garment checkpoint")
 class AppearanceRenderTest(unittest.TestCase):
-    """`GarmentRenderer(appearance=True)` shades with the checkpoint's own
-    network; the frame must come out, differ from the static shading
-    where the garment is, and agree with it in coverage."""
+    """`GarmentRenderer(appearance=True)` renders a frame that differs from static shading but agrees in coverage."""
 
     def test_shaded_render_differs_in_colour_not_in_coverage(self):
         import torch
@@ -427,7 +367,7 @@ class AppearanceRenderTest(unittest.TestCase):
         covered = (static[..., 3] > 25) & (shaded[..., 3] > 25)
         self.assertGreater(covered.mean(), 0.02)
         overlap = ((static[..., 3] > 25) == (shaded[..., 3] > 25)).mean()
-        # the network also moves the splats (its xyz offsets), so at 35% subsampling the covered pixels differ by a few percent
+        # The network also moves the splats, so covered pixels differ by a few percent.
         self.assertGreater(overlap, 0.90, f"coverage agreement {overlap:.3f}")
         colour_change = np.abs(static[covered][:, :3].astype(float) - shaded[covered][:, :3].astype(float)).mean()
         self.assertGreater(colour_change, 2.0, "the network should change the colours")

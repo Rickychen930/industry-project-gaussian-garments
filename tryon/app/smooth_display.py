@@ -1,12 +1,9 @@
-"""The fluid display modes: every camera frame is shown, not only the ones
-the pipeline finishes.
+"""The fluid display modes: every camera frame is shown, not only the ones the pipeline finishes.
 
-The pipeline (`pipeline.run`, unchanged: body and garment on the SAME frame)
-runs in its own process at its own rate. The display reads the camera at
-its rate, finds the landmarks (MediaPipe lite, ~20 ms) and draws the newest
-finished garment layer moved with the torso to this frame (--smooth), or
-shows the video about one pipeline period late with the layer nearest in
-time (--delayed).
+The pipeline (`pipeline.run`) runs in its own process at its own rate. The display reads
+the camera, finds landmarks (MediaPipe lite) and draws the newest finished garment layer
+moved with the torso to this frame (--smooth), or shows the video about one pipeline
+period late with the nearest layer (--delayed).
 """
 
 from __future__ import annotations
@@ -23,24 +20,19 @@ from tryon.app.person import landmarks_from
 from tryon.app.ui import WINDOW, Overlay
 
 
-# MediaPipe model for the display's per-frame landmarks: the display shares
-# the CPU with the pipeline process, and every millisecond it spends is
-# taken from the pipeline (see smooth_display)
+# MediaPipe model for the display's per-frame landmarks: it shares the CPU with the
+# pipeline process, so every millisecond counts.
 DISPLAY_POSE_COMPLEXITY = 0
 # --delayed-sync: above this many waiting frames the display shows two a tick
 DELAY_CATCH_UP = 45
-# A file is played once the pipeline has finished this many frames: its first
-# few are slow (compilation, GPU contexts, first model calls), which starved
-# --delayed-sync of later layers on a 6 s clip
+# A file is played once the pipeline has finished this many frames: its first few are
+# slow (compilation, GPU contexts) and starved --delayed-sync of layers.
 WARMUP_LAYERS = 3
 
 
 class Link:
-    """One end of a `multiprocessing.Pipe` whose incoming messages are
-    drained continuously by a thread into a queue. With two processes
-    sending large frames to each other, plain pipes deadlocked: each side
-    blocked in `send` on a full pipe while the other was blocked in its own
-    `send` and never read (a test hung for 7 hours)."""
+    """One end of a `multiprocessing.Pipe` whose incoming messages a thread drains into a
+    queue. Plain pipes deadlocked when both processes blocked in `send` on full pipes."""
 
     def __init__(self, conn):
         import queue
@@ -71,11 +63,9 @@ class Link:
 
 
 class Channel:
-    """The pipeline process's end of `smooth_display`'s pipe: a
-    cv2.VideoCapture look-alike whose `read` asks the display for its
-    newest camera frame (so the pipeline always works on the NEWEST frame,
-    skipping those it was too slow for), and `publish` / `take_key` for
-    the finished frames and the garment keys."""
+    """The pipeline process's end of `smooth_display`'s pipe: a cv2.VideoCapture look-alike
+    whose `read` returns the display's newest camera frame (skipping those the pipeline was
+    too slow for), plus `publish` / `take_key` for finished frames and garment keys."""
 
     is_camera = True
 
@@ -100,8 +90,8 @@ class Channel:
         return kind, payload
 
     def read(self):
-        """The display's newest frame. It may come as (frame id, frame): the
-        id then travels back with the finished layer (`publish`)."""
+        """The display's newest frame, maybe as (frame id, frame); the id travels back with
+        the finished layer (`publish`)."""
         if os.environ.get("TRYON_DEBUG"):
             print(f"[pipeline] need at {time.perf_counter():.2f}", file=sys.stderr, flush=True)
         self._conn.send(("need", None))
@@ -119,8 +109,7 @@ class Channel:
         pass
 
     def publish(self, source_frame, frame, points, hud, garment_alpha=None):
-        # what the pipeline changed (the erased clothing and the garment),
-        # and of that, the garment itself
+        # what the pipeline changed (erased clothing and garment), and of that, the garment
         changed = (cv2.absdiff(source_frame, frame).max(axis=2) > 6).astype(np.uint8)
         changed = cv2.morphologyEx(changed, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
         alpha = cv2.GaussianBlur(changed.astype(np.float32), (5, 5), 0)
@@ -151,8 +140,7 @@ def _pipeline_process(conn, fps, renderer_flags, pipeline):
 
 
 def _face_and_hands(points, shape):
-    """Soft mask (float, 0-1) of this frame's face and hands, which stay in
-    front of any garment layer carried from another frame."""
+    """Soft mask (0-1) of this frame's face and hands, which stay in front of a carried layer."""
     from tryon.removal.remover import hand_discs
 
     keep = hand_discs(points, shape).astype(np.uint8)
@@ -164,19 +152,15 @@ def _face_and_hands(points, shape):
 
 
 def _compose_between(frame, points, person, keyframes, frame_id):
-    """The frame with the garment from the pipeline layer nearest in time
-    (the one before or the one after `frame_id`: with the display delayed,
-    both exist), moved to this frame's torso. Returns the composite and the
-    garment alpha shown."""
+    """The frame with the garment from the pipeline layer nearest in time, moved to this
+    frame's torso. Returns the composite and the garment alpha shown."""
     from tryon.app.layer_warp import torso_transform
 
     height, width = frame.shape[:2]
     ids = sorted(keyframes)
     before = [k for k in ids if k <= frame_id]
     after = [k for k in ids if k >= frame_id]
-    # The NEAREST layer in time, not a blend of the two: cross-fading two
-    # layers of different poses showed both garments half-transparent
-    # (measured: IoU 0.638, but visibly doubled sleeves and hems).
+    # The NEAREST layer, not a blend: cross-fading two poses showed doubled sleeves and hems.
     candidates = ([before[-1]] if before else []) + ([after[0]] if after else [])
     nearest = min(candidates, key=lambda k: (abs(frame_id - k), -k))
     parts = [(keyframes[nearest], 1.0)]
@@ -230,14 +214,11 @@ def _person_mask(result, box=None):
 
 
 class DisplayOutput:
-    """Where the display's frames go, in both modes: the window (unless
-    `headless`, with n / p sent to the pipeline and q / Esc to stop), a
-    video file, and the shown garment's alpha per frame (`--dump-alpha`,
-    for tools/evaluate/live_display.py).
+    """Where the display's frames go: the window (unless `headless`; n / p go to the pipeline,
+    q / Esc stop), a video file, and the shown garment's alpha per frame (`--dump-alpha`).
 
-    `ui`: the window's `ui.Overlay` (clickable garments, Exit, ...), drawn on
-    the shown copy only; its garment choices go to the pipeline as
-    ("goto", i). None: the bare window with the n / p / q keys."""
+    `ui`: the window's `ui.Overlay`, drawn on the shown copy only; its garment choices go
+    to the pipeline as ("goto", i). None: the bare window with the n / p / q keys."""
 
     def __init__(self, link, headless, output_video, fps, dump_alpha, ui=None):
         self.link, self.headless, self.output_video, self.fps = link, headless, output_video, fps
@@ -281,10 +262,9 @@ class DisplayOutput:
 
 
 def _delayed_loop(capture, here, pose, is_camera, fps_in, max_width, display, max_frames, first_layer, wants_frame):
-    """`smooth_display --delayed-sync`: show every camera frame about one
-    pipeline period late, with the garment interpolated between the pipeline
-    layers before and after it instead of extrapolated from the last one.
-    Returns (pipeline layers, the shape of the frames shown)."""
+    """`smooth_display --delayed-sync`: show every camera frame about one pipeline period
+    late, with the garment interpolated between the layers before and after it. Returns
+    (pipeline layers, the shape of the frames shown)."""
     pending = collections.deque()  # (frame id, frame, landmarks, person mask) waiting for a later layer
     keyframes = collections.OrderedDict()
     if first_layer is not None:
@@ -323,8 +303,7 @@ def _delayed_loop(capture, here, pose, is_camera, fps_in, max_width, display, ma
         if wants_frame and not finished:
             here.send(("frame", (captured - 1, frame)))
             wants_frame = False
-        # one frame out per frame in (two while catching up), so the delay
-        # settles at about one pipeline period
+        # one frame out per frame in (two while catching up): the delay settles at one pipeline period
         budget = len(pending) if finished else (2 if len(pending) > DELAY_CATCH_UP else 1)
         while pending and budget > 0 and keyframes:
             frame_id, target, target_points, target_person = pending[0]
@@ -347,9 +326,8 @@ _WARP_MARGIN = 3  # bilinear taps plus fixed-point rounding of the warp
 
 
 def _layer_box(layer):
-    """(x0, y0, x1, y1) bounding the nonzero pixels of the layer's changed /
-    garment alpha in its own frame (half-open), or None if it is empty.
-    Cached for the newest layer: it is reused for every camera frame."""
+    """(x0, y0, x1, y1) bounding the nonzero pixels of the layer's changed / garment alpha
+    (half-open), or None if empty. Cached for the newest layer."""
     cached = getattr(_layer_box, "cache", None)
     if cached is not None and cached[0] is layer:
         return cached[1]
@@ -363,9 +341,8 @@ def _layer_box(layer):
 
 
 def _moved_box(box, m, shape):
-    """Where `box` lands after the warp `m` (None = identity), grown by what
-    the interpolation can smear, clipped to the frame: outside it the
-    warped alpha is exactly zero."""
+    """Where `box` lands after the warp `m` (None = identity), grown by interpolation smear,
+    clipped to the frame."""
     height, width = shape[:2]
     x0, y0, x1, y1 = box
     if m is None:
@@ -378,11 +355,9 @@ def _moved_box(box, m, shape):
 
 
 def _compose_newest(frame, result, points, layer):
-    """`frame` with the newest pipeline `layer` moved onto it with the torso.
-    Returns (frame shown, the garment's alpha as shown, HUD text).
-
-    Everything after the warps works on the layer's moved bounding box: the
-    alpha is zero outside it, and there the result is the frame unchanged."""
+    """`frame` with the newest pipeline `layer` moved onto it with the torso. Returns
+    (frame shown, the garment's alpha as shown, HUD text). Works on the layer's moved
+    bounding box only: alpha is zero outside it."""
     from tryon.app.layer_warp import torso_transform
     from tryon.removal.remover import hand_discs
 
@@ -406,10 +381,8 @@ def _compose_newest(frame, result, points, layer):
         return out, drawn, hud
     window = (slice(y0, y1), slice(x0, x1))
     image, changed, garment = image[window], changed[window], garment[window]
-    # The erased-and-filled region belongs to the OLD frame's body:
-    # carried along, it paints stale skin / background patches where
-    # the body no longer is. Keep it only on this frame's person;
-    # the garment itself is always drawn.
+    # The erased-and-filled region belongs to the OLD frame's body: carried along it paints
+    # stale patches. Keep it only on this frame's person; the garment is always drawn.
     person = _person_mask(result, (x0, y0, x1, y1))
     if person is not None:
         changed = changed * person
@@ -431,9 +404,8 @@ def _compose_newest(frame, result, points, layer):
 
 
 def _live_loop(capture, here, pose, is_camera, fps_in, max_width, display, max_frames, layer, wants_frame, layers):
-    """`smooth_display`: every camera frame shown as it arrives, with the
-    newest pipeline layer carried onto it. Returns (pipeline layers, the
-    shape of the frames shown)."""
+    """`smooth_display`: every camera frame shown as it arrives, with the newest pipeline
+    layer carried onto it. Returns (pipeline layers, the shape of the frames shown)."""
     times = collections.deque(maxlen=30)
     start = time.perf_counter()
     frame_shape = None
@@ -473,11 +445,9 @@ def _live_loop(capture, here, pose, is_camera, fps_in, max_width, display, max_f
 
 
 def _warm_up(capture, here, max_width):
-    """Hold a video file at frame 0 while the pipeline loads (models and the
-    first compile take ~20-30 s), feeding it frame 0 until WARMUP_LAYERS
-    layers are back, so the file then plays from frame 0 with a layer for
-    it. Returns (newest layer, layers received, whether the pipeline wants a
-    frame)."""
+    """Hold a video file at frame 0 while the pipeline loads, feeding it frame 0 until
+    WARMUP_LAYERS layers are back. Returns (newest layer, layers received, whether the
+    pipeline wants a frame)."""
     layer, layers, wants_frame, warmed = None, 0, False, 0
     ok, first = capture.read()
     if ok:
@@ -505,18 +475,12 @@ def smooth_display(source, max_width=960, headless=False, output_video=None, max
                    delayed=False, ui=True, **pipeline):
     """Show every camera frame, not only the ones the pipeline finishes.
 
-    The pipeline (`pipeline.run`, unchanged: body regression and garment on
-    the SAME frame) runs in its own process at its own rate. This process
-    reads the camera at its rate, finds the landmarks (MediaPipe, ~20 ms),
-    and draws the newest finished layer - the erased clothing plus the
-    garment, rendered for an earlier frame - moved with the torso to this
-    frame (`layer_warp.torso_transform`), keeping this frame's face and
-    hands in front (`_live_loop`); or, with `delayed`, shows the video one
-    pipeline period late with the garment from the nearest layer
-    (`_delayed_loop`). The 3D pose is never moved to another frame; only
-    the 2D layer is (docs/LOG.md: a late pose scored below the
-    keypoint fit).
-    """
+    The pipeline (`pipeline.run`) runs in its own process; this process reads the camera,
+    finds landmarks and draws the newest finished layer moved with the torso
+    (`layer_warp.torso_transform`), keeping this frame's face and hands in front
+    (`_live_loop`); or, with `delayed`, shows the video one pipeline period late with the
+    nearest layer (`_delayed_loop`). The 3D pose is never moved to another frame; only the
+    2D layer is."""
     import multiprocessing
 
     import mediapipe as mp

@@ -1,18 +1,16 @@
-"""Why are the rendered garment colours off the real video's, and what could fix it with what exists live?
+"""Why the rendered garment colours are off the real video's, and what could fix it live.
 
-The fit audit (docs/LOG.md) found the jackets 19-20 levels low in R and B against the real pixels. This
-tool measures where the error comes from and tests colour corrections, scoring each against the real
-garment pixels while using ONLY information that exists in live use for the correction itself.
+The fit audit found the jackets 19-20 levels low in R and B. This measures where
+the error comes from and scores colour corrections against the real garment
+pixels while the corrections themselves use only information available live.
 
-    .venv/bin/python -m tools.evaluate.colour_study collect VIDEO [--max-frames N]   # slow: the live pipeline
-    .venv/bin/python -m tools.evaluate.colour_study report [videos]                  # json + figure from the cache
+    .venv/bin/python -m tools.evaluate.colour_study collect VIDEO [--max-frames N]   # slow: live pipeline
+    .venv/bin/python -m tools.evaluate.colour_study report [videos]                  # json + figure from cache
 
-`collect` runs `fit_audit`'s live pipeline on one video (ONE per process: memory) and caches, for every
-scored frame, the real panel, the SCHP labels, the real shirt mask, the body silhouette and the garment
-rendered three ways on the SAME posed mesh: student shading (what is live), the checkpoint's static
-colours (no shading at all) and the 55M teacher (a subset of the frames). `report` reads the cache.
-
-Pure helpers at the top are what tests/test_tools_colour_study.py checks.
+`collect` (one video per process: memory) caches per scored frame the real panel,
+SCHP labels, shirt mask, body silhouette and the garment rendered with student
+shading, static colours and the 55M teacher. `report` reads the cache.
+Pure helpers at the top are checked by tests/test_tools_colour_study.py.
 """
 
 from __future__ import annotations
@@ -70,20 +68,6 @@ def luminance(bgr):
     """Rec. 601 luma of BGR values (..., 3)."""
     bgr = np.asarray(bgr, np.float32)
     return 0.114 * bgr[..., 0] + 0.587 * bgr[..., 1] + 0.299 * bgr[..., 2]
-
-
-def scene_statistics(frame, labels, garment_alpha, margin=12):
-    """What a live frame tells about the scene: median luminance and mean BGR of the background and of the
-    wearer's skin, never of a pixel the garment covers or of the clothing the wearer has on.
-    Returns {"background": (N, 3) mean/median stats ...}; entries are None where no pixel qualifies."""
-    free = ~cv2.dilate((garment_alpha > ALPHA_MASK).astype(np.uint8), np.ones((margin, margin), np.uint8)).astype(bool)
-    out = {}
-    for key, classes in (("background", SCENE_BACKGROUND), ("skin", SCENE_SKIN)):
-        pixels = frame[np.isin(labels, classes) & free]
-        out[key] = None if len(pixels) < MIN_REGION else {"median_luma": float(np.median(luminance(pixels))),
-                                                           "mean_bgr": pixels.astype(np.float64).mean(axis=0),
-                                                           "std_bgr": pixels.astype(np.float64).std(axis=0)}
-    return out
 
 
 def metrics(corrected_px, real_px):

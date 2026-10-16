@@ -1,6 +1,5 @@
-"""A contact sheet of every garment checkpoint: what each one looks like,
-drawn front-on by the live renderer on one neutral body (arms lowered),
-labelled with its number and name - the numbers `./live-tryon run N` takes.
+"""Contact sheet of every garment checkpoint on one neutral body, labelled with
+the number `./live-tryon run N` takes.
 
     .venv/bin/python -m tools.data.garment_previews [--models ~/tryon-data/garments] [--out docs/figures/garments.jpg]
 """

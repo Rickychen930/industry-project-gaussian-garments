@@ -3,21 +3,14 @@ simulation plus how smooth the garment's motion is.
 
     .venv/bin/python -m tools.evaluate.cloth_smoothness 00152_outer 00170_upper --stride 5
 
-The skinned targets (the renderer's rigid LBS on the cached SMPL-X fits of
-`tools.evaluate.cloth_trajectory`), the fitted bodies, and the reference
-`pred` are cached once per garment as `<cache>/<name>.npz` for every one of the
-160 frames; a cloth variant is then replayed on `frames[::stride]` with
-dt = stride / 25 s, so a variant costs seconds rather than a render.
-
-Metrics (all in the reference's vertex order, cm; lower is better):
-  distance  mean / p90 vertex distance to pred[k] (all / sleeves / rest),
-            after `GarmentRenderer._limit_strain` like the live path.
-  jitter    mean norm of the second difference of the displacement
-            d = x - skinned target over the replayed frames (the body's own
-            motion removed), per frame^2; for the reference d = pred - target.
-  rough     mean norm of the uniform graph Laplacian of d over the mesh
-            faces: how far each vertex's displacement is from its
-            neighbours' mean; the reference's value is the natural floor.
+Skinned targets, fitted bodies and the reference `pred` are cached per garment
+(`<cache>/<name>.npz`, all 160 frames); a cloth variant is replayed on
+`frames[::stride]` with dt = stride / 25 s. Metrics (reference vertex order, cm,
+lower is better):
+  distance  mean / p90 distance to pred[k] (all / sleeves / rest), after
+            `GarmentRenderer._limit_strain` as live
+  jitter    mean norm of the second difference of d = x - skinned target
+  rough     mean norm of the graph Laplacian of d (reference value is the floor)
 """
 
 from __future__ import annotations

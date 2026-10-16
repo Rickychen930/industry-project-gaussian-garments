@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Continue every garment's shading student for more cycles, and make the result live only when it
-# scores higher on the held-out poses than the one it started from (the live one is kept as
-# stage3/shading_student_before_more.pt the first time).
+# Continue every garment's shading student for more cycles; promote it only if it
+# beats the starting held-out score (the live one is kept once as
+# stage3/shading_student_before_more.pt).
 #
 #   tools/train/continue_shading_students.sh [garment ...]     # default: all but 00190_upper
 #   CYCLES=400 tools/train/continue_shading_students.sh 00134_upper
 #
-# Logs: $LOG/<garment>-more.log, one line a garment in $LOG/progress.log.
+# Logs: $LOG/<garment>-more.log and $LOG/progress.log.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"

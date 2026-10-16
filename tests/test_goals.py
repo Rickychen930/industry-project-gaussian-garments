@@ -1,13 +1,8 @@
-"""The two goals, tested on the real assets rather than asserted.
+"""The two goals (360-degree turning and limb-following motion), tested on
+real assets.
 
-These are the properties the 2D system could only approximate: it faked
-rotation with 24 pre-rendered views and faked motion by warping anchors,
-and it hit a wall at the sleeves because an outstretched arm needs the
-upper arm turned -72 degrees while the torso stays at 0, and one affine
-transform carries one rotation.
-
-A garment skinned to a body gets both for free. These tests are what stops
-that claim from being a claim.
+A garment skinned to a body gets both structurally; these tests keep that
+from being a claim only.
 """
 
 from __future__ import annotations
@@ -109,8 +104,7 @@ class ThreeDGoalsTest(unittest.TestCase):
         raised[0, RIGHT_SHOULDER_Z] = 1.2
         out = binding.apply(_posed(model, body_pose=raised))
         moved = np.linalg.norm(out - down, axis=1)
-        # The sleeves must move a long way while the torso stays put: that
-        # difference is the whole point.
+        # The sleeves must move a long way while the torso stays put.
         self.assertGreater(
             float(np.percentile(moved, 95)),
             0.10,

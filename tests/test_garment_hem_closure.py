@@ -23,7 +23,7 @@ def _chain(count=6, spacing=1.0):
 
 class GeodesicTest(unittest.TestCase):
     def test_distance_along_the_edges_not_the_straight_line(self):
-        # an L: 0 - 1 - 2 along y, then 2 - 3 along x; vertex 3 is 2.828 away in a line, 3 along the edges
+        # An L: 0-1-2 along y, then 2-3 along x; vertex 3 is 2.828 away in a line, 3 along the edges.
         rest = np.array([[0, 0, 0], [0, -1, 0], [0, -2, 0], [1, -2, 0]], float)
         edges = np.array([[0, 1], [1, 2], [2, 3]])
         distance, anchor_of = geodesic_from(4, edges, rest, [0])

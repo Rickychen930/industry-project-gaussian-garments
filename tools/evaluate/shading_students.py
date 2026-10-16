@@ -1,15 +1,12 @@
-"""Every garment's shading students against the teacher, on the training
-tool's fixed held-out poses (trajectory frames never trained on, turned by
--60..60 degrees, the garment pushed out of the body as live).
+"""Every garment's shading students against the teacher, on the training tool's
+fixed held-out poses (unseen trajectory frames, turned -60..60 degrees).
 
-Per garment: the render with no shading, with the student trained before
-7 Oct (`stage3/shading_student_nomean.pt`, if kept) and with the live
-student, each as PSNR against the render with the teacher's shading - on
-the garment's own held-out poses and on the two multi-garment motions no
+Per garment: PSNR against the render with the teacher's shading, for no shading,
+the pre-7-Oct student (`stage3/shading_student_nomean.pt`, if kept) and the live
+student, on its own held-out poses and on the two multi-garment motions no
 student trains on (`shading_student.TEST_MOTIONS`).
 
-    .venv/bin/python -m tools.evaluate.shading_students \\
-        [00134_upper ...] [--poses 10] [--out docs/baseline/shading-students.json]
+    .venv/bin/python -m tools.evaluate.shading_students [00134_upper ...] [--poses 10] [--out docs/baseline/shading-students.json]
 """
 
 from __future__ import annotations

@@ -1,11 +1,8 @@
 """A body raising its arms, with exact 3D ground truth.
 
-The one thing a real video cannot give: true joint positions to score a
-track against. Without it, a tracker's acceleration error has no
-reference and "smoother" cannot be told from "lagging" (VIBE's warning
-about Temporal-HMR). A SMPL-X body is posed frame by frame, projected
-through a known camera into a 640x480 frame, and the projections are
-jittered by the noise a keypoint detector would add.
+A real video cannot give true joint positions, so a SMPL-X body is posed
+per frame, projected through a known camera into 640x480 and jittered like
+a keypoint detector's noise.
 """
 
 import numpy as np

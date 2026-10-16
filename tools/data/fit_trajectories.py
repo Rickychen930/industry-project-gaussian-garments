@@ -1,12 +1,8 @@
 """Fit SMPL-X to every frame of the authors' trajectory for each garment.
 
-`tools/train/shading_student.py` samples its training poses from
-`docs/baseline/trajectory-fits-<name>.npz`; until now only the garments
-evaluated with `tools/evaluate/cloth_trajectory.py` had a full one
-(the others held the single scan frame). This fills them all, with the
-same fitter and cache format (`tools.evaluate.cloth_trajectory.fit_frames`,
-cold 500 / warm 150 `fit_mesh` iterations); frames already cached are
-kept.
+Fills `docs/baseline/trajectory-fits-<name>.npz` (the pose source for
+`tools/train/shading_student.py`) with the fitter and cache format of
+`tools.evaluate.cloth_trajectory.fit_frames`; cached frames are kept.
 
     .venv/bin/python -m tools.data.fit_trajectories [00122_outer,00136_outer ...] [--stride 1]
 """
