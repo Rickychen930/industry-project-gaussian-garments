@@ -1,7 +1,7 @@
 # Weights and test data: large, downloaded or generated (./setup.sh fills models/)
 /models
 /models/
-/data/
+/data
 /output/
 
 # The data root lives outside the repository (tryon/paths.py); these guard a copy made inside it
@@ -9,6 +9,13 @@
 /trajectories/
 /release_videos/
 /body_models/
+
+# 4D-DRESS release archives (9-15 GB each) and anything extracted from them;
+# keep them under ~/tryon-data, never in the working tree
+*4D-DRESS*
+*.tar.gz
+*.tgz
+*.tar
 
 # Python
 __pycache__/

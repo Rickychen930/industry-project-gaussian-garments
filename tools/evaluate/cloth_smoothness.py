@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import pickle
+import tempfile
 import time
 from pathlib import Path
 
@@ -40,7 +41,7 @@ from tools.data.fit_scan_pose import trajectory_for
 from tryon.paths import GARMENTS
 
 BASELINE = Path(__file__).resolve().parents[2] / "docs" / "baseline"
-CACHE = Path("/tmp/tryon-cloth-seq")
+CACHE = Path(tempfile.gettempdir()) / "tryon-cloth-seq"
 
 
 def build_sequence(name, cache_dir=CACHE):

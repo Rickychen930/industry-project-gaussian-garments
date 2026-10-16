@@ -14,7 +14,7 @@ better than the alternative.
 
 | part | now | measured by |
 |---|---|---|
-| body | NLF-S (backbone on the GPU), refined toward MediaPipe's keypoints; 24 mm PA-MPJPE on 8 annotated views (keypoint fit alone: 87-94 mm) | `docs/baseline/body-regressors.json` |
+| body | NLF-S (backbone on the GPU), refined toward MediaPipe's keypoints; 24.6 mm PA-MPJPE on 16 annotated views (keypoint fit alone: 87-94 mm) | `docs/baseline/body-regressors.json` |
 | garment | skinned from the scan pose; `LightCloth` springs, body collision, strain limit | `tools/evaluate/cloth_trajectory.py` |
 | shading | per-garment student (1.55M parameters) with a stored per-Gaussian mean, trained on the garment's own motion and every other simulation the authors released: 29.1 dB on unseen motions (one-motion student: 26.9) | `tools/evaluate/shading_students.py` |
 | removal | SCHP (ATR + LIP) on CoreML, learned background plate, Telea fill | `tools/evaluate/background_fill.py` |
@@ -26,7 +26,7 @@ better than the alternative.
 | target | goal | now | |
 |---|---|---|---|
 | garment on the real shirt (IoU, 5 release videos) | >= 0.80 | 0.730 | open |
-| body accuracy (PA-MPJPE, 8 annotated views) | <= 30 mm | 24 mm | done |
+| body accuracy (PA-MPJPE, 16 annotated views) | <= 30 mm | 24.6 mm | done |
 | display frame rate | camera rate (>= 20 fps) | ~25 fps (smooth display) | done |
 | pipeline time a frame (M1) | <= 0.5 s | 0.085-0.10 s | done |
 | garment present while a person is in view | >= 95 % of frames | 100 % on 15 release videos, 99.5 % on 14 webcam scenarios | done |

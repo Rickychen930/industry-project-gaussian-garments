@@ -1,0 +1,159 @@
+{
+ "views": 4208,
+ "subjects": [
+  "00134",
+  "00136"
+ ],
+ "threshold_mm": 60.0,
+ "positive_rate": 0.1473384030418251,
+ "overall_mean_mm": 42.51041901108433,
+ "splits": {
+  "test_00134": {
+   "train_views": 2740,
+   "test_views": 1468,
+   "test_positive_rate": 0.15940054495912806,
+   "test_mean_mm": 45.10035700879641,
+   "single_feature_auc": {
+    "repro": 0.5594862098103588,
+    "gap_mean": 0.7750626826801867,
+    "gap_max": 0.7671390378035434,
+    "vis_min": 0.6955838147086121,
+    "vis_mean": 0.6689142390114837
+   },
+   "gradient_boosting": {
+    "auc": 0.745986230589148,
+    "selective_mean_mm": {
+     "keep_0.95": {
+      "detector": 43.42991154547609,
+      "random": 45.14847585162229,
+      "oracle_ceiling": 41.48230157533724
+     },
+     "keep_0.90": {
+      "detector": 42.67638067581269,
+      "random": 45.04295830820151,
+      "oracle_ceiling": 39.722352034895316
+     },
+     "keep_0.85": {
+      "detector": 41.875454201206225,
+      "random": 45.088236139507714,
+      "oracle_ceiling": 38.27401852951079
+     },
+     "keep_0.80": {
+      "detector": 40.99697064335567,
+      "random": 45.15241545727094,
+      "oracle_ceiling": 37.00581768667927
+     },
+     "keep_0.70": {
+      "detector": 40.02861498025772,
+      "random": 45.034067307916516,
+      "oracle_ceiling": 34.90434958357684
+     }
+    }
+   },
+   "logistic": {
+    "auc": 0.7092527947471222,
+    "selective_mean_mm": {
+     "keep_0.95": {
+      "detector": 43.73340018121569,
+      "random": 45.14847585162229,
+      "oracle_ceiling": 41.48230157533724
+     },
+     "keep_0.90": {
+      "detector": 43.007167527968804,
+      "random": 45.04295830820151,
+      "oracle_ceiling": 39.722352034895316
+     },
+     "keep_0.85": {
+      "detector": 42.4291972104343,
+      "random": 45.088236139507714,
+      "oracle_ceiling": 38.27401852951079
+     },
+     "keep_0.80": {
+      "detector": 42.21777980680721,
+      "random": 45.15241545727094,
+      "oracle_ceiling": 37.00581768667927
+     },
+     "keep_0.70": {
+      "detector": 41.40140496574296,
+      "random": 45.034067307916516,
+      "oracle_ceiling": 34.90434958357684
+     }
+    }
+   }
+  },
+  "test_00136": {
+   "train_views": 1468,
+   "test_views": 2740,
+   "test_positive_rate": 0.14087591240875913,
+   "test_mean_mm": 41.12281719333202,
+   "single_feature_auc": {
+    "repro": 0.6551025484127997,
+    "gap_mean": 0.8058062343448039,
+    "gap_max": 0.8309987189702458,
+    "vis_min": 0.7799633299730148,
+    "vis_mean": 0.7908267704403484
+   },
+   "gradient_boosting": {
+    "auc": 0.7979285616809223,
+    "selective_mean_mm": {
+     "keep_0.95": {
+      "detector": 39.22593582183781,
+      "random": 41.13658654323463,
+      "oracle_ceiling": 37.5875279707655
+     },
+     "keep_0.90": {
+      "detector": 37.85583253738998,
+      "random": 41.17434467133511,
+      "oracle_ceiling": 35.45442507477006
+     },
+     "keep_0.85": {
+      "detector": 36.8657895080701,
+      "random": 41.13388798450693,
+      "oracle_ceiling": 33.811096246440584
+     },
+     "keep_0.80": {
+      "detector": 36.213299998612726,
+      "random": 41.159658510862315,
+      "oracle_ceiling": 32.523360589329315
+     },
+     "keep_0.70": {
+      "detector": 34.98055451276525,
+      "random": 41.098902277970595,
+      "oracle_ceiling": 30.419853060781048
+     }
+    }
+   },
+   "logistic": {
+    "auc": 0.8035369187492571,
+    "selective_mean_mm": {
+     "keep_0.95": {
+      "detector": 39.26624851570726,
+      "random": 41.13658654323463,
+      "oracle_ceiling": 37.5875279707655
+     },
+     "keep_0.90": {
+      "detector": 38.08106090817018,
+      "random": 41.17434467133511,
+      "oracle_ceiling": 35.45442507477006
+     },
+     "keep_0.85": {
+      "detector": 37.04816943856012,
+      "random": 41.13388798450693,
+      "oracle_ceiling": 33.811096246440584
+     },
+     "keep_0.80": {
+      "detector": 36.569414810982515,
+      "random": 41.159658510862315,
+      "oracle_ceiling": 32.523360589329315
+     },
+     "keep_0.70": {
+      "detector": 35.36515239375622,
+      "random": 41.098902277970595,
+      "oracle_ceiling": 30.419853060781048
+     }
+    }
+   }
+  }
+ },
+ "protocol": "label = PA-MPJPE > threshold; features = live signals only (no camera id, no ground truth); trained on one subject, tested on the other"
+}
