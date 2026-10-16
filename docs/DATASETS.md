@@ -62,7 +62,7 @@ simulation), and 4-camera masks (a multi-view test set).
 
 | dataset | why not any more |
 |---|---|
-| Human-parsing sets (`mattmdjaga/human_parsing_dataset`, `SaffalPoosh/VITON-HD-test`, `YashBhamare123/human_parsing_dataset_plus_neck`, Fashionpedia) | They trained and scored the project's own U-Net, which SCHP replaced on 25 Sep and which was removed on 8 Oct (tag `archive/unet-segmentation-2026-10-08`). `data/segmentation/` can be deleted. |
+| Human-parsing sets (`mattmdjaga/human_parsing_dataset`, `SaffalPoosh/VITON-HD-test`, `YashBhamare123/human_parsing_dataset_plus_neck`, Fashionpedia) | They trained and scored the project's own U-Net, which SCHP replaced on 25 Sep and which was removed on 8 Oct (an unpublished local tag). `data/segmentation/` can be deleted. |
 | CLOTH3D (ChaLearn) | Was for training a TailorNet-style garment model. Garment motion is now `LightCloth`, measured as accurate as a full solver against the authors' simulation. |
 | LIP (ChaLearn) | Was for training our own parser. SCHP (pretrained on LIP and ATR) is used and measured better. |
 | HBW / SHAPY (MPI) | Was for body-shape error. The NLF body regressor replaced the keypoint shape fit, and 4D-DRESS would measure the same thing on the garments' own subjects. |

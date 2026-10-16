@@ -100,7 +100,7 @@ pose-dependent shading from a distilled student · code audit and refactor
 
 ## Tried and dropped
 
-Switches that measured no gain were removed from the code on 10 Oct (tag `archive/pre-cleanup-2026-10-10` has them): the arm shading model, skin texture transfer and body-outline tube of the fill; importance subsampling; the relaxed rest; the front opening; ride-up; neighbour coupling, wrap, target filter, velocity inheritance and the vertical attachment of the cloth; the fitter's skin term; and the studies that only measured them.
+Switches that measured no gain were removed from the code on 10 Oct (an unpublished local tag has them): the arm shading model, skin texture transfer and body-outline tube of the fill; importance subsampling; the relaxed rest; the front opening; ride-up; neighbour coupling, wrap, target filter, velocity inheritance and the vertical attachment of the cloth; the fitter's skin term; and the studies that only measured them.
 
 Each row was measured; the entry in [`LOG.md`](LOG.md) has the numbers.
 
@@ -114,8 +114,8 @@ Each row was measured; the entry in [`LOG.md`](LOG.md) has the numbers.
 | FASHN parser on CoreML, parser on the Neural Engine | still 4-5x SCHP; kept as the opt-in quality parser |
 | pruning transparent Gaussians | nothing to prune (0-2 % below 0.05 opacity) |
 | ambient occlusion as an input of the student | measured, not kept (the student reads normals and body distance) |
-| the project's own U-Net clothing parser | SCHP measured better on every source; removed 8 Oct (tag `archive/unet-segmentation-2026-10-08`) |
-| position-based cloth solver, learned pose correctives, 3D re-skin display | no net gain; removed 1 Oct (tag `archive/pre-cleanup-2026-10-01`) |
+| the project's own U-Net clothing parser | SCHP measured better on every source; removed 8 Oct (an unpublished local tag) |
+| position-based cloth solver, learned pose correctives, 3D re-skin display | no net gain; removed 1 Oct (an unpublished local tag) |
 | SAM 2 for the clothing mask, RTMPose, SMPLer-X, Multi-HMR 672_B | compared, not adopted (numbers in `LOG.md`) |
 | numba `parallel=True` kernel on the mask thread | aborts the process (numba's workqueue layer is not thread-safe) and serially is no faster than numpy |
 | diffusion try-on (ViViD, CatVTON, FASHN, VTON360, FitMe360) | tens of seconds to 30 minutes a frame on the M1 ([`REFERENCE_RUNS.md`](REFERENCE_RUNS.md)) |

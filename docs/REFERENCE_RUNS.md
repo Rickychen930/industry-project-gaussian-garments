@@ -179,7 +179,7 @@ MediaPipe's `selfie_multiclass_256x256` (Apache-2.0, 15.6 MB, Tasks API).
 Its single "clothes" class covers trousers too, so the upper garment is
 taken above a cut 0.35 torso lengths below the hips from MediaPipe Pose
 (`tryon3d/parsing_mp_multiclass.py`). Scored by `tools/evaluate/parsers.py` (since removed with the
-U-Net, tag `archive/unet-segmentation-2026-10-08`) on the same labelled test images (150 per source, SCHP
+U-Net, an unpublished local tag) on the same labelled test images (150 per source, SCHP
 one pass):
 
 | source | SCHP IoU / BF@2px | MediaPipe multiclass IoU / BF@2px | ms/image SCHP / MediaPipe |
