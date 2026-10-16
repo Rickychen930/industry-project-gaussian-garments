@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 the authors of this project (Jayson M. Hendra, Michael P. Budiman, Ricky)
+Copyright (c) 2026 the authors of this project (Jayson M. Hendra, Michael P. Budiman, Ricky Chen)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of the code and documentation written for this project, to deal in it without
@@ -22,3 +22,8 @@ no licence file published), the SMPL-X body models (registered research use),
 the 4D-DRESS dataset (no redistribution), and the pretrained models fetched
 by setup.sh (each under its own licence; the Harmonizer model is
 non-commercial). None of them is included in this repository.
+
+Exception inside this repository: tryon/garment/appearance.py is a port of files of the Gaussian Garments code
+(eth-ait/Gaussian-Garments: scene/avatar_net.py, scene/avatar_gaussian_model.py, scene/styleunet/styleunet.py). Those files carry
+non-commercial licences (Inria GRAPHDECO, NVIDIA Source Code License-NC) and no licence file is published for the project, so
+that module and the checkpoints it reads are for research and evaluation use only; the MIT terms above do not apply to them.

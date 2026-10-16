@@ -65,7 +65,9 @@ class WidthsTest(unittest.TestCase):
         from tryon.garment.shading_student import IN_CHANNELS, OUT_CHANNELS, StudentUNet
 
         small, wide = StudentUNet(), StudentUNet((48, 96, 192, 288))
-        count = lambda m: sum(p.numel() for p in m.parameters())
+        def count(m):
+            return sum(p.numel() for p in m.parameters())
+
         self.assertGreater(count(wide), 2 * count(small))
         x = torch.zeros(1, IN_CHANNELS, 32, 32)
         self.assertEqual(tuple(small(x).shape), tuple(wide(x).shape))

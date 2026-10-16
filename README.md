@@ -27,7 +27,7 @@ measured number; what is planned and what was tried and dropped is in
 | [docs/LOG.md](docs/LOG.md) | the dated engineering log: every measurement and decision, in order |
 | [docs/REFERENCE_RUNS.md](docs/REFERENCE_RUNS.md) | other try-on systems run on this machine for comparison |
 | [docs/AUDIT.md](docs/AUDIT.md) | the code audit: every module's size, complexity, findings and what was done |
-| [docs/BRANCHES.md](docs/BRANCHES.md) | the branch, the archive tags, and comparing any two versions |
+| [docs/BRANCHES.md](docs/BRANCHES.md) | the branch and comparing two versions |
 
 ## Project layout
 
