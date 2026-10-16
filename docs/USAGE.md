@@ -139,7 +139,7 @@ and `tryon/body/regressor.py` (body), `tryon/garment/skinning.py` and
 | | value | source |
 |---|---|---|
 | Display frame rate (smooth mode) | 25 fps | `smooth_display`, dancer clip |
-| Pipeline time per frame | 0.085-0.10 s of work, HUD 7.3-7.5 fps on a video file (decode adds ~40 ms), sync mode; 0.21-0.23 s before 8 Oct | `--profile`; the pipeline's HUD |
+| Pipeline time per frame | 0.1-0.2 s of work (0.085-0.10 s on a quiet machine), HUD 7.3-7.5 fps on a video file (decode adds ~40 ms), sync mode; 0.21-0.23 s before 8 Oct | `--profile`; the pipeline's HUD |
 | Stages (960-wide frame, medians) | MediaPipe 13, fit 8, render 56-66, erase beside the render (a worker thread; 0-23 ms of waiting), composite 5 ms; the body regressor and the clothing mask of the NEXT frame run during this frame | `--profile` |
 | Garment IoU vs the real shirt, per frame (`--sync`) | 0.728 on 5 release videos with the cloth stepped at the clip's own dt (0.722 without cloth; authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
 | Smooth mode, share of the per-frame accuracy | 77 % at the dancers' speed, 86-93 % at a quarter to an eighth of it | `tools/evaluate/async_display.py` (simulated) |

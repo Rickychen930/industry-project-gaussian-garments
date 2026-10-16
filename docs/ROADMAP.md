@@ -19,7 +19,7 @@ better than the alternative.
 | shading | per-garment student (1.55M parameters) with a stored per-Gaussian mean, trained on the garment's own motion and every other simulation the authors released: 29.1 dB on unseen motions (one-motion student: 26.9) | `tools/evaluate/shading_students.py` |
 | removal | SCHP (ATR + LIP) on CoreML, learned background plate, Telea fill | `tools/evaluate/background_fill.py` |
 | accuracy | garment IoU vs the real shirt **0.730** (5 release videos; the authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
-| speed (M1, sync) | 0.085-0.10 s of work a frame (HUD 7.3-7.5 fps on a video file, whose decode adds ~40 ms a frame; a webcam figure is still to be taken); 0.21-0.23 s (4.4-4.8 fps) before 8 Oct; the body regressor works on the next frame while this one is drawn; smooth display at camera rate (~25 fps). The 8 Oct removal of repeated work cut a loaded-machine frame from 300-388 to 187-217 ms (clean-machine figure still to be taken) | `python -m tryon.app --profile` |
+| speed (M1, sync) | 0.1-0.2 s of work a frame (0.085-0.10 s on a quiet machine; HUD 7.3-7.5 fps on a video file, whose decode adds ~40 ms a frame; a webcam figure is still to be taken); 0.21-0.23 s (4.4-4.8 fps) before 8 Oct; the body regressor works on the next frame while this one is drawn; smooth display at camera rate (~25 fps). The 8 Oct removal of repeated work cut a loaded-machine frame from 300-388 to 187-217 ms (clean-machine figure still to be taken) | `python -m tryon.app --profile` |
 
 ## Targets
 
@@ -28,7 +28,7 @@ better than the alternative.
 | garment on the real shirt (IoU, 5 release videos) | >= 0.80 | 0.730 | open |
 | body accuracy (PA-MPJPE, 16 annotated views) | <= 30 mm | 24.6 mm | done |
 | display frame rate | camera rate (>= 20 fps) | ~25 fps (smooth display) | done |
-| pipeline time a frame (M1) | <= 0.5 s | 0.085-0.10 s | done |
+| pipeline time a frame (M1) | <= 0.5 s | 0.1-0.2 s (0.085-0.10 s quiet) | done |
 | garment present while a person is in view | >= 95 % of frames | 100 % on 15 release videos, 99.5 % on 14 webcam scenarios | done |
 | smooth display vs exact (webcam-speed motion) | >= 90 % of the exact IoU | 93 % at 1/8 of dancer speed | done |
 
