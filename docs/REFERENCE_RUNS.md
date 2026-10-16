@@ -90,7 +90,7 @@ memory (53 min without finishing one image while swapping 14 GB), so every
 run below is on the CPU at the README defaults (30 steps, CFG 1.5, seed 42):
 **27-33 min per image**.
 
-**Scored on our reference frame** (`tools/compare_tryon_systems.py`,
+**Scored on our reference frame** (script since removed; result in
 `docs/baseline/compare-tryon-systems-00152_outer.json`): every system gets
 the same person - release video 00152_outer frame 0 with the shirt erased -
 and is judged against the real frame (shirt IoU from the SCHP parser on
@@ -103,7 +103,7 @@ or 120 of the same video.
 |---|---|---|---|---|---|---|
 | erased photo only | 0.190 | 10.62 | 0.558 | 0.299 | 0.576 | - |
 | ours, their body + cloth (L1) | 0.809 | 14.38 | 0.563 | 0.106 | 0.184 | - |
-| **ours, full live pipeline (L3)** | **0.750** | **14.03** | **0.541** | **0.108** | **0.244** | **~0.4 s** |
+| **ours, full live pipeline (L3)** | **0.750** | **14.03** | **0.541** | **0.108** | **0.244** | **0.1-0.2 s** (~0.4 s when this table was made) |
 | FASHN VTON 1.5, garment photo f60 | 0.670 | 13.56 | 0.511 | 0.169 | 0.338 | 33 min |
 | FASHN VTON 1.5, garment photo f120 | 0.759 | 13.94 | 0.500 | 0.170 | 0.303 | 30 min |
 
@@ -178,8 +178,8 @@ Survey item 3: replace the SCHP parser on the per-frame path with
 MediaPipe's `selfie_multiclass_256x256` (Apache-2.0, 15.6 MB, Tasks API).
 Its single "clothes" class covers trousers too, so the upper garment is
 taken above a cut 0.35 torso lengths below the hips from MediaPipe Pose
-(`tryon3d/parsing_mp_multiclass.py`). Scored by `tools/evaluate/parsers.py` (since removed with the
-U-Net, an unpublished local tag) on the same labelled test images (150 per source, SCHP
+(`tryon3d/parsing_mp_multiclass.py`, since removed). Scored by `tools/evaluate/parsers.py` (since removed with the
+U-Net) on the same labelled test images (150 per source, SCHP
 one pass):
 
 | source | SCHP IoU / BF@2px | MediaPipe multiclass IoU / BF@2px | ms/image SCHP / MediaPipe |
@@ -216,7 +216,7 @@ pasted back into the erased frame.
 
 | system | shirt IoU | PSNR | SSIM | DISTS | LPIPS | time / frame |
 |---|---|---|---|---|---|---|
-| ours, full live pipeline (L3) | 0.750 | 14.03 | 0.541 | 0.108 | 0.244 | ~0.4 s |
+| ours, full live pipeline (L3) | 0.750 | 14.03 | 0.541 | 0.108 | 0.244 | 0.1-0.2 s (~0.4 s when this table was made) |
 | FASHN VTON 1.5, garment photo f120 | 0.759 | 13.94 | 0.500 | 0.170 | 0.303 | 30 min |
 | CatVTON, garment photo f60 | 0.478 | 12.18 | 0.485 | 0.237 | 0.526 | 78 s |
 | CatVTON, garment photo f120 | 0.478 | 11.89 | 0.493 | 0.258 | 0.552 | 92 s |

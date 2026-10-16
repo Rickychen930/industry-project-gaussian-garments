@@ -27,3 +27,8 @@ moderngl==5.12.0
 # ONNX; the macOS wheel includes the CoreML execution provider, which runs
 # SCHP on the Neural Engine / GPU (304 ms vs 2.1 s on the CPU).
 onnxruntime==1.23.2
+
+# Only the tools in tools/evaluate and tools/train import these (colour and fill
+# studies, the body failure detector); the live system does not need them.
+scikit-image==0.25.2
+scikit-learn==1.7.2

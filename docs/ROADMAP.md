@@ -34,7 +34,7 @@ better than the alternative.
 
 ## Where the IoU gap is (measured 8 Oct)
 
-Garment IoU against the real shirt is 0.728 over the 5 release videos; the
+Garment IoU against the real shirt is 0.730 over the 5 release videos (0.728 in the fit audit's own run); the
 authors' registration reaches 0.827. Four measurements say where the 0.10 is not:
 
 | not the cause | evidence |
@@ -63,7 +63,7 @@ profile camera is the weak one, 28-38 mm); motion **good** (no dropouts, no lag,
 as steady as the real shirt: centroid jitter 0.66x, area jitter 0.98x of the real
 shirt's); edges **good**; garment against the body **acceptable** (1.0 % of the
 vertices inside the body, 10.6 mm mean penetration, equal to the reference's);
-silhouette **acceptable** for closed garments (IoU 0.77-0.88) and **weak** for
+silhouette **acceptable** for closed garments (IoU 0.74-0.82) and **weak** for
 loose and open outer shirts (0.50-0.68); texture **acceptable** on plain garments
 and **weak** on 00136_outer (dark by 19-21 levels) and on plaid and knit patterns, which do not register pixel for pixel. What looks worst on the sheets is the
 erased clothing (grey patches, a flat pale skin fill on the arms), not the garment.
@@ -93,7 +93,7 @@ pose-dependent shading from a distilled student · code audit and refactor
 5. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth + posed mesh ~54 ms of which `push_out_of_body` 22; `render_splats_gl` ~59 ms of which `_instances` 26; MediaPipe for the next frame could run beside the render): each needs to be bit-identical and >= 3 ms.
 6. **Shading refresh rate**: the student updates every 0.7 s on a worker
    thread; test 0.35 s with the GPU free and keep it only if fps holds.
-7. **AnyWear / Decart comparison**: possible only with the user's own API
+7. **AnyWear / Decart comparison**: possible only with a paid API
    key and their approval to upload the release videos.
 8. **4D-DRESS**: its access request was archived (the data cannot be
    redistributed, so no copies are used); see [`DATASETS.md`](DATASETS.md).

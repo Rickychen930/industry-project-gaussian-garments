@@ -147,6 +147,10 @@ ContourCraft, learned pose correctives, SMPLer-X, Multi-HMR 672_B,
 video diffusion try-on (ViViD, CatVTON - tens of seconds a frame on the M1),
 FitMe360 and VTON360 (reproduced as references).
 
+## Licence
+
+The code and documentation written for this project are MIT-licensed (`LICENSE`). Third-party code, models and data (Gaussian Garments, SMPL-X, 4D-DRESS, pretrained weights) keep their own terms, which `LICENSE` lists; none of them is in this repository. The CI workflow runs the linter and the tests that need no SMPL-X models or GPU; the full suite runs locally with `./live-tryon test`.
+
 ## Targets and checkpoints
 
 The targets (garment IoU 0.80, body 30 mm, camera-rate display, under 0.5 s a
