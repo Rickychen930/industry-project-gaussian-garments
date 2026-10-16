@@ -45,7 +45,7 @@ licence forbids redistribution, so no copy elsewhere may be used. The plan
 was archived on 7 Oct 2026 without it; the full release reached us later and
 was used only for the body-accuracy test in `docs/baseline/body-accuracy-4ddress.json`
 (4,208 views of subjects 00134 and 00136: mean PA-MPJPE 42.5 mm, 14.7% of
-views above 60 mm, against 24.6 mm on the 16-view sample; a 440-view sample of three frames per take, in `body-accuracy-4ddress.json`, gives 42.4 mm), the corrector in
+views above 60 mm, against 24.6 mm on the 16-view sample; a 440-view sample (22 takes, four cameras, five frames each), in `body-accuracy-4ddress.json`, gives 42.4 mm), the corrector in
 `body-corrector.json` (did not help on the held-out subject) and the failure
 detector in `failure-detector.json` (AUC 0.75 and 0.80). Garment overlap was
 not scored against its captured shirts.
