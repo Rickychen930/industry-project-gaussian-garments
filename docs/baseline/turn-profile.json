@@ -1,0 +1,34 @@
+{
+ "frames": 351,
+ "usable_frames": 339,
+ "angle_range_degrees": [
+  0.00939515710251726,
+  89.88563963018208
+ ],
+ "bins": [
+  {
+   "bin": "head-on (0 to 20 degrees)",
+   "frames": 192,
+   "garment_width_px": 463.0,
+   "person_width_px": 464.5,
+   "ratio": 0.9967707212055974
+  },
+  {
+   "bin": "oblique (20 to 70)",
+   "frames": 67,
+   "garment_width_px": 282.0,
+   "person_width_px": 223.0,
+   "ratio": 1.2645739910313902
+  },
+  {
+   "bin": "side-on (70 to 90)",
+   "frames": 80,
+   "garment_width_px": 237.0,
+   "person_width_px": 212.0,
+   "ratio": 1.1179245283018868
+  }
+ ],
+ "sources": [
+  "seg-records.json"
+ ]
+}

@@ -180,5 +180,6 @@ the garment disappears), `async_display.py` and `live_display.py` (the
 smooth display), `tracking_jitter.py` and `real_fit.py` (the body),
 `cloth_trajectory.py` and `resize_trajectories.py` (the cloth against the
 authors' simulation), `classical_matching.py` and `classical_reconstruction.py` (SIFT, COLMAP and a
-visual hull on the four 4D-DRESS cameras, against the scan), `classical_factors.py` (matches against garment, light, blur, background and view), `bootstrap_iou.py` (95 percent intervals of the garment IoU), `reference_frame.py` (where quality is lost, level by
+visual hull on the four 4D-DRESS cameras, against the scan), `classical_factors.py` (matches against garment, light, blur, background and view), `bootstrap_iou.py` (95 percent intervals of the garment IoU), `turn_profile.py` (garment and person width against the angle to the camera, from
+`session_benchmark.py --records`), `reference_frame.py` (where quality is lost, level by
 level), `background_fill.py`, `shading_students.py` (the shading networks).

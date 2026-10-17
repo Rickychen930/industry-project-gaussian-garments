@@ -27,6 +27,17 @@ FRONT_BACK_DEGREES = 35.0
 SHOULDER_BAND = (0.74, 1.35)
 
 
+def _plain(value):
+    """JSON form of the numpy scalars in the per-frame records."""
+    if isinstance(value, np.bool_):
+        return bool(value)
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.floating):
+        return float(value)
+    raise TypeError(f"not JSON serialisable: {type(value)}")
+
+
 def percentiles(values, points=(50, 90, 95, 99)):
     values = np.asarray([v for v in values if v is not None and np.isfinite(v)], float)
     if values.size == 0:
@@ -71,6 +82,8 @@ def run_session(source, garment, max_frames=0, max_width=960):
         mask = current.get("mask")
         alpha = rgba[..., 3] >= 25
         current["alpha_area"] = int(alpha.sum())
+        columns = np.flatnonzero(alpha.any(axis=0))
+        current["garment_width"] = int(columns[-1] - columns[0] + 1) if columns.size else 0
         current["uncovered"] = None if mask is None or mask.shape != alpha.shape or not mask.any() else float((mask & ~alpha).sum() / mask.sum())
         original_composite(frame, rgba)
 
@@ -80,7 +93,7 @@ def run_session(source, garment, max_frames=0, max_width=960):
         current.clear()
         out = original_process(self, frame, points, stamp, stage, untouched)
         status, reprojection, alpha = out
-        ratio = facing = None
+        ratio = facing = profile_angle = None
         if self.fitter is not None and points is not None and min(points[11, 2], points[12, 2]) > 0.5:
             with torch.no_grad():
                 pixels = self.fitter._project(self.fitter._forward().joints[0, 16:18]).numpy()
@@ -88,11 +101,16 @@ def run_session(source, garment, max_frames=0, max_width=960):
             yaw = landmark_yaw(points)
             if wanted > 4 and yaw is not None:
                 away = abs((np.degrees(yaw) + 180.0) % 360.0 - 180.0)
-                facing = min(away, 180.0 - away) <= FRONT_BACK_DEGREES
+                profile_angle = min(away, 180.0 - away)  # 0 facing the camera or away, 90 side-on
+                facing = profile_angle <= FRONT_BACK_DEGREES
                 ratio = float(np.linalg.norm(pixels[0] - pixels[1])) / wanted
+        mask = current.get("mask")
+        person_columns = np.flatnonzero(mask.any(axis=0)) if mask is not None and mask.any() else np.zeros(0)
         records.append(dict(status=status, reprojection=None if reprojection != reprojection else float(reprojection),
                             dressed=alpha is not None, garment_pixels=current.get("alpha_area"), uncovered=current.get("uncovered"),
-                            shoulder_ratio=ratio, front_or_back=facing))
+                            shoulder_ratio=ratio, front_or_back=facing, profile_angle=profile_angle,
+                            garment_width=current.get("garment_width"),
+                            person_width=int(person_columns[-1] - person_columns[0] + 1) if person_columns.size else None))
         return out
 
     ClothingRemover.remove = remove
@@ -140,6 +158,7 @@ def main():
     parser.add_argument("--max-frames", type=int, default=0)
     parser.add_argument("--max-width", type=int, default=960)
     parser.add_argument("--out", default=None, help="write the summary here (JSON)")
+    parser.add_argument("--records", default=None, help="also write the per-frame records here (JSON)")
     args = parser.parse_args()
     records, stages, seconds = run_session(args.source, args.garment, args.max_frames, args.max_width)
     summary = summarise(records, stages, seconds)
@@ -148,6 +167,8 @@ def main():
     print(json.dumps(summary, indent=2))
     if args.out:
         write_json(args.out, summary)
+    if args.records:
+        write_json(args.records, json.loads(json.dumps(records, default=_plain)))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,38 @@
+{
+ "frames": 351,
+ "dressed_share": 1.0,
+ "status_counts": {
+  "regressed": 345,
+  "re-found": 6
+ },
+ "reprojection_px": {
+  "p50": 38.6,
+  "p90": 196.02,
+  "p95": 208.78,
+  "p99": 304.36
+ },
+ "front_or_back_frames": 204,
+ "shoulder_ratio_outside_band": 0,
+ "shoulder_band": [
+  0.74,
+  1.35
+ ],
+ "uncovered_clothing_share": {
+  "p50": 0.16,
+  "p90": 0.24
+ },
+ "garment_pixels_median": 110624,
+ "stage_median_ms": {
+  "mediapipe": 69.0,
+  "regressor": 6.0,
+  "fit": 110.0,
+  "erase start": 18.0,
+  "render": 454.0,
+  "erase wait": 44.0,
+  "composite": 57.0,
+  "total": 1034.0
+ },
+ "wall_seconds": 582.2,
+ "source": "seg.mp4",
+ "garment": "00190_upper"
+}
