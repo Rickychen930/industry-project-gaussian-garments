@@ -172,7 +172,7 @@ The code and documentation written for this project are MIT-licensed (`LICENSE`)
 ## Targets and checkpoints
 
 The final report (32040 Industry Project, 17 Oct 2026) states four primary objectives, set after the
-results were known (P1 met, P2 and P4 met with limits, P3 partly met), and grades six stricter
+results were known (P1 to P4 met; turning with the wearer and hiding the wearer's top stay as detailed targets, partly met), and grades six stricter
 detailed targets, O1 to O6; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind each verdict.
 
 | objective | verdict |

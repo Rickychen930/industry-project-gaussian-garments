@@ -20,10 +20,13 @@ targets (O1 to O6) that it reports in full.
 
 | primary objective | evidence | verdict |
 |---|---|---|
-| P1 a captured garment shown on a live webcam wearer, M1 without CUDA, in at least 95 % of the pooled frames | 13,645 of 13,912 frames (98.1 %) over seven recordings; 100 % on 15 release videos | met |
-| P2 the garment follows the body and turns with the wearer | synthetic full turn passes; real recordings reach side-on, back views not measured | met with limits |
-| P3 the wearer's own top replaced (erased and filled) | uncovered share under 0.10 in 3 of 6 sessions (0.07-0.29); erased arms look like smooth tubes | partly met |
-| P4 measured against the real garment and other systems, IoU >= 0.70 and display >= 5 fps | IoU 0.730 (authors' fit 0.827); 7.3-7.5 fps; two of three systems scored, VTON 360 judged by eye | met with limits |
+| P1 a captured garment shown on a live webcam wearer, M1 without CUDA, in at least 95 % of the pooled frames | 13,645 of 13,912 frames (98.1 %) over seven recordings | met |
+| P2 each of the 15 published garments worn live (at least 95 % of frames of its release video) | 100 % of frames on all 15 release videos | met |
+| P3 measured against the real garment and at least two other try-on systems, IoU >= 0.70 and display >= 5 fps | IoU 0.730 (authors' fit 0.827); 7.3-7.5 fps; FASHN VTON 1.5 and CatVTON scored on five measures | met |
+| P4 tested, documented and reproducible, each design choice recorded with its measurement | 512 tests on 17 Oct (503 passed, 9 skipped, no failure); six documents; setup and doctor scripts | met |
+
+Turning with the wearer (O2) and hiding the wearer's own top (O3) are not primary objectives; both stay
+as detailed targets and are partly met.
 
 Detailed targets and learning outcomes:
 
@@ -120,6 +123,15 @@ blur, objects in front, a person leaving · pipeline under 0.5 s a frame in 14 o
 pose-dependent shading from a distilled student · code audit and refactor.
 
 ## Next
+
+Improvement areas, each tied to a detailed target, in the order they would be taken:
+
+1. O3: median uncovered share <= 0.10 in every session (now 0.07-0.29, under 0.10 in 3 of 6) and natural-looking arms.
+2. O2: a measured full turn of a real wearer, including the back (now side-on only).
+3. O1: body error <= 30 mm on unselected views (now 42.5 mm on 4,208 views).
+4. O5: median work <= 0.5 s in every run, and 20 fps, which needs a CUDA GPU (now 14 of 17 runs, 7.3-7.5 fps).
+5. O4: IoU 0.80, closer to the authors' fit of 0.827 (now 0.730).
+6. O6: a score for VTON 360 on the five measures (now judged by eye).
 
 1. **Garment shape closer to the real garment** (IoU 0.730 -> 0.80):
    the gap is the garment's shape, not placement, cloth or size ("Where the
