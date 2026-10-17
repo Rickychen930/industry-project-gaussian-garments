@@ -171,8 +171,9 @@ The code and documentation written for this project are MIT-licensed (`LICENSE`)
 
 ## Targets and checkpoints
 
-The final report (32040 Industry Project, 17 Oct 2026) grades the six objectives against the
-thresholds set in it; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind each verdict.
+The final report (32040 Industry Project, 17 Oct 2026) states four primary objectives, set after the
+results were known (P1 met, P2 and P4 met with limits, P3 partly met), and grades six stricter
+detailed targets, O1 to O6; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind each verdict.
 
 | objective | verdict |
 |---|---|
@@ -183,7 +184,7 @@ thresholds set in it; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind 
 | O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 5 fps | partly met (work within 0.5 s in 14 of 17 runs; display 7.3-7.5 fps in the default display, so the display rate is met) |
 | O6 three current systems scored on the same frame with the same measures | partly met (two of three scored; VTON 360 judged by eye) |
 
-Learning outcomes: LO1 partly met, LO2 and LO3 met with limits, LO4 and LO5 met, LO6 met with
+Learning outcomes: LO1 partly met, LO2 partly met, LO3 met with limits, LO4 and LO5 met, LO6 met with
 limits (one member wrote all the code). The classical pipeline on four calibrated cameras rebuilt
 the upper garment with an F-score of 0.50 at 2 cm and could not recover camera motion from
 features.

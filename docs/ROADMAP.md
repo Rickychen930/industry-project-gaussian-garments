@@ -15,6 +15,18 @@ better than the alternative.
 The final report (32040 Industry Project) grades the six objectives and the six registered learning
 outcomes as follows. The thresholds are the report's.
 
+The report states four primary objectives, set after the results were known, and six stricter detailed
+targets (O1 to O6) that it reports in full.
+
+| primary objective | evidence | verdict |
+|---|---|---|
+| P1 a captured garment shown on a live webcam wearer, M1 without CUDA, in at least 95 % of the pooled frames | 13,645 of 13,912 frames (98.1 %) over seven recordings; 100 % on 15 release videos | met |
+| P2 the garment follows the body and turns with the wearer | synthetic full turn passes; real recordings reach side-on, back views not measured | met with limits |
+| P3 the wearer's own top replaced (erased and filled) | uncovered share under 0.10 in 3 of 6 sessions (0.07-0.29); erased arms look like smooth tubes | partly met |
+| P4 measured against the real garment and other systems, IoU >= 0.70 and display >= 5 fps | IoU 0.730 (authors' fit 0.827); 7.3-7.5 fps; two of three systems scored, VTON 360 judged by eye | met with limits |
+
+Detailed targets and learning outcomes:
+
 | objective (threshold) | result | verdict |
 |---|---|---|
 | O1 body placed accurately, garment drawn in almost every frame (<= 30 mm on the 16 development views and on 4,208 unselected views; >= 95 % in each set and each recording) | body 24.6 mm on the 16 views, 42.5 mm on the 4,208 views of two 4D-DRESS subjects; garment in 100 % of frames on 15 release videos, 99.5 % on 14 webcam scenarios, 98.6 % over six sessions, but 90.1 % on session 1 and 89.5 % on the 17 Oct recording (100 % on frames with a person in view) | partly met |
@@ -27,7 +39,7 @@ outcomes as follows. The thresholds are the report's.
 | learning outcome | verdict |
 |---|---|
 | LO1 camera motion and 3D from 2D frames | partly met (camera motion from SIFT matches failed; 3D points need the capture's calibration) |
-| LO2 complete classical pipeline, frames to surface | met with limits (four calibrated studio cameras, no smartphone video) |
+| LO2 complete classical pipeline, frames to surface | partly met (four calibrated studio cameras, no smartphone video) |
 | LO3 limits of classical algorithms on garments | met with limits (one studio capture, nine takes) |
 | LO4 experiments and quantitative evaluation | met |
 | LO5 compare alternatives, justify with evidence | met |
