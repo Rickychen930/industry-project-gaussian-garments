@@ -101,8 +101,8 @@ nearest pipeline frame.
 | garment IoU vs the real garment, 5 release videos | **0.730** (the authors' fit, four cameras: 0.827) | `tools/evaluate/vs_registration.py` |
 | body accuracy (PA-MPJPE) | **24.6 mm** on 16 development views (keypoint fit 87-94 mm); 42.5 mm on 4,208 unselected views | `docs/baseline/body-regressors.json`, `docs/baseline/body-accuracy-4ddress.json` |
 | garment present, 6 recorded webcam sessions | **98.6 %** of 13,178 frames (100 % on 15 release videos; 90.1 % on session 1 and 89.5 % on the 17 Oct recording) | `tools/evaluate/session_benchmark.py` |
-| tests | **512** on 17 Oct (503 passed, 9 skipped); 513 after the intrinsics fix of the classical tool | `./live-tryon test` |
-| work a frame, M1 (median per run) | 125-411 ms in 14 of 17 timed runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); default display 7.3-7.5 fps on a video file (smooth mode's rate on the webcam was never logged) | `python -m tryon.app --profile`, `tools/evaluate/session_benchmark.py` |
+| tests | **512** on 17 Oct (503 passed, 9 skipped); 513 after the intrinsics fix of the classical tool; 533 (all pass, 9 skipped) with the tests of the two new evaluation tools; line coverage on 17 Oct: `tryon/` 73 %, `tools/` 14 %, all 43 % | `./live-tryon test` |
+| work a frame, M1 (median per run) | 125-411 ms in 17 of 20 timed runs; three above 0.5 s: 670 and 602 ms (two 10 Oct replays before that day's fixes; the same sessions take 380 and 384 ms on a quiet machine with the current code) and 1,034 ms (the turn replay, not repeatable); default display 7.3-7.5 fps on a video file (smooth mode's rate on the webcam was never logged) | `python -m tryon.app --profile`, `tools/evaluate/session_benchmark.py` |
 
 ## Setup, step by step
 
@@ -181,7 +181,7 @@ detailed targets, O1 to O6; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers b
 | O2 garment turns with the wearer through 360 degrees | partly met (synthetic full turn passes; real recordings reach side-on only) |
 | O3 the wearer's own top hidden | partly met (3 of 6 sessions at or under 0.10 uncovered) |
 | O4 garment IoU >= 0.70 | met (0.730; the authors' fit reaches 0.827) |
-| O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 5 fps | partly met (work within 0.5 s in 14 of 17 runs; display 7.3-7.5 fps in the default display, so the display rate is met) |
+| O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 5 fps | partly met (work within 0.5 s in 17 of 20 runs; display 7.3-7.5 fps in the default display, so the display rate is met) |
 | O6 three current systems scored on the same frame with the same measures | partly met (two of three scored; VTON 360 judged by eye) |
 
 Learning outcomes: LO1 partly met, LO2 partly met, LO3 met with limits, LO4 and LO5 met, LO6 met with
@@ -191,7 +191,7 @@ features.
 
 ## Measuring
 
-Each number above comes from one of the 28 tools in `tools/evaluate/`, which writes its
+Each number above comes from one of the 30 tools in `tools/evaluate/`, which writes its
 result as JSON under `docs/baseline/`; among them `vs_registration.py` (the garment
 against the real garment over whole release clips), `dropouts.py` (how often
 the garment disappears), `async_display.py` and `live_display.py` (smooth
@@ -200,4 +200,4 @@ mode), `tracking_jitter.py` and `real_fit.py` (the body),
 authors' simulation), `classical_matching.py` and `classical_reconstruction.py` (SIFT, COLMAP and a
 visual hull on the four 4D-DRESS cameras, against the scan), `classical_factors.py` (matches against garment, light, blur, background and view), `bootstrap_iou.py` (95 percent intervals of the garment IoU), `turn_profile.py` (garment and person width against the angle to the camera, from
 `session_benchmark.py --records`), `reference_frame.py` (where quality is lost, level by
-level), `background_fill.py`, `shading_students.py` (the shading networks).
+level), `background_fill.py`, `shading_students.py` (the shading networks), `body_orientation_4ddress.py` (facing direction and root-relative error against 4D-DRESS: median 3.6 degrees, 60.0 mm on 440 views) and `yaw_by_pose.py` (the signed yaw of a recorded turn).

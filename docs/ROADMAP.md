@@ -36,7 +36,7 @@ Detailed targets and learning outcomes:
 | O2 garment turns with the wearer through 360 degrees (synthetic: under 5 cm at every step; real: no threshold) | `tests/test_goals.py` full turn passes for the skinning; two real recordings reach side-on, garment against wearer width 0.98 head-on and 1.11 side-on (`tools/evaluate/turn_profile.py`, 970 frames); no ground truth | partly met |
 | O3 the wearer's own top hidden (median uncovered share <= 0.10 in each session, set after measuring) | 3 of 6 sessions at or under 0.10 (medians 0.07-0.29); erased arms look like smooth tubes | partly met |
 | O4 garment covers the real garment's pixels (IoU >= 0.70) | 0.730 on five release videos (authors' fit 0.827) | met |
-| O5 keeps up with a live wearer ((a) median work <= 0.5 s in each run; (b) display >= 5 fps) | (a) 125-411 ms in 14 of 17 runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); (b) default display 7.3-7.5 fps on a video file; smooth mode's 25 fps is the clip's rate, never logged on the webcam | partly met (R4 partly met, R5 met) |
+| O5 keeps up with a live wearer ((a) median work <= 0.5 s in each run; (b) display >= 5 fps) | (a) 125-411 ms in 17 of 20 runs; three above 0.5 s: 670 and 602 ms (two 10 Oct replays before that day's fixes; the same sessions take 380 and 384 ms on a quiet machine with the current code) and 1,034 ms (the turn replay, not repeatable); (b) default display 7.3-7.5 fps on a video file; smooth mode's 25 fps is the clip's rate, never logged on the webcam | partly met (R4 partly met, R5 met) |
 | O6 three current systems scored on the same frame with five measures | FASHN VTON 1.5 and CatVTON scored on all five; VTON 360 run but judged by eye ([`REFERENCE_RUNS.md`](REFERENCE_RUNS.md)) | partly met |
 
 | learning outcome | verdict |
@@ -51,7 +51,7 @@ Detailed targets and learning outcomes:
 The registered classical route was run on the four calibrated 4D-DRESS cameras (17 Oct): visual hull of the
 upper garment F-score 0.50 at 2 cm, camera motion from SIFT matches failed, COLMAP registered all four cameras
 in 2 of 30 frames. Tests: 512 on 17 Oct (503 passed, 9 skipped), 513 after the intrinsics fix of the
-classical tool. Evaluation: 28 tools in `tools/evaluate/`.
+classical tool. Evaluation: 30 tools in `tools/evaluate/`.
 
 ## Current state (8 Oct 2026) (later numbers in the section above)
 
@@ -71,7 +71,7 @@ classical tool. Evaluation: 28 tools in `tools/evaluate/`.
 | garment on the real garment (IoU, 5 release videos) | >= 0.70 | 0.730 | met (O4) |
 | body accuracy (PA-MPJPE) | <= 30 mm on the 16 development views and on 4,208 unselected views | 24.6 mm and 42.5 mm | met on the 16 views only (O1 partly met) |
 | display frame rate | >= 5 fps | 7.3-7.5 fps in the default display on a video file; smooth mode's ~25 fps is the clip's rate and was never logged on the webcam | met (R5; O5 partly met) |
-| pipeline time a frame (M1) | median <= 0.5 s in each run | 125-411 ms in 14 of 17 timed runs; 670, 602 and 1,034 ms in three runs on a loaded machine | partly met (R4, O5) |
+| pipeline time a frame (M1) | median <= 0.5 s in each run | 125-411 ms in 17 of 20 timed runs; 670, 602 (before the 10 Oct fixes) and 1,034 ms (the turn replay) in three runs | partly met (R4, O5) |
 | garment present | >= 95 % of frames in each set and each recording | 100 % on 15 release videos, 99.5 % on 14 webcam scenarios, 98.6 % over six sessions; 90.1 % and 89.5 % in two recordings | not in every recording (O1 partly met) |
 | smooth mode vs exact (webcam-speed motion) | >= 90 % of the exact IoU | 93 % at 1/8 of dancer speed | done |
 
@@ -113,13 +113,23 @@ erased clothing (grey patches, a flat pale skin fill on the arms), not the garme
 
 ## Done
 
+Measured on 17 Oct, after the report text was first fixed:
+
+- Quiet machine, current code: white-shirt session 380 ms, floral-shirt session 384 ms, guided recording 395 ms of work a frame
+  (`session-*-quiet-20261017.json`, `session-20261017-150621-yaw.json`).
+- Facing direction on 440 4D-DRESS views (439 detected): median error 3.6 degrees, p90 9.6, no view over 90 degrees; root-relative
+  joint error 60.0 mm mean (`body-orientation-4ddress.json`).
+- Signed yaw in the guided recording: -57 degrees at about 17 s (left side), no yaw for two 2.4 s stretches while the back is
+  to the camera, +92 degrees at about 33 s (right side) (`yaw-by-pose.json`).
+- Line coverage: `tryon/` 73 %, `tools/` 14 %, all 43 % (513 tests, 215 s, 9 skipped); code in other processes is not counted.
+
 Body tracking (MediaPipe -> SMPL-X, then NLF-S from the image) · garment
 follows the body (skinning from the scan pose) · Gaussian-splat rendering
 (CPU, then GPU: 143 -> 37 ms) · clothing removal (SCHP, learned background
 fill) · cloth (springs, collision, strain limit) · 360-degree turns (facing
 from MediaPipe's 3D landmarks and the regressor) · live system with a
 separate display process (smooth mode) · robustness to desk framing, close-ups, dim light,
-blur, objects in front, a person leaving · pipeline under 0.5 s a frame in 14 of 17 timed runs ·
+blur, objects in front, a person leaving · pipeline under 0.5 s a frame in 17 of 20 timed runs ·
 pose-dependent shading from a distilled student · code audit and refactor.
 
 ## Next
@@ -129,7 +139,7 @@ Improvement areas, each tied to a detailed target, in the order they would be ta
 1. O3: median uncovered share <= 0.10 in every session (now 0.07-0.29, under 0.10 in 3 of 6) and natural-looking arms.
 2. O2: a measured full turn of a real wearer, including the back (now side-on only).
 3. O1: body error <= 30 mm on unselected views (now 42.5 mm on 4,208 views).
-4. O5: median work <= 0.5 s in every run, and 20 fps, which needs a CUDA GPU (now 14 of 17 runs, 7.3-7.5 fps).
+4. O5: median work <= 0.5 s in every run, and 20 fps, which needs a CUDA GPU (now 17 of 20 runs, 7.3-7.5 fps).
 5. O4: IoU 0.80, closer to the authors' fit of 0.827 (now 0.730).
 6. O6: a score for VTON 360 on the five measures (now judged by eye).
 

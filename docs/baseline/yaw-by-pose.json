@@ -1,0 +1,46 @@
+{
+ "assumption": "none about pose timing: the recording stores no pose start times, so the yaw trace is summarised as a whole (extremes, gaps) and read against the prompt order by hand",
+ "frames": 734,
+ "agreement": {
+  "frames": 631,
+  "median_gap_degrees": 4.53154867630559,
+  "p90_gap_degrees": 57.92068882995767,
+  "share_over_90_degrees": 0.04754358161648178
+ },
+ "body_yaw": {
+  "frames_with_yaw": 631,
+  "lowest_degrees": -86.96368408203125,
+  "lowest_at_seconds": 47.33,
+  "highest_degrees": 166.076416015625,
+  "highest_at_seconds": 28.6,
+  "frames_over_135_degrees": 16,
+  "missing_runs": [
+   {
+    "from_seconds": 25.93,
+    "to_seconds": 28.33
+   },
+   {
+    "from_seconds": 29.67,
+    "to_seconds": 32.13
+   }
+  ]
+ },
+ "mediapipe_yaw": {
+  "frames_with_yaw": 631,
+  "lowest_degrees": -176.02753781121987,
+  "lowest_at_seconds": 32.67,
+  "highest_degrees": 177.568062928818,
+  "highest_at_seconds": 44.13,
+  "frames_over_135_degrees": 19,
+  "missing_runs": [
+   {
+    "from_seconds": 25.93,
+    "to_seconds": 28.33
+   },
+   {
+    "from_seconds": 29.67,
+    "to_seconds": 32.13
+   }
+  ]
+ }
+}

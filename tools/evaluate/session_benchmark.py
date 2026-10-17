@@ -93,12 +93,14 @@ def run_session(source, garment, max_frames=0, max_width=960):
         current.clear()
         out = original_process(self, frame, points, stamp, stage, untouched)
         status, reprojection, alpha = out
-        ratio = facing = profile_angle = None
+        ratio = facing = profile_angle = mediapipe_yaw = body_yaw = None
         if self.fitter is not None and points is not None and min(points[11, 2], points[12, 2]) > 0.5:
             with torch.no_grad():
                 pixels = self.fitter._project(self.fitter._forward().joints[0, 16:18]).numpy()
             wanted = float(np.linalg.norm(points[11, :2] - points[12, :2]))
             yaw = landmark_yaw(points)
+            body_yaw = float(np.degrees(self.fitter.global_orient.detach()[0, 1]))
+            mediapipe_yaw = None if yaw is None else float(np.degrees(yaw))
             if wanted > 4 and yaw is not None:
                 away = abs((np.degrees(yaw) + 180.0) % 360.0 - 180.0)
                 profile_angle = min(away, 180.0 - away)  # 0 facing the camera or away, 90 side-on
@@ -109,6 +111,7 @@ def run_session(source, garment, max_frames=0, max_width=960):
         records.append(dict(status=status, reprojection=None if reprojection != reprojection else float(reprojection),
                             dressed=alpha is not None, garment_pixels=current.get("alpha_area"), uncovered=current.get("uncovered"),
                             shoulder_ratio=ratio, front_or_back=facing, profile_angle=profile_angle,
+                            mediapipe_yaw=mediapipe_yaw, body_yaw=body_yaw,
                             garment_width=current.get("garment_width"),
                             person_width=int(person_columns[-1] - person_columns[0] + 1) if person_columns.size else None))
         return out

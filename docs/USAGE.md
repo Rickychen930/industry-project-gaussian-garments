@@ -90,7 +90,7 @@ there is no display process.
               │  newest garment layer, moved with the torso ───────┘
               │  (this frame's face and hands stay in front)
               │
-              └─ newest frame ─► PIPELINE PROCESS (median 0.13-0.41 s a frame, 14 of 17 runs)
+              └─ newest frame ─► PIPELINE PROCESS (median 0.13-0.41 s a frame, 17 of 20 runs)
                                   1. MediaPipe landmarks
                                   2. SMPL-X body from NLF-S (image regressor)
                                   3. garment skinned to the body + cloth springs
@@ -141,7 +141,7 @@ and `tryon/body/regressor.py` (body), `tryon/garment/skinning.py` and
 |---|---|---|
 | Display frame rate (default display) | 7.3-7.5 fps on a video file | the pipeline's HUD |
 | Display frame rate (smooth mode) | 25 fps on a release clip: the clip's own rate, not a faster garment; never logged on the webcam | `smooth_display`, dancer clip |
-| Pipeline time per frame | median 125-411 ms of work in 14 of 17 timed runs of the final report; three above 0.5 s, all on a loaded machine (670, 602 and 1,034 ms); 0.085-0.10 s on a quiet machine; 129 ms on the laptop camera on 17 Oct (busy machine); 0.21-0.23 s before 8 Oct. Default display; a video file's decode adds ~40 ms | `--profile`; the pipeline's HUD |
+| Pipeline time per frame | median 125-411 ms of work in 17 of 20 timed runs of the final report; three above 0.5 s (670, 602 and 1,034 ms; see ROADMAP); 0.085-0.10 s on a quiet machine; 129 ms on the laptop camera on 17 Oct (busy machine); 0.21-0.23 s before 8 Oct. Default display; a video file's decode adds ~40 ms | `--profile`; the pipeline's HUD |
 | Stages (960-wide frame, medians) | MediaPipe 13, fit 8, render 56-66, erase beside the render (a worker thread; 0-23 ms of waiting), composite 5 ms; the body regressor and the clothing mask of the NEXT frame run during this frame | `--profile` |
 | Garment IoU vs the real garment, per frame (default display) | 0.728 on 5 release videos with the cloth stepped at the clip's own dt (0.722 without cloth); 0.730 in the final report's run; the authors' fit (four cameras): 0.827 | `tools/evaluate/vs_registration.py` |
 | Smooth mode, share of the per-frame accuracy | 77 % at the dancers' speed, 86-93 % at a quarter to an eighth of it | `tools/evaluate/async_display.py` (simulated) |
