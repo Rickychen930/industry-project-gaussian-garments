@@ -20,6 +20,8 @@ measured number; what is planned and what was tried and dropped is in
 
 ![The garment turns with the wearer](docs/demo/demo-preview.gif)
 
+[docs/demo/live-run-20261017.mp4](docs/demo/live-run-20261017.mp4) is a live run on the laptop camera (17 Oct 2026).
+
 [docs/demo/demo.mp4](docs/demo/demo.mp4) (59 s): the laptop camera on the left, the live try-on on the right
 (garment 00190_upper on a team member, Apple M1, no CUDA GPU), then the measured results. The wearer is Ricky,
 who gave consent; the garment belongs to the Gaussian Garments authors and is shown for research and

@@ -1,34 +1,35 @@
 {
- "frames": 351,
- "usable_frames": 339,
+ "frames": 1085,
+ "usable_frames": 970,
  "angle_range_degrees": [
-  0.00939515710251726,
+  0.008598297072637706,
   89.88563963018208
  ],
  "bins": [
   {
    "bin": "head-on (0 to 20 degrees)",
-   "frames": 192,
-   "garment_width_px": 463.0,
-   "person_width_px": 464.5,
-   "ratio": 0.9967707212055974
+   "frames": 708,
+   "garment_width_px": 494.0,
+   "person_width_px": 502.5,
+   "ratio": 0.9830845771144279
   },
   {
    "bin": "oblique (20 to 70)",
-   "frames": 67,
-   "garment_width_px": 282.0,
-   "person_width_px": 223.0,
-   "ratio": 1.2645739910313902
+   "frames": 173,
+   "garment_width_px": 337.0,
+   "person_width_px": 318.0,
+   "ratio": 1.059748427672956
   },
   {
    "bin": "side-on (70 to 90)",
-   "frames": 80,
+   "frames": 89,
    "garment_width_px": 237.0,
-   "person_width_px": 212.0,
-   "ratio": 1.1179245283018868
+   "person_width_px": 213.0,
+   "ratio": 1.1126760563380282
   }
  ],
  "sources": [
-  "seg-records.json"
+  "session-20261010-120547-turn-records.json",
+  "session-20261017-150621-records.json"
  ]
 }
