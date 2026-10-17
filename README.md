@@ -16,6 +16,21 @@ measured number; what is planned and what was tried and dropped is in
 ./live-tryon doctor         # what this machine has, and which GPU each stage uses
 ```
 
+## Demo
+
+![The garment turns with the wearer](docs/demo/demo-preview.gif)
+
+[docs/demo/demo.mp4](docs/demo/demo.mp4) (59 s): the laptop camera on the left, the live try-on on the right
+(garment 00190_upper on a team member, Apple M1, no CUDA GPU), then the measured results. The wearer is Ricky,
+who gave consent; the garment belongs to the Gaussian Garments authors and is shown for research and
+evaluation (third-party terms in `LICENSE`). Record your own:
+
+```bash
+./live-tryon bench 00190_upper 200       # stand 2-3 m from the camera; saves the camera frames and the output
+python -m tools.data.make_demo_video --camera ~/tryon-data/captures/bench-<time>-input.mp4 \
+    --tryon ~/tryon-data/captures/bench-<time>.mp4
+```
+
 ## Documentation
 
 | read | for |

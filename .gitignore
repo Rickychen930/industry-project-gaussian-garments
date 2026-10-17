@@ -24,6 +24,7 @@
 *.onnx
 *.safetensors
 *.mp4
+!docs/demo/*.mp4
 *.npy
 *.pkl
 
