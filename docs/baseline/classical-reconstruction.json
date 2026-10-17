@@ -5,7 +5,11 @@
   "0052",
   "0076"
  ],
- "frame_index": 10,
+ "frame_indices": [
+  10,
+  40,
+  70
+ ],
  "voxel_m": 0.02,
  "threshold_m": 0.02,
  "rows": [
@@ -62,7 +66,120 @@
     "recall": 0.5598315007853777,
     "f_score": 0.4742610680721788,
     "chamfer_cm": 3.2485994400283804
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "motion": [
+    {
+     "matches": 14,
+     "inliers": 5,
+     "rotation_error_deg": 173.3364036381969,
+     "direction_error_deg": 51.643039779030424
+    },
+    {
+     "matches": 16,
+     "inliers": 6,
+     "rotation_error_deg": 117.47357593844315,
+     "direction_error_deg": 42.97669555843659
+    },
+    {
+     "matches": 15,
+     "inliers": 4,
+     "rotation_error_deg": 146.77159996020453,
+     "direction_error_deg": 48.90639571607344
+    },
+    {
+     "matches": 21,
+     "inliers": 5,
+     "rotation_error_deg": 92.63515018837731,
+     "direction_error_deg": 51.527769410162044
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 9,
+     "inliers": 6,
+     "rotation_error_deg": 90.00902538096598,
+     "direction_error_deg": 43.22184583615702
+    }
+   ],
+   "triangulated_points": 7,
+   "triangulated_median_error_cm": 0.46701142646213506,
+   "person_hull": {
+    "precision": 0.5509088748960437,
+    "recall": 0.6896395104226429,
+    "f_score": 0.6125170630457852,
+    "chamfer_cm": 2.406159069639623
+   },
+   "garment_hull": {
+    "precision": 0.3956228956228956,
+    "recall": 0.46612675151047694,
+    "f_score": 0.42799069491542874,
+    "chamfer_cm": 3.1170336676447286
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "motion": [
+    {
+     "matches": 13,
+     "inliers": 7,
+     "rotation_error_deg": 108.6958700462061,
+     "direction_error_deg": 55.623439185478794
+    },
+    {
+     "matches": 17,
+     "inliers": 6,
+     "rotation_error_deg": 130.96399828817204,
+     "direction_error_deg": 4.417962251939703
+    },
+    {
+     "matches": 22,
+     "inliers": 9,
+     "rotation_error_deg": 160.81417266031093,
+     "direction_error_deg": 50.12487226793293
+    },
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 20,
+     "inliers": 4,
+     "rotation_error_deg": 177.00661986764607,
+     "direction_error_deg": 4.65487662490134
+    },
+    {
+     "matches": 16,
+     "inliers": 4,
+     "rotation_error_deg": 130.9281415779347,
+     "direction_error_deg": 30.14722451076755
+    }
+   ],
+   "triangulated_points": 10,
+   "triangulated_median_error_cm": 1.0017443597676072,
+   "person_hull": {
+    "precision": 0.4809625668449198,
+    "recall": 0.6736076445838979,
+    "f_score": 0.5612132698010565,
+    "chamfer_cm": 3.3649008260902598
+   },
+   "garment_hull": {
+    "precision": 0.346012832263978,
+    "recall": 0.4933638153299041,
+    "f_score": 0.40675473059254685,
+    "chamfer_cm": 4.21312360635063
+   },
+   "frame_index": 70
   },
   {
    "take": "00134/Inner/Take10",
@@ -117,7 +234,120 @@
     "recall": 0.514431586113002,
     "f_score": 0.45651519232443327,
     "chamfer_cm": 3.204297015262805
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "motion": [
+    {
+     "matches": 13,
+     "inliers": 5,
+     "rotation_error_deg": 97.09130286785836,
+     "direction_error_deg": 48.49340803939105
+    },
+    {
+     "matches": 9,
+     "inliers": 2,
+     "rotation_error_deg": 137.8201366660678,
+     "direction_error_deg": 30.110947027772173
+    },
+    {
+     "matches": 9,
+     "inliers": 2,
+     "rotation_error_deg": 141.3934060850956,
+     "direction_error_deg": 47.92223068356814
+    },
+    {
+     "matches": 17,
+     "inliers": 5,
+     "rotation_error_deg": 178.77348474772262,
+     "direction_error_deg": 50.34260773860244
+    },
+    {
+     "matches": 12,
+     "inliers": 3,
+     "rotation_error_deg": 169.6279436483427,
+     "direction_error_deg": 19.170734259395843
+    },
+    {
+     "matches": 15,
+     "inliers": 8,
+     "rotation_error_deg": 141.3163669362506,
+     "direction_error_deg": 55.24631108144676
+    }
+   ],
+   "triangulated_points": 11,
+   "triangulated_median_error_cm": 0.9694716695797169,
+   "person_hull": {
+    "precision": 0.45344698388909704,
+    "recall": 0.7394856493321966,
+    "f_score": 0.5621734672703053,
+    "chamfer_cm": 3.5116216289372124
+   },
+   "garment_hull": {
+    "precision": 0.36803551609322976,
+    "recall": 0.5086640581330352,
+    "f_score": 0.42707090240870277,
+    "chamfer_cm": 3.539622272002226
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "motion": [
+    {
+     "matches": 14,
+     "inliers": 5,
+     "rotation_error_deg": 171.6245476935693,
+     "direction_error_deg": 47.06210737873072
+    },
+    {
+     "matches": 16,
+     "inliers": 5,
+     "rotation_error_deg": 178.64428902618826,
+     "direction_error_deg": 33.4285202984979
+    },
+    {
+     "matches": 11,
+     "inliers": 3,
+     "rotation_error_deg": 90.03940578698624,
+     "direction_error_deg": 52.97541349618995
+    },
+    {
+     "matches": 18,
+     "inliers": 4,
+     "rotation_error_deg": 148.74679001011037,
+     "direction_error_deg": 48.45686564038944
+    },
+    {
+     "matches": 17,
+     "inliers": 6,
+     "rotation_error_deg": 176.96653727533743,
+     "direction_error_deg": 10.410465150826314
+    },
+    {
+     "matches": 26,
+     "inliers": 6,
+     "rotation_error_deg": 91.00369537901999,
+     "direction_error_deg": 40.69980079448754
+    }
+   ],
+   "triangulated_points": 13,
+   "triangulated_median_error_cm": 2.1377457623079996,
+   "person_hull": {
+    "precision": 0.6038346613545816,
+    "recall": 0.6817549239297087,
+    "f_score": 0.6404333985435636,
+    "chamfer_cm": 2.1367451991119606
+   },
+   "garment_hull": {
+    "precision": 0.46132075471698114,
+    "recall": 0.4561993769470405,
+    "f_score": 0.4587457726795462,
+    "chamfer_cm": 3.4164137760376434
+   },
+   "frame_index": 70
   },
   {
    "take": "00134/Inner/Take3",
@@ -172,7 +402,456 @@
     "recall": 0.611343495214463,
     "f_score": 0.5221618234959264,
     "chamfer_cm": 3.037373741113303
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "motion": [
+    {
+     "matches": 18,
+     "inliers": 5,
+     "rotation_error_deg": 89.16102975287376,
+     "direction_error_deg": 24.51330867044814
+    },
+    {
+     "matches": 10,
+     "inliers": 5,
+     "rotation_error_deg": 23.59924399348332,
+     "direction_error_deg": 5.232027029248929
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 12,
+     "inliers": 5,
+     "rotation_error_deg": 98.50874011001513,
+     "direction_error_deg": 48.438119868257914
+    },
+    {
+     "matches": 8,
+     "inliers": 3,
+     "rotation_error_deg": 161.59753943791924,
+     "direction_error_deg": 0.8962176734277503
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    }
+   ],
+   "triangulated_points": 9,
+   "triangulated_median_error_cm": 0.5675513067930793,
+   "person_hull": {
+    "precision": 0.4944509345794392,
+    "recall": 0.7820338740798971,
+    "f_score": 0.6058472099134549,
+    "chamfer_cm": 2.999675954971866
+   },
+   "garment_hull": {
+    "precision": 0.4176594253679047,
+    "recall": 0.5677841028884673,
+    "f_score": 0.4812865990708182,
+    "chamfer_cm": 3.2603906529426525
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "motion": [
+    {
+     "matches": 18,
+     "inliers": 7,
+     "rotation_error_deg": 88.7072934783522,
+     "direction_error_deg": 44.34783723460359
+    },
+    {
+     "matches": 16,
+     "inliers": 3,
+     "rotation_error_deg": 162.70333245657682,
+     "direction_error_deg": 21.475372481790615
+    },
+    {
+     "matches": 9,
+     "inliers": 2,
+     "rotation_error_deg": 130.94929773986934,
+     "direction_error_deg": 39.937411449492274
+    },
+    {
+     "matches": 13,
+     "inliers": 6,
+     "rotation_error_deg": 171.48948575359543,
+     "direction_error_deg": 68.85449194278338
+    },
+    {
+     "matches": 2,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 12,
+     "inliers": 3,
+     "rotation_error_deg": 111.05214642149521,
+     "direction_error_deg": 52.64402129748381
+    }
+   ],
+   "triangulated_points": 10,
+   "triangulated_median_error_cm": 0.37781639198868777,
+   "person_hull": {
+    "precision": 0.5863219349457881,
+    "recall": 0.705921317215112,
+    "f_score": 0.6405870596529277,
+    "chamfer_cm": 2.196647597082159
+   },
+   "garment_hull": {
+    "precision": 0.4858229598893499,
+    "recall": 0.5217031260782554,
+    "f_score": 0.5031241581233143,
+    "chamfer_cm": 2.5119931958678614
+   },
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "motion": [
+    {
+     "matches": 13,
+     "inliers": 6,
+     "rotation_error_deg": 107.1545142897194,
+     "direction_error_deg": 60.18175324330263
+    },
+    {
+     "matches": 9,
+     "inliers": 6,
+     "rotation_error_deg": 132.2490666635999,
+     "direction_error_deg": 15.259045241444147
+    },
+    {
+     "matches": 10,
+     "inliers": 3,
+     "rotation_error_deg": 139.59607446650287,
+     "direction_error_deg": 48.750002241712586
+    },
+    {
+     "matches": 14,
+     "inliers": 9,
+     "rotation_error_deg": 82.36434741434795,
+     "direction_error_deg": 37.56898145545456
+    },
+    {
+     "matches": 13,
+     "inliers": 4,
+     "rotation_error_deg": 138.8085297140618,
+     "direction_error_deg": 17.422703516636478
+    },
+    {
+     "matches": 17,
+     "inliers": 8,
+     "rotation_error_deg": 76.1331848905052,
+     "direction_error_deg": 59.81442507860401
+    }
+   ],
+   "triangulated_points": 7,
+   "triangulated_median_error_cm": 0.5795889867244639,
+   "person_hull": {
+    "precision": 0.564032098494009,
+    "recall": 0.7698382402061363,
+    "f_score": 0.6510580009561386,
+    "chamfer_cm": 2.2551903081012727
+   },
+   "garment_hull": {
+    "precision": 0.4500387296669249,
+    "recall": 0.5685067378069636,
+    "f_score": 0.5023831694509846,
+    "chamfer_cm": 2.6269203495858253
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "motion": [
+    {
+     "matches": 11,
+     "inliers": 4,
+     "rotation_error_deg": 96.07471025968287,
+     "direction_error_deg": 48.93743267145586
+    },
+    {
+     "matches": 18,
+     "inliers": 7,
+     "rotation_error_deg": 155.0093389823642,
+     "direction_error_deg": 4.065263749029852
+    },
+    {
+     "matches": 21,
+     "inliers": 7,
+     "rotation_error_deg": 175.07551458199538,
+     "direction_error_deg": 44.030331479020305
+    },
+    {
+     "matches": 25,
+     "inliers": 5,
+     "rotation_error_deg": 101.8309973418888,
+     "direction_error_deg": 51.35887186145397
+    },
+    {
+     "matches": 11,
+     "inliers": 6,
+     "rotation_error_deg": 90.36727107794535,
+     "direction_error_deg": 1.851354300836092
+    },
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    }
+   ],
+   "triangulated_points": 8,
+   "triangulated_median_error_cm": 0.9651572658789831,
+   "person_hull": {
+    "precision": 0.49754063301967494,
+    "recall": 0.7250521722633276,
+    "f_score": 0.5901276618042629,
+    "chamfer_cm": 2.7821355232969096
+   },
+   "garment_hull": {
+    "precision": 0.43474646716541976,
+    "recall": 0.5416666666666666,
+    "f_score": 0.48235252385513105,
+    "chamfer_cm": 2.7554865881499158
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "motion": [
+    {
+     "matches": 23,
+     "inliers": 3,
+     "rotation_error_deg": 89.75984239825058,
+     "direction_error_deg": 49.62029469789951
+    },
+    {
+     "matches": 14,
+     "inliers": 5,
+     "rotation_error_deg": 178.59879020262204,
+     "direction_error_deg": 13.417354995261515
+    },
+    {
+     "matches": 12,
+     "inliers": 4,
+     "rotation_error_deg": 162.18797481854756,
+     "direction_error_deg": 43.66067008329587
+    },
+    {
+     "matches": 12,
+     "inliers": 3,
+     "rotation_error_deg": 147.0353319846351,
+     "direction_error_deg": 43.99103448967658
+    },
+    {
+     "matches": 9,
+     "inliers": 6,
+     "rotation_error_deg": 162.9862515420892,
+     "direction_error_deg": 89.59411403226028
+    },
+    {
+     "matches": 15,
+     "inliers": 5,
+     "rotation_error_deg": 155.89105720115063,
+     "direction_error_deg": 41.33249911945666
+    }
+   ],
+   "triangulated_points": 11,
+   "triangulated_median_error_cm": 1.2770011094210265,
+   "person_hull": {
+    "precision": 0.4850196711389085,
+    "recall": 0.7180495664123584,
+    "f_score": 0.5789661204730405,
+    "chamfer_cm": 2.8135493973999908
+   },
+   "garment_hull": {
+    "precision": 0.4701561065197429,
+    "recall": 0.5714109521460287,
+    "f_score": 0.51586183769647,
+    "chamfer_cm": 2.8236906804043835
+   },
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "motion": [
+    {
+     "matches": 15,
+     "inliers": 6,
+     "rotation_error_deg": 158.32459620302063,
+     "direction_error_deg": 48.75990192050565
+    },
+    {
+     "matches": 13,
+     "inliers": 4,
+     "rotation_error_deg": 29.20981163345393,
+     "direction_error_deg": 27.68047905733509
+    },
+    {
+     "matches": 20,
+     "inliers": 9,
+     "rotation_error_deg": 89.80191190234534,
+     "direction_error_deg": 48.47772773349142
+    },
+    {
+     "matches": 13,
+     "inliers": 8,
+     "rotation_error_deg": 142.15703487154468,
+     "direction_error_deg": 53.8674598307158
+    },
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 9,
+     "inliers": 5,
+     "rotation_error_deg": 100.02367732161936,
+     "direction_error_deg": 33.07933660204414
+    }
+   ],
+   "triangulated_points": 10,
+   "triangulated_median_error_cm": 1.613936836635082,
+   "person_hull": {
+    "precision": 0.4774381368267831,
+    "recall": 0.7716749994076251,
+    "f_score": 0.589901848384447,
+    "chamfer_cm": 3.228068588772892
+   },
+   "garment_hull": {
+    "precision": 0.38949762249328096,
+    "recall": 0.5921915075520091,
+    "f_score": 0.4699189940945522,
+    "chamfer_cm": 3.214065430281561
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "motion": [
+    {
+     "matches": 14,
+     "inliers": 4,
+     "rotation_error_deg": 108.88581474308239,
+     "direction_error_deg": 49.55171109568898
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 12,
+     "inliers": 4,
+     "rotation_error_deg": 111.87193735217967,
+     "direction_error_deg": 44.116047464555564
+    },
+    {
+     "matches": 5,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 10,
+     "inliers": 5,
+     "rotation_error_deg": 172.31772224975387,
+     "direction_error_deg": 21.263854696890665
+    },
+    {
+     "matches": 11,
+     "inliers": 4,
+     "rotation_error_deg": 151.9927958252665,
+     "direction_error_deg": 43.95794002651531
+    }
+   ],
+   "triangulated_points": 6,
+   "triangulated_median_error_cm": 0.563440133523295,
+   "person_hull": {
+    "precision": 0.5917693661971831,
+    "recall": 0.8110783987843677,
+    "f_score": 0.6842814480175097,
+    "chamfer_cm": 2.212899807371578
+   },
+   "garment_hull": {
+    "precision": 0.5517541316323572,
+    "recall": 0.6143805474751995,
+    "f_score": 0.5813856864687666,
+    "chamfer_cm": 2.329968602943434
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "motion": [
+    {
+     "matches": 20,
+     "inliers": 6,
+     "rotation_error_deg": 174.3931873814376,
+     "direction_error_deg": 46.18192035285212
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 15,
+     "inliers": 7,
+     "rotation_error_deg": 110.51515246472968,
+     "direction_error_deg": 41.383428874491734
+    },
+    {
+     "matches": 13,
+     "inliers": 4,
+     "rotation_error_deg": 108.17185344886585,
+     "direction_error_deg": 48.141807183750245
+    },
+    {
+     "matches": 9,
+     "inliers": 6,
+     "rotation_error_deg": 150.48140507023874,
+     "direction_error_deg": 4.863336361901081
+    },
+    {
+     "matches": 10,
+     "inliers": 9,
+     "rotation_error_deg": 142.22291667267902,
+     "direction_error_deg": 47.949584879399836
+    }
+   ],
+   "triangulated_points": 9,
+   "triangulated_median_error_cm": 0.4707882493368221,
+   "person_hull": {
+    "precision": 0.5870744373918061,
+    "recall": 0.7549918792395147,
+    "f_score": 0.6605283617466455,
+    "chamfer_cm": 2.1820714129662786
+   },
+   "garment_hull": {
+    "precision": 0.4294506496466834,
+    "recall": 0.6270830683119196,
+    "f_score": 0.509782558741852,
+    "chamfer_cm": 2.7940676699407745
+   },
+   "frame_index": 70
   },
   {
    "take": "00136/Inner/Take1",
@@ -227,7 +906,120 @@
     "recall": 0.33793103448275863,
     "f_score": 0.3739414429199764,
     "chamfer_cm": 5.837356842050305
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "motion": [
+    {
+     "matches": 12,
+     "inliers": 7,
+     "rotation_error_deg": 142.32064235651114,
+     "direction_error_deg": 87.07765993842703
+    },
+    {
+     "matches": 14,
+     "inliers": 4,
+     "rotation_error_deg": 160.1037184397912,
+     "direction_error_deg": 16.262218405966063
+    },
+    {
+     "matches": 16,
+     "inliers": 5,
+     "rotation_error_deg": 167.1531881528815,
+     "direction_error_deg": 46.05956019948824
+    },
+    {
+     "matches": 23,
+     "inliers": 10,
+     "rotation_error_deg": 132.90767326833307,
+     "direction_error_deg": 47.843189408010666
+    },
+    {
+     "matches": 26,
+     "inliers": 5,
+     "rotation_error_deg": 178.89620619927183,
+     "direction_error_deg": 3.145174946184617
+    },
+    {
+     "matches": 8,
+     "inliers": 4,
+     "rotation_error_deg": 163.9570050263417,
+     "direction_error_deg": 42.74193839396092
+    }
+   ],
+   "triangulated_points": 5,
+   "triangulated_median_error_cm": 0.716834412319567,
+   "person_hull": {
+    "precision": 0.5673782521681121,
+    "recall": 0.7843807895111872,
+    "f_score": 0.6584614382667259,
+    "chamfer_cm": 2.101185442734514
+   },
+   "garment_hull": {
+    "precision": 0.48058001035732784,
+    "recall": 0.6534748264581505,
+    "f_score": 0.5538478893126213,
+    "chamfer_cm": 2.3327373354197825
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "motion": [
+    {
+     "matches": 20,
+     "inliers": 6,
+     "rotation_error_deg": 92.14170521163516,
+     "direction_error_deg": 43.1519382832194
+    },
+    {
+     "matches": 20,
+     "inliers": 4,
+     "rotation_error_deg": 179.425623688718,
+     "direction_error_deg": 10.813787098738436
+    },
+    {
+     "matches": 17,
+     "inliers": 8,
+     "rotation_error_deg": 150.9639255586348,
+     "direction_error_deg": 45.1215423477845
+    },
+    {
+     "matches": 18,
+     "inliers": 8,
+     "rotation_error_deg": 106.19260444552042,
+     "direction_error_deg": 43.82241609065371
+    },
+    {
+     "matches": 24,
+     "inliers": 7,
+     "rotation_error_deg": 179.42469617863242,
+     "direction_error_deg": 24.914511038021377
+    },
+    {
+     "matches": 11,
+     "inliers": 4,
+     "rotation_error_deg": 162.65199126593402,
+     "direction_error_deg": 48.563541926743845
+    }
+   ],
+   "triangulated_points": 8,
+   "triangulated_median_error_cm": 5.996486976638039,
+   "person_hull": {
+    "precision": 0.5048205128205128,
+    "recall": 0.7860916749964301,
+    "f_score": 0.6148136275120624,
+    "chamfer_cm": 2.702350629791541
+   },
+   "garment_hull": {
+    "precision": 0.40391644908616187,
+    "recall": 0.5929210305022552,
+    "f_score": 0.4805007077540097,
+    "chamfer_cm": 3.281205162379279
+   },
+   "frame_index": 70
   },
   {
    "take": "00136/Inner/Take11",
@@ -282,7 +1074,120 @@
     "recall": 0.6084377548750649,
     "f_score": 0.520935939441044,
     "chamfer_cm": 2.8622476350305917
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "motion": [
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 6,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 15,
+     "inliers": 4,
+     "rotation_error_deg": 143.51960720144757,
+     "direction_error_deg": 46.56347159488255
+    },
+    {
+     "matches": 14,
+     "inliers": 4,
+     "rotation_error_deg": 101.90669854531897,
+     "direction_error_deg": 46.74963387275748
+    },
+    {
+     "matches": 23,
+     "inliers": 7,
+     "rotation_error_deg": 175.50966517034522,
+     "direction_error_deg": 21.446401946953877
+    },
+    {
+     "matches": 8,
+     "inliers": 3,
+     "rotation_error_deg": 172.616988849199,
+     "direction_error_deg": 47.446848345244206
+    }
+   ],
+   "triangulated_points": 2,
+   "triangulated_median_error_cm": 3.383139483018069,
+   "person_hull": {
+    "precision": 0.62039795067318,
+    "recall": 0.7391981595533083,
+    "f_score": 0.6746077307500732,
+    "chamfer_cm": 2.017384642346336
+   },
+   "garment_hull": {
+    "precision": 0.4498594189315839,
+    "recall": 0.5741884086835292,
+    "f_score": 0.5044765623675664,
+    "chamfer_cm": 3.2572909115544246
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "motion": [
+    {
+     "matches": 20,
+     "inliers": 7,
+     "rotation_error_deg": 96.71105973921428,
+     "direction_error_deg": 46.97704694637616
+    },
+    {
+     "matches": 8,
+     "inliers": 6,
+     "rotation_error_deg": 22.724431006416157,
+     "direction_error_deg": 3.1924532052409984
+    },
+    {
+     "matches": 13,
+     "inliers": 7,
+     "rotation_error_deg": 76.01660088262055,
+     "direction_error_deg": 22.1687271755107
+    },
+    {
+     "matches": 15,
+     "inliers": 5,
+     "rotation_error_deg": 169.17119431615845,
+     "direction_error_deg": 49.598681552974924
+    },
+    {
+     "matches": 14,
+     "inliers": 9,
+     "rotation_error_deg": 144.7520602124187,
+     "direction_error_deg": 11.606773704203912
+    },
+    {
+     "matches": 8,
+     "inliers": 5,
+     "rotation_error_deg": 166.59778153112825,
+     "direction_error_deg": 47.601456615179536
+    }
+   ],
+   "triangulated_points": 4,
+   "triangulated_median_error_cm": 2.0053933657494927,
+   "person_hull": {
+    "precision": 0.62602010644589,
+    "recall": 0.7455493145468393,
+    "f_score": 0.6805763588917849,
+    "chamfer_cm": 1.9585787291091643
+   },
+   "garment_hull": {
+    "precision": 0.4674317617866005,
+    "recall": 0.5723253816163352,
+    "f_score": 0.5145875902685464,
+    "chamfer_cm": 3.0620065630770203
+   },
+   "frame_index": 70
   },
   {
    "take": "00136/Inner/Take12",
@@ -337,21 +1242,470 @@
     "recall": 0.6427489013486892,
     "f_score": 0.5598479689098942,
     "chamfer_cm": 2.521078284656235
-   }
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "motion": [
+    {
+     "matches": 19,
+     "inliers": 4,
+     "rotation_error_deg": 101.88490771301441,
+     "direction_error_deg": 56.338669903849436
+    },
+    {
+     "matches": 11,
+     "inliers": 3,
+     "rotation_error_deg": 177.62322249400736,
+     "direction_error_deg": 7.508244238038379
+    },
+    {
+     "matches": 8,
+     "inliers": 2,
+     "rotation_error_deg": 173.99920294474092,
+     "direction_error_deg": 50.85392713321149
+    },
+    {
+     "matches": 21,
+     "inliers": 5,
+     "rotation_error_deg": 99.24167626858674,
+     "direction_error_deg": 50.608784776993325
+    },
+    {
+     "matches": 13,
+     "inliers": 9,
+     "rotation_error_deg": 179.5606683027323,
+     "direction_error_deg": 38.938763354148605
+    },
+    {
+     "matches": 13,
+     "inliers": 6,
+     "rotation_error_deg": 142.83260649726927,
+     "direction_error_deg": 50.10057770260515
+    }
+   ],
+   "triangulated_points": 9,
+   "triangulated_median_error_cm": 2.7997011141463717,
+   "person_hull": {
+    "precision": 0.532378223495702,
+    "recall": 0.6332048181230393,
+    "f_score": 0.5784306122249308,
+    "chamfer_cm": 2.4586674979543233
+   },
+   "garment_hull": {
+    "precision": 0.45293621803877493,
+    "recall": 0.586509297111961,
+    "f_score": 0.5111404090092171,
+    "chamfer_cm": 2.71182959372925
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "motion": [
+    {
+     "matches": 16,
+     "inliers": 6,
+     "rotation_error_deg": 113.76105543216174,
+     "direction_error_deg": 43.73226167506168
+    },
+    {
+     "matches": 15,
+     "inliers": 5,
+     "rotation_error_deg": 177.63479438746165,
+     "direction_error_deg": 21.902800035822892
+    },
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    },
+    {
+     "matches": 14,
+     "inliers": 6,
+     "rotation_error_deg": 159.7110413568821,
+     "direction_error_deg": 47.796794733981535
+    },
+    {
+     "matches": 15,
+     "inliers": 5,
+     "rotation_error_deg": 178.76819445444605,
+     "direction_error_deg": 23.36725621116559
+    },
+    {
+     "matches": 17,
+     "inliers": 6,
+     "rotation_error_deg": 91.72272023725465,
+     "direction_error_deg": 50.405594806765805
+    }
+   ],
+   "triangulated_points": 15,
+   "triangulated_median_error_cm": 1.1397218078292275,
+   "person_hull": {
+    "precision": 0.550357732526142,
+    "recall": 0.687265205192829,
+    "f_score": 0.6112390267607128,
+    "chamfer_cm": 2.3245075097786314
+   },
+   "garment_hull": {
+    "precision": 0.4190751445086705,
+    "recall": 0.5780707841776545,
+    "f_score": 0.4858969794614644,
+    "chamfer_cm": 2.868182980931305
+   },
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "motion": [
+    {
+     "matches": 18,
+     "inliers": 5,
+     "rotation_error_deg": 93.1029992913608,
+     "direction_error_deg": 39.65782350068413
+    },
+    {
+     "matches": 9,
+     "inliers": 4,
+     "rotation_error_deg": 40.76916349830083,
+     "direction_error_deg": 26.06170402014977
+    },
+    {
+     "matches": 8,
+     "inliers": 4,
+     "rotation_error_deg": 106.92967779528394,
+     "direction_error_deg": 54.34690507850286
+    },
+    {
+     "matches": 15,
+     "inliers": 3,
+     "rotation_error_deg": 113.65830722824785,
+     "direction_error_deg": 57.79535760446311
+    },
+    {
+     "matches": 18,
+     "inliers": 6,
+     "rotation_error_deg": 166.53937622725275,
+     "direction_error_deg": 26.633048551446787
+    },
+    {
+     "matches": 13,
+     "inliers": 3,
+     "rotation_error_deg": 86.19311820634307,
+     "direction_error_deg": 52.15763684867176
+    }
+   ],
+   "triangulated_points": 7,
+   "triangulated_median_error_cm": 1.6417973929988487,
+   "person_hull": {
+    "precision": 0.5485662473081718,
+    "recall": 0.7745635671352283,
+    "f_score": 0.6422641598530459,
+    "chamfer_cm": 2.3818904449879037
+   },
+   "garment_hull": {
+    "precision": 0.4688888888888889,
+    "recall": 0.6444221570745255,
+    "f_score": 0.5428175536416711,
+    "chamfer_cm": 2.525558328863149
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "motion": [
+    {
+     "matches": 16,
+     "inliers": 5,
+     "rotation_error_deg": 103.8950263126752,
+     "direction_error_deg": 53.73711737570643
+    },
+    {
+     "matches": 15,
+     "inliers": 8,
+     "rotation_error_deg": 102.79817642292136,
+     "direction_error_deg": 20.657152574152946
+    },
+    {
+     "matches": 9,
+     "inliers": 3,
+     "rotation_error_deg": 88.28008508697266,
+     "direction_error_deg": 53.04358586156267
+    },
+    {
+     "matches": 20,
+     "inliers": 6,
+     "rotation_error_deg": 171.94870968035306,
+     "direction_error_deg": 47.94158586867441
+    },
+    {
+     "matches": 17,
+     "inliers": 3,
+     "rotation_error_deg": 177.34152537332557,
+     "direction_error_deg": 4.820966197199744
+    },
+    {
+     "matches": 14,
+     "inliers": 8,
+     "rotation_error_deg": 170.79455632768827,
+     "direction_error_deg": 84.37247025256532
+    }
+   ],
+   "triangulated_points": 10,
+   "triangulated_median_error_cm": 1.0383744033648505,
+   "person_hull": {
+    "precision": 0.5782975958414555,
+    "recall": 0.7672190822875754,
+    "f_score": 0.65949528234394,
+    "chamfer_cm": 2.1625959757679003
+   },
+   "garment_hull": {
+    "precision": 0.4578180818906293,
+    "recall": 0.6391497775580821,
+    "f_score": 0.5334966246860119,
+    "chamfer_cm": 2.511598732718757
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "motion": [
+    {
+     "matches": 21,
+     "inliers": 9,
+     "rotation_error_deg": 154.39183144214434,
+     "direction_error_deg": 50.347413230820436
+    },
+    {
+     "matches": 25,
+     "inliers": 8,
+     "rotation_error_deg": 57.278619431788734,
+     "direction_error_deg": 28.220282437208866
+    },
+    {
+     "matches": 20,
+     "inliers": 4,
+     "rotation_error_deg": 98.28007302775019,
+     "direction_error_deg": 46.5800692477898
+    },
+    {
+     "matches": 24,
+     "inliers": 8,
+     "rotation_error_deg": 101.95582733445134,
+     "direction_error_deg": 46.57520989220751
+    },
+    {
+     "matches": 32,
+     "inliers": 10,
+     "rotation_error_deg": 178.97984703228596,
+     "direction_error_deg": 1.9018460890438298
+    },
+    {
+     "matches": 22,
+     "inliers": 4,
+     "rotation_error_deg": 96.16999876662902,
+     "direction_error_deg": 43.83869790092775
+    }
+   ],
+   "triangulated_points": 23,
+   "triangulated_median_error_cm": 6.513778488404324,
+   "person_hull": {
+    "precision": 0.5425824175824175,
+    "recall": 0.739494391428093,
+    "f_score": 0.6259167186704864,
+    "chamfer_cm": 2.1784911184225297
+   },
+   "garment_hull": {
+    "precision": 0.4526201466196036,
+    "recall": 0.6350956130483689,
+    "f_score": 0.5285518150130815,
+    "chamfer_cm": 2.465172849875002
+   },
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "motion": [
+    {
+     "matches": 21,
+     "inliers": 7,
+     "rotation_error_deg": 91.07016382357546,
+     "direction_error_deg": 42.905569352259434
+    },
+    {
+     "matches": 22,
+     "inliers": 6,
+     "rotation_error_deg": 50.50670514318937,
+     "direction_error_deg": 16.408907259236315
+    },
+    {
+     "matches": 21,
+     "inliers": 4,
+     "rotation_error_deg": 90.03132532211261,
+     "direction_error_deg": 49.488169724793316
+    },
+    {
+     "matches": 17,
+     "inliers": 5,
+     "rotation_error_deg": 152.60892968125228,
+     "direction_error_deg": 47.40698101188647
+    },
+    {
+     "matches": 22,
+     "inliers": 5,
+     "rotation_error_deg": 171.61215918163126,
+     "direction_error_deg": 26.453882737559614
+    },
+    {
+     "matches": 7,
+     "inliers": 0,
+     "rotation_error_deg": null,
+     "direction_error_deg": null
+    }
+   ],
+   "triangulated_points": 16,
+   "triangulated_median_error_cm": 3.647070453077869,
+   "person_hull": {
+    "precision": 0.5094460454691002,
+    "recall": 0.7623113534715744,
+    "f_score": 0.6107399174807666,
+    "chamfer_cm": 2.615382983943212
+   },
+   "garment_hull": {
+    "precision": 0.40524638391762685,
+    "recall": 0.5957133387346247,
+    "f_score": 0.4823584224428833,
+    "chamfer_cm": 2.9704615780981714
+   },
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "motion": [
+    {
+     "matches": 18,
+     "inliers": 4,
+     "rotation_error_deg": 160.37146594708497,
+     "direction_error_deg": 40.744347710254914
+    },
+    {
+     "matches": 20,
+     "inliers": 3,
+     "rotation_error_deg": 155.11140838337403,
+     "direction_error_deg": 7.703711609209297
+    },
+    {
+     "matches": 13,
+     "inliers": 5,
+     "rotation_error_deg": 101.99213122292785,
+     "direction_error_deg": 43.450370743421246
+    },
+    {
+     "matches": 18,
+     "inliers": 5,
+     "rotation_error_deg": 97.26313771522405,
+     "direction_error_deg": 51.20257865767766
+    },
+    {
+     "matches": 18,
+     "inliers": 4,
+     "rotation_error_deg": 162.5472061919125,
+     "direction_error_deg": 14.676604474667947
+    },
+    {
+     "matches": 13,
+     "inliers": 5,
+     "rotation_error_deg": 175.13913332792688,
+     "direction_error_deg": 48.34974944123037
+    }
+   ],
+   "triangulated_points": 9,
+   "triangulated_median_error_cm": 4.999441821152879,
+   "person_hull": {
+    "precision": 0.5407556781999575,
+    "recall": 0.7483946995021765,
+    "f_score": 0.6278533370356906,
+    "chamfer_cm": 2.627091301922939
+   },
+   "garment_hull": {
+    "precision": 0.4539344721366564,
+    "recall": 0.5899819819819819,
+    "f_score": 0.5130930899776641,
+    "chamfer_cm": 2.6945536140308377
+   },
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "motion": [
+    {
+     "matches": 21,
+     "inliers": 2,
+     "rotation_error_deg": 86.42093488743545,
+     "direction_error_deg": 49.783070937382305
+    },
+    {
+     "matches": 27,
+     "inliers": 5,
+     "rotation_error_deg": 178.09627335197527,
+     "direction_error_deg": 26.989435069756016
+    },
+    {
+     "matches": 22,
+     "inliers": 6,
+     "rotation_error_deg": 86.4342906049914,
+     "direction_error_deg": 43.2988441977127
+    },
+    {
+     "matches": 15,
+     "inliers": 4,
+     "rotation_error_deg": 97.14904048207804,
+     "direction_error_deg": 44.47272167184874
+    },
+    {
+     "matches": 15,
+     "inliers": 3,
+     "rotation_error_deg": 127.16027262297065,
+     "direction_error_deg": 25.72439259355468
+    },
+    {
+     "matches": 18,
+     "inliers": 5,
+     "rotation_error_deg": 91.38639787547372,
+     "direction_error_deg": 43.775759669602046
+    }
+   ],
+   "triangulated_points": 13,
+   "triangulated_median_error_cm": 1.8739535191717667,
+   "person_hull": {
+    "precision": 0.48811475409836064,
+    "recall": 0.7180076628352491,
+    "f_score": 0.581151844729966,
+    "chamfer_cm": 3.0199063557991965
+   },
+   "garment_hull": {
+    "precision": 0.4140225179119754,
+    "recall": 0.6150101714617844,
+    "f_score": 0.49488818452413424,
+    "chamfer_cm": 2.675893070092213
+   },
+   "frame_index": 70
   }
  ],
  "summary": {
-  "takes": 6,
-  "pairs": 36,
-  "pairs_with_pose": 32,
-  "median_camera_rotation_error_deg": 108.62417792615898,
-  "median_camera_direction_error_deg": 46.061283547111955,
+  "frames": 30,
+  "pairs": 180,
+  "pairs_with_pose": 162,
+  "median_camera_rotation_error_deg": 131.60653247588596,
+  "median_camera_direction_error_deg": 44.79713200981662,
   "median_triangulated_points": 9.0,
-  "median_triangulation_error_cm": 1.8996377517436915,
-  "person_hull_f_score": 0.6001931239021134,
-  "garment_hull_f_score": 0.4975985037566114,
-  "garment_hull_precision": 0.43698975998395595,
-  "garment_hull_recall": 0.5841346278302213,
-  "garment_hull_chamfer_cm": 3.120835378188054
+  "median_triangulation_error_cm": 1.208361458625127,
+  "person_hull_f_score": 0.611878044903249,
+  "garment_hull_f_score": 0.5027536637871495,
+  "garment_hull_precision": 0.44994907429925435,
+  "garment_hull_recall": 0.5822900406448077,
+  "garment_hull_chamfer_cm": 2.8652153079809484
  }
 }

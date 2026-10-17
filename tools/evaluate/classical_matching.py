@@ -127,14 +127,19 @@ def summarise(result: dict) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--takes", type=int, default=3, help="takes per subject")
-    parser.add_argument("--frame-index", type=int, default=10)
+    parser.add_argument("--takes", type=int, default=5, help="takes per subject")
+    parser.add_argument("--frame-index", type=int, nargs="+", default=[10, 40, 70], help="frame positions per take")
     parser.add_argument("--out", default=str(paths.BASELINE / "classical-matching.json"))
     args = parser.parse_args()
     takes = []
     for subject in ("00134", "00136"):
         takes += sorted((paths.DATA_ROOT / "4d-dress" / subject / "Inner").glob("Take*"))[: args.takes]
-    result = evaluate(takes, args.frame_index)
+    result = {"rows": []}
+    for index in args.frame_index:
+        part = evaluate(takes, index)
+        result["rows"] += [{**row, "frame_index": index} for row in part["rows"]]
+    result.update({"cameras": list(CAMERAS), "ratio": RATIO, "frame_indices": args.frame_index,
+                   "control_step": CONTROL_STEP})
     result["summary"] = summarise(result)
     Path(args.out).write_text(json.dumps(result, indent=1))
     print(json.dumps(result["summary"], indent=1))

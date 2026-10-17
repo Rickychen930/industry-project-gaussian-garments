@@ -1,13 +1,4 @@
 {
- "cameras": [
-  "0004",
-  "0028",
-  "0052",
-  "0076"
- ],
- "ratio": 0.8,
- "frame_index": 10,
- "control_step": 5,
  "rows": [
   {
    "take": "00134/Inner/Take1",
@@ -19,7 +10,8 @@
     829
    ],
    "ratio_matches": 95,
-   "inliers": 58
+   "inliers": 58,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -31,7 +23,8 @@
     926
    ],
    "ratio_matches": 109,
-   "inliers": 48
+   "inliers": 48,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -43,7 +36,8 @@
     714
    ],
    "ratio_matches": 137,
-   "inliers": 73
+   "inliers": 73,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -55,7 +49,8 @@
     926
    ],
    "ratio_matches": 129,
-   "inliers": 62
+   "inliers": 62,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -67,7 +62,8 @@
     714
    ],
    "ratio_matches": 169,
-   "inliers": 86
+   "inliers": 86,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -79,7 +75,8 @@
     714
    ],
    "ratio_matches": 135,
-   "inliers": 67
+   "inliers": 67,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -91,7 +88,8 @@
     681
    ],
    "ratio_matches": 454,
-   "inliers": 391
+   "inliers": 391,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -103,7 +101,8 @@
     811
    ],
    "ratio_matches": 576,
-   "inliers": 493
+   "inliers": 493,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -115,7 +114,8 @@
     900
    ],
    "ratio_matches": 595,
-   "inliers": 545
+   "inliers": 545,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -127,7 +127,8 @@
     752
    ],
    "ratio_matches": 521,
-   "inliers": 460
+   "inliers": 460,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -139,7 +140,8 @@
     186
    ],
    "ratio_matches": 12,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -151,7 +153,8 @@
     188
    ],
    "ratio_matches": 13,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -163,7 +166,8 @@
     191
    ],
    "ratio_matches": 11,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -175,7 +179,8 @@
     188
    ],
    "ratio_matches": 8,
-   "inliers": 7
+   "inliers": 7,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -187,7 +192,8 @@
     191
    ],
    "ratio_matches": 15,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -199,7 +205,8 @@
     191
    ],
    "ratio_matches": 9,
-   "inliers": 7
+   "inliers": 7,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -211,7 +218,8 @@
     254
    ],
    "ratio_matches": 120,
-   "inliers": 99
+   "inliers": 99,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -223,7 +231,8 @@
     188
    ],
    "ratio_matches": 98,
-   "inliers": 78
+   "inliers": 78,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -235,7 +244,8 @@
     192
    ],
    "ratio_matches": 98,
-   "inliers": 80
+   "inliers": 80,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
@@ -247,12 +257,14 @@
     198
    ],
    "ratio_matches": 112,
-   "inliers": 93
+   "inliers": 93,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take1",
    "kind": "colmap",
-   "registered_images_of_4": 0
+   "registered_images_of_4": 0,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -264,7 +276,8 @@
     733
    ],
    "ratio_matches": 115,
-   "inliers": 56
+   "inliers": 56,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -276,7 +289,8 @@
     969
    ],
    "ratio_matches": 119,
-   "inliers": 65
+   "inliers": 65,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -288,7 +302,8 @@
     792
    ],
    "ratio_matches": 108,
-   "inliers": 61
+   "inliers": 61,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -300,7 +315,8 @@
     969
    ],
    "ratio_matches": 109,
-   "inliers": 52
+   "inliers": 52,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -312,7 +328,8 @@
     792
    ],
    "ratio_matches": 156,
-   "inliers": 87
+   "inliers": 87,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -324,7 +341,8 @@
     792
    ],
    "ratio_matches": 145,
-   "inliers": 86
+   "inliers": 86,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -336,7 +354,8 @@
     742
    ],
    "ratio_matches": 399,
-   "inliers": 324
+   "inliers": 324,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -348,7 +367,8 @@
     704
    ],
    "ratio_matches": 450,
-   "inliers": 391
+   "inliers": 391,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -360,7 +380,8 @@
     959
    ],
    "ratio_matches": 594,
-   "inliers": 523
+   "inliers": 523,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -372,7 +393,8 @@
     851
    ],
    "ratio_matches": 475,
-   "inliers": 413
+   "inliers": 413,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -384,7 +406,8 @@
     159
    ],
    "ratio_matches": 14,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -396,7 +419,8 @@
     193
    ],
    "ratio_matches": 16,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -408,7 +432,8 @@
     187
    ],
    "ratio_matches": 15,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -420,7 +445,8 @@
     193
    ],
    "ratio_matches": 17,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -432,7 +458,8 @@
     187
    ],
    "ratio_matches": 14,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -444,7 +471,8 @@
     187
    ],
    "ratio_matches": 16,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -456,7 +484,8 @@
     267
    ],
    "ratio_matches": 95,
-   "inliers": 58
+   "inliers": 58,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -468,7 +497,8 @@
     144
    ],
    "ratio_matches": 50,
-   "inliers": 28
+   "inliers": 28,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -480,7 +510,8 @@
     187
    ],
    "ratio_matches": 85,
-   "inliers": 66
+   "inliers": 66,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
@@ -492,12 +523,14 @@
     195
    ],
    "ratio_matches": 62,
-   "inliers": 40
+   "inliers": 40,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take10",
    "kind": "colmap",
-   "registered_images_of_4": 0
+   "registered_images_of_4": 0,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -509,7 +542,8 @@
     803
    ],
    "ratio_matches": 113,
-   "inliers": 65
+   "inliers": 65,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -521,7 +555,8 @@
     968
    ],
    "ratio_matches": 117,
-   "inliers": 61
+   "inliers": 61,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -533,7 +568,8 @@
     808
    ],
    "ratio_matches": 140,
-   "inliers": 73
+   "inliers": 73,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -545,7 +581,8 @@
     968
    ],
    "ratio_matches": 144,
-   "inliers": 69
+   "inliers": 69,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -557,7 +594,8 @@
     808
    ],
    "ratio_matches": 189,
-   "inliers": 94
+   "inliers": 94,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -569,7 +607,8 @@
     808
    ],
    "ratio_matches": 153,
-   "inliers": 86
+   "inliers": 86,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -581,7 +620,8 @@
     761
    ],
    "ratio_matches": 397,
-   "inliers": 353
+   "inliers": 353,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -593,7 +633,8 @@
     815
    ],
    "ratio_matches": 494,
-   "inliers": 450
+   "inliers": 450,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -605,7 +646,8 @@
     1013
    ],
    "ratio_matches": 592,
-   "inliers": 540
+   "inliers": 540,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -617,7 +659,8 @@
     870
    ],
    "ratio_matches": 504,
-   "inliers": 437
+   "inliers": 437,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -629,7 +672,8 @@
     169
    ],
    "ratio_matches": 22,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -641,7 +685,8 @@
     181
    ],
    "ratio_matches": 14,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -653,7 +698,8 @@
     199
    ],
    "ratio_matches": 18,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -665,7 +711,8 @@
     181
    ],
    "ratio_matches": 10,
-   "inliers": 7
+   "inliers": 7,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -677,7 +724,8 @@
     199
    ],
    "ratio_matches": 14,
-   "inliers": 10
+   "inliers": 10,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -689,7 +737,8 @@
     199
    ],
    "ratio_matches": 14,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -701,7 +750,8 @@
     213
    ],
    "ratio_matches": 81,
-   "inliers": 54
+   "inliers": 54,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -713,7 +763,8 @@
     165
    ],
    "ratio_matches": 72,
-   "inliers": 53
+   "inliers": 53,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -725,7 +776,8 @@
     205
    ],
    "ratio_matches": 76,
-   "inliers": 56
+   "inliers": 56,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
@@ -737,12 +789,546 @@
     196
    ],
    "ratio_matches": 68,
-   "inliers": 56
+   "inliers": 56,
+   "frame_index": 10
   },
   {
    "take": "00134/Inner/Take3",
    "kind": "colmap",
-   "registered_images_of_4": 0
+   "registered_images_of_4": 0,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    705,
+    841
+   ],
+   "ratio_matches": 102,
+   "inliers": 60,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    705,
+    1017
+   ],
+   "ratio_matches": 113,
+   "inliers": 53,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    705,
+    716
+   ],
+   "ratio_matches": 122,
+   "inliers": 69,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    841,
+    1017
+   ],
+   "ratio_matches": 125,
+   "inliers": 69,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    841,
+    716
+   ],
+   "ratio_matches": 162,
+   "inliers": 92,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    1017,
+    716
+   ],
+   "ratio_matches": 135,
+   "inliers": 61,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    705,
+    695
+   ],
+   "ratio_matches": 387,
+   "inliers": 320,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    841,
+    906
+   ],
+   "ratio_matches": 507,
+   "inliers": 446,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    1017,
+    1036
+   ],
+   "ratio_matches": 722,
+   "inliers": 666,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    716,
+    734
+   ],
+   "ratio_matches": 433,
+   "inliers": 380,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    245,
+    170
+   ],
+   "ratio_matches": 16,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    245,
+    203
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    245,
+    182
+   ],
+   "ratio_matches": 15,
+   "inliers": 10,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    170,
+    203
+   ],
+   "ratio_matches": 14,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    170,
+    182
+   ],
+   "ratio_matches": 13,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    203,
+    182
+   ],
+   "ratio_matches": 18,
+   "inliers": 11,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    245,
+    263
+   ],
+   "ratio_matches": 89,
+   "inliers": 66,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    170,
+    190
+   ],
+   "ratio_matches": 54,
+   "inliers": 37,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    203,
+    221
+   ],
+   "ratio_matches": 95,
+   "inliers": 68,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    182,
+    212
+   ],
+   "ratio_matches": 73,
+   "inliers": 60,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "kind": "colmap",
+   "registered_images_of_4": 2,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    755,
+    836
+   ],
+   "ratio_matches": 110,
+   "inliers": 62,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    755,
+    942
+   ],
+   "ratio_matches": 128,
+   "inliers": 49,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    755,
+    705
+   ],
+   "ratio_matches": 126,
+   "inliers": 66,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    836,
+    942
+   ],
+   "ratio_matches": 160,
+   "inliers": 81,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    836,
+    705
+   ],
+   "ratio_matches": 162,
+   "inliers": 65,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    942,
+    705
+   ],
+   "ratio_matches": 129,
+   "inliers": 57,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    755,
+    762
+   ],
+   "ratio_matches": 410,
+   "inliers": 360,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    836,
+    868
+   ],
+   "ratio_matches": 530,
+   "inliers": 475,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    942,
+    1001
+   ],
+   "ratio_matches": 606,
+   "inliers": 547,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    705,
+    745
+   ],
+   "ratio_matches": 420,
+   "inliers": 374,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    299,
+    161
+   ],
+   "ratio_matches": 22,
+   "inliers": 10,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    299,
+    160
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    299,
+    187
+   ],
+   "ratio_matches": 15,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    161,
+    160
+   ],
+   "ratio_matches": 16,
+   "inliers": 10,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    161,
+    187
+   ],
+   "ratio_matches": 10,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    187
+   ],
+   "ratio_matches": 9,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    299,
+    246
+   ],
+   "ratio_matches": 98,
+   "inliers": 63,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    161,
+    172
+   ],
+   "ratio_matches": 61,
+   "inliers": 42,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    160,
+    198
+   ],
+   "ratio_matches": 53,
+   "inliers": 31,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    187,
+    225
+   ],
+   "ratio_matches": 75,
+   "inliers": 56,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -754,7 +1340,8 @@
     846
    ],
    "ratio_matches": 124,
-   "inliers": 55
+   "inliers": 55,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -766,7 +1353,8 @@
     867
    ],
    "ratio_matches": 124,
-   "inliers": 58
+   "inliers": 58,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -778,7 +1366,8 @@
     802
    ],
    "ratio_matches": 145,
-   "inliers": 79
+   "inliers": 79,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -790,7 +1379,8 @@
     867
    ],
    "ratio_matches": 165,
-   "inliers": 70
+   "inliers": 70,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -802,7 +1392,8 @@
     802
    ],
    "ratio_matches": 207,
-   "inliers": 109
+   "inliers": 109,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -814,7 +1405,8 @@
     802
    ],
    "ratio_matches": 132,
-   "inliers": 76
+   "inliers": 76,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -826,7 +1418,8 @@
     703
    ],
    "ratio_matches": 522,
-   "inliers": 487
+   "inliers": 487,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -838,7 +1431,8 @@
     811
    ],
    "ratio_matches": 582,
-   "inliers": 540
+   "inliers": 540,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -850,7 +1444,8 @@
     845
    ],
    "ratio_matches": 625,
-   "inliers": 591
+   "inliers": 591,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -862,7 +1457,8 @@
     804
    ],
    "ratio_matches": 594,
-   "inliers": 553
+   "inliers": 553,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -874,7 +1470,8 @@
     83
    ],
    "ratio_matches": 10,
-   "inliers": 7
+   "inliers": 7,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -886,7 +1483,8 @@
     103
    ],
    "ratio_matches": 11,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -898,7 +1496,8 @@
     84
    ],
    "ratio_matches": 4,
-   "inliers": 0
+   "inliers": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -910,7 +1509,8 @@
     103
    ],
    "ratio_matches": 10,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -922,7 +1522,8 @@
     84
    ],
    "ratio_matches": 7,
-   "inliers": 0
+   "inliers": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -934,7 +1535,8 @@
     84
    ],
    "ratio_matches": 8,
-   "inliers": 0
+   "inliers": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -946,7 +1548,8 @@
     156
    ],
    "ratio_matches": 67,
-   "inliers": 64
+   "inliers": 64,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -958,7 +1561,8 @@
     159
    ],
    "ratio_matches": 49,
-   "inliers": 42
+   "inliers": 42,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -970,7 +1574,8 @@
     134
    ],
    "ratio_matches": 63,
-   "inliers": 61
+   "inliers": 61,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
@@ -982,12 +1587,14 @@
     185
    ],
    "ratio_matches": 54,
-   "inliers": 51
+   "inliers": 51,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take1",
    "kind": "colmap",
-   "registered_images_of_4": 0
+   "registered_images_of_4": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -999,7 +1606,8 @@
     800
    ],
    "ratio_matches": 108,
-   "inliers": 60
+   "inliers": 60,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1011,7 +1619,8 @@
     924
    ],
    "ratio_matches": 130,
-   "inliers": 53
+   "inliers": 53,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1023,7 +1632,8 @@
     795
    ],
    "ratio_matches": 136,
-   "inliers": 77
+   "inliers": 77,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1035,7 +1645,8 @@
     924
    ],
    "ratio_matches": 138,
-   "inliers": 65
+   "inliers": 65,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1047,7 +1658,8 @@
     795
    ],
    "ratio_matches": 190,
-   "inliers": 93
+   "inliers": 93,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1059,7 +1671,8 @@
     795
    ],
    "ratio_matches": 138,
-   "inliers": 77
+   "inliers": 77,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1071,7 +1684,8 @@
     613
    ],
    "ratio_matches": 406,
-   "inliers": 340
+   "inliers": 340,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1083,7 +1697,8 @@
     750
    ],
    "ratio_matches": 490,
-   "inliers": 436
+   "inliers": 436,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1095,7 +1710,8 @@
     943
    ],
    "ratio_matches": 646,
-   "inliers": 589
+   "inliers": 589,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1107,7 +1723,8 @@
     786
    ],
    "ratio_matches": 496,
-   "inliers": 408
+   "inliers": 408,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1119,7 +1736,8 @@
     165
    ],
    "ratio_matches": 11,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1131,7 +1749,8 @@
     134
    ],
    "ratio_matches": 10,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1143,7 +1762,8 @@
     169
    ],
    "ratio_matches": 4,
-   "inliers": 0
+   "inliers": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1155,7 +1775,8 @@
     134
    ],
    "ratio_matches": 18,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1167,7 +1788,8 @@
     169
    ],
    "ratio_matches": 25,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1179,7 +1801,8 @@
     169
    ],
    "ratio_matches": 11,
-   "inliers": 8
+   "inliers": 8,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1191,7 +1814,8 @@
     133
    ],
    "ratio_matches": 58,
-   "inliers": 45
+   "inliers": 45,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1203,7 +1827,8 @@
     135
    ],
    "ratio_matches": 65,
-   "inliers": 43
+   "inliers": 43,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1215,7 +1840,8 @@
     175
    ],
    "ratio_matches": 62,
-   "inliers": 51
+   "inliers": 51,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
@@ -1227,12 +1853,14 @@
     197
    ],
    "ratio_matches": 69,
-   "inliers": 49
+   "inliers": 49,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take11",
    "kind": "colmap",
-   "registered_images_of_4": 0
+   "registered_images_of_4": 0,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1244,7 +1872,8 @@
     786
    ],
    "ratio_matches": 106,
-   "inliers": 54
+   "inliers": 54,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1256,7 +1885,8 @@
     851
    ],
    "ratio_matches": 144,
-   "inliers": 66
+   "inliers": 66,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1268,7 +1898,8 @@
     765
    ],
    "ratio_matches": 147,
-   "inliers": 83
+   "inliers": 83,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1280,7 +1911,8 @@
     851
    ],
    "ratio_matches": 138,
-   "inliers": 73
+   "inliers": 73,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1292,7 +1924,8 @@
     765
    ],
    "ratio_matches": 167,
-   "inliers": 82
+   "inliers": 82,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1304,7 +1937,8 @@
     765
    ],
    "ratio_matches": 155,
-   "inliers": 76
+   "inliers": 76,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1316,7 +1950,8 @@
     682
    ],
    "ratio_matches": 434,
-   "inliers": 378
+   "inliers": 378,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1328,7 +1963,8 @@
     717
    ],
    "ratio_matches": 468,
-   "inliers": 411
+   "inliers": 411,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1340,7 +1976,8 @@
     779
    ],
    "ratio_matches": 535,
-   "inliers": 464
+   "inliers": 464,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1352,7 +1989,8 @@
     739
    ],
    "ratio_matches": 484,
-   "inliers": 416
+   "inliers": 416,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1364,7 +2002,8 @@
     160
    ],
    "ratio_matches": 15,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1376,7 +2015,8 @@
     162
    ],
    "ratio_matches": 21,
-   "inliers": 10
+   "inliers": 10,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1388,7 +2028,8 @@
     161
    ],
    "ratio_matches": 11,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1400,7 +2041,8 @@
     162
    ],
    "ratio_matches": 18,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1412,7 +2054,8 @@
     161
    ],
    "ratio_matches": 15,
-   "inliers": 9
+   "inliers": 9,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1424,7 +2067,8 @@
     161
    ],
    "ratio_matches": 19,
-   "inliers": 11
+   "inliers": 11,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1436,7 +2080,8 @@
     150
    ],
    "ratio_matches": 56,
-   "inliers": 41
+   "inliers": 41,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1448,7 +2093,8 @@
     117
    ],
    "ratio_matches": 70,
-   "inliers": 40
+   "inliers": 40,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1460,7 +2106,8 @@
     136
    ],
    "ratio_matches": 57,
-   "inliers": 39
+   "inliers": 39,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
@@ -1472,46 +2119,5937 @@
     153
    ],
    "ratio_matches": 57,
-   "inliers": 35
+   "inliers": 35,
+   "frame_index": 10
   },
   {
    "take": "00136/Inner/Take12",
    "kind": "colmap",
-   "registered_images_of_4": 4
+   "registered_images_of_4": 0,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    651,
+    768
+   ],
+   "ratio_matches": 110,
+   "inliers": 55,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    651,
+    901
+   ],
+   "ratio_matches": 114,
+   "inliers": 51,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    651,
+    733
+   ],
+   "ratio_matches": 127,
+   "inliers": 68,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    768,
+    901
+   ],
+   "ratio_matches": 143,
+   "inliers": 77,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    768,
+    733
+   ],
+   "ratio_matches": 175,
+   "inliers": 92,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    901,
+    733
+   ],
+   "ratio_matches": 145,
+   "inliers": 80,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    651,
+    661
+   ],
+   "ratio_matches": 403,
+   "inliers": 330,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    768,
+    814
+   ],
+   "ratio_matches": 497,
+   "inliers": 439,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    901,
+    991
+   ],
+   "ratio_matches": 624,
+   "inliers": 541,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    733,
+    741
+   ],
+   "ratio_matches": 457,
+   "inliers": 404,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    178,
+    145
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    178,
+    144
+   ],
+   "ratio_matches": 11,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    178,
+    150
+   ],
+   "ratio_matches": 10,
+   "inliers": 7,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    145,
+    144
+   ],
+   "ratio_matches": 15,
+   "inliers": 8,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    145,
+    150
+   ],
+   "ratio_matches": 16,
+   "inliers": 10,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    144,
+    150
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    178,
+    170
+   ],
+   "ratio_matches": 57,
+   "inliers": 38,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    145,
+    160
+   ],
+   "ratio_matches": 50,
+   "inliers": 40,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    144,
+    165
+   ],
+   "ratio_matches": 57,
+   "inliers": 35,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    150,
+    157
+   ],
+   "ratio_matches": 43,
+   "inliers": 25,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    663,
+    792
+   ],
+   "ratio_matches": 117,
+   "inliers": 58,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    663,
+    898
+   ],
+   "ratio_matches": 143,
+   "inliers": 68,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    663,
+    772
+   ],
+   "ratio_matches": 139,
+   "inliers": 69,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    898
+   ],
+   "ratio_matches": 158,
+   "inliers": 82,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    772
+   ],
+   "ratio_matches": 174,
+   "inliers": 93,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    898,
+    772
+   ],
+   "ratio_matches": 145,
+   "inliers": 86,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    663,
+    675
+   ],
+   "ratio_matches": 391,
+   "inliers": 342,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    792,
+    871
+   ],
+   "ratio_matches": 516,
+   "inliers": 458,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    898,
+    865
+   ],
+   "ratio_matches": 579,
+   "inliers": 525,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    772,
+    769
+   ],
+   "ratio_matches": 474,
+   "inliers": 402,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    181,
+    153
+   ],
+   "ratio_matches": 22,
+   "inliers": 12,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    181,
+    139
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    181,
+    179
+   ],
+   "ratio_matches": 21,
+   "inliers": 12,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    153,
+    139
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    153,
+    179
+   ],
+   "ratio_matches": 26,
+   "inliers": 12,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    139,
+    179
+   ],
+   "ratio_matches": 5,
+   "inliers": 0,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    181,
+    174
+   ],
+   "ratio_matches": 63,
+   "inliers": 42,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    153,
+    152
+   ],
+   "ratio_matches": 60,
+   "inliers": 40,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    139,
+    151
+   ],
+   "ratio_matches": 67,
+   "inliers": 46,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    179,
+    182
+   ],
+   "ratio_matches": 62,
+   "inliers": 34,
+   "frame_index": 10
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 10
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    673,
+    805
+   ],
+   "ratio_matches": 99,
+   "inliers": 55,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    673,
+    832
+   ],
+   "ratio_matches": 111,
+   "inliers": 53,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    673,
+    851
+   ],
+   "ratio_matches": 125,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    805,
+    832
+   ],
+   "ratio_matches": 130,
+   "inliers": 67,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    805,
+    851
+   ],
+   "ratio_matches": 132,
+   "inliers": 77,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    832,
+    851
+   ],
+   "ratio_matches": 131,
+   "inliers": 73,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    673,
+    713
+   ],
+   "ratio_matches": 443,
+   "inliers": 388,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    805,
+    755
+   ],
+   "ratio_matches": 483,
+   "inliers": 413,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    832,
+    869
+   ],
+   "ratio_matches": 555,
+   "inliers": 499,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    851,
+    812
+   ],
+   "ratio_matches": 556,
+   "inliers": 479,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    208
+   ],
+   "ratio_matches": 14,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    211
+   ],
+   "ratio_matches": 12,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    203
+   ],
+   "ratio_matches": 16,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    208,
+    211
+   ],
+   "ratio_matches": 19,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    208,
+    203
+   ],
+   "ratio_matches": 8,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    211,
+    203
+   ],
+   "ratio_matches": 10,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    199,
+    226
+   ],
+   "ratio_matches": 105,
+   "inliers": 83,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    208,
+    214
+   ],
+   "ratio_matches": 64,
+   "inliers": 46,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    211,
+    256
+   ],
+   "ratio_matches": 108,
+   "inliers": 86,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    203,
+    214
+   ],
+   "ratio_matches": 82,
+   "inliers": 63,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "kind": "colmap",
+   "registered_images_of_4": 4,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    733,
+    903
+   ],
+   "ratio_matches": 117,
+   "inliers": 64,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    733,
+    1008
+   ],
+   "ratio_matches": 120,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    733,
+    725
+   ],
+   "ratio_matches": 125,
+   "inliers": 71,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    903,
+    1008
+   ],
+   "ratio_matches": 166,
+   "inliers": 92,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    903,
+    725
+   ],
+   "ratio_matches": 185,
+   "inliers": 97,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    1008,
+    725
+   ],
+   "ratio_matches": 167,
+   "inliers": 83,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    733,
+    714
+   ],
+   "ratio_matches": 389,
+   "inliers": 359,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    903,
+    869
+   ],
+   "ratio_matches": 577,
+   "inliers": 511,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    1008,
+    1002
+   ],
+   "ratio_matches": 674,
+   "inliers": 589,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    725,
+    761
+   ],
+   "ratio_matches": 468,
+   "inliers": 412,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    264,
+    159
+   ],
+   "ratio_matches": 14,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    264,
+    205
+   ],
+   "ratio_matches": 8,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    264,
+    204
+   ],
+   "ratio_matches": 8,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    159,
+    205
+   ],
+   "ratio_matches": 19,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    159,
+    204
+   ],
+   "ratio_matches": 9,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    205,
+    204
+   ],
+   "ratio_matches": 17,
+   "inliers": 12,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    264,
+    245
+   ],
+   "ratio_matches": 84,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    159,
+    141
+   ],
+   "ratio_matches": 62,
+   "inliers": 45,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    205,
+    215
+   ],
+   "ratio_matches": 105,
+   "inliers": 76,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    204,
+    243
+   ],
+   "ratio_matches": 92,
+   "inliers": 67,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    808
+   ],
+   "ratio_matches": 123,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    980
+   ],
+   "ratio_matches": 118,
+   "inliers": 70,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    828
+   ],
+   "ratio_matches": 134,
+   "inliers": 66,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    808,
+    980
+   ],
+   "ratio_matches": 147,
+   "inliers": 81,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    808,
+    828
+   ],
+   "ratio_matches": 196,
+   "inliers": 110,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    980,
+    828
+   ],
+   "ratio_matches": 155,
+   "inliers": 81,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    735,
+    704
+   ],
+   "ratio_matches": 395,
+   "inliers": 349,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    808,
+    765
+   ],
+   "ratio_matches": 490,
+   "inliers": 444,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    980,
+    967
+   ],
+   "ratio_matches": 607,
+   "inliers": 569,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    828,
+    785
+   ],
+   "ratio_matches": 471,
+   "inliers": 405,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    230,
+    157
+   ],
+   "ratio_matches": 19,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    230,
+    180
+   ],
+   "ratio_matches": 7,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    230,
+    188
+   ],
+   "ratio_matches": 6,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    157,
+    180
+   ],
+   "ratio_matches": 9,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    157,
+    188
+   ],
+   "ratio_matches": 9,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    180,
+    188
+   ],
+   "ratio_matches": 4,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    230,
+    227
+   ],
+   "ratio_matches": 75,
+   "inliers": 56,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    157,
+    171
+   ],
+   "ratio_matches": 65,
+   "inliers": 42,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    180,
+    168
+   ],
+   "ratio_matches": 61,
+   "inliers": 50,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    188,
+    199
+   ],
+   "ratio_matches": 70,
+   "inliers": 46,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    686,
+    792
+   ],
+   "ratio_matches": 104,
+   "inliers": 45,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    686,
+    964
+   ],
+   "ratio_matches": 107,
+   "inliers": 51,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    686,
+    801
+   ],
+   "ratio_matches": 132,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    964
+   ],
+   "ratio_matches": 105,
+   "inliers": 48,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    801
+   ],
+   "ratio_matches": 158,
+   "inliers": 77,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    964,
+    801
+   ],
+   "ratio_matches": 151,
+   "inliers": 67,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    686,
+    717
+   ],
+   "ratio_matches": 304,
+   "inliers": 261,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    792,
+    811
+   ],
+   "ratio_matches": 424,
+   "inliers": 389,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    964,
+    930
+   ],
+   "ratio_matches": 543,
+   "inliers": 501,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    801,
+    789
+   ],
+   "ratio_matches": 388,
+   "inliers": 347,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    244,
+    187
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    244,
+    195
+   ],
+   "ratio_matches": 20,
+   "inliers": 15,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    244,
+    241
+   ],
+   "ratio_matches": 23,
+   "inliers": 16,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    187,
+    195
+   ],
+   "ratio_matches": 21,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    187,
+    241
+   ],
+   "ratio_matches": 16,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    195,
+    241
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    244,
+    246
+   ],
+   "ratio_matches": 28,
+   "inliers": 16,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    187,
+    159
+   ],
+   "ratio_matches": 23,
+   "inliers": 12,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    195,
+    173
+   ],
+   "ratio_matches": 38,
+   "inliers": 16,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    241,
+    228
+   ],
+   "ratio_matches": 32,
+   "inliers": 18,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "kind": "colmap",
+   "registered_images_of_4": 3,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    691,
+    808
+   ],
+   "ratio_matches": 113,
+   "inliers": 67,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    691,
+    985
+   ],
+   "ratio_matches": 116,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    691,
+    815
+   ],
+   "ratio_matches": 142,
+   "inliers": 81,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    808,
+    985
+   ],
+   "ratio_matches": 146,
+   "inliers": 77,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    808,
+    815
+   ],
+   "ratio_matches": 185,
+   "inliers": 102,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    985,
+    815
+   ],
+   "ratio_matches": 144,
+   "inliers": 74,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    691,
+    709
+   ],
+   "ratio_matches": 439,
+   "inliers": 397,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    808,
+    781
+   ],
+   "ratio_matches": 551,
+   "inliers": 489,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    985,
+    958
+   ],
+   "ratio_matches": 637,
+   "inliers": 567,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    815,
+    844
+   ],
+   "ratio_matches": 524,
+   "inliers": 453,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    146
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    199
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    211
+   ],
+   "ratio_matches": 11,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    146,
+    199
+   ],
+   "ratio_matches": 6,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    146,
+    211
+   ],
+   "ratio_matches": 13,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    199,
+    211
+   ],
+   "ratio_matches": 14,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    199,
+    204
+   ],
+   "ratio_matches": 89,
+   "inliers": 74,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    146,
+    129
+   ],
+   "ratio_matches": 66,
+   "inliers": 49,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    199,
+    207
+   ],
+   "ratio_matches": 111,
+   "inliers": 84,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    211,
+    253
+   ],
+   "ratio_matches": 101,
+   "inliers": 75,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "kind": "colmap",
+   "registered_images_of_4": 2,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    692,
+    806
+   ],
+   "ratio_matches": 114,
+   "inliers": 63,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    692,
+    885
+   ],
+   "ratio_matches": 114,
+   "inliers": 58,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    692,
+    780
+   ],
+   "ratio_matches": 148,
+   "inliers": 56,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    806,
+    885
+   ],
+   "ratio_matches": 147,
+   "inliers": 68,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    806,
+    780
+   ],
+   "ratio_matches": 193,
+   "inliers": 83,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    885,
+    780
+   ],
+   "ratio_matches": 138,
+   "inliers": 81,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    692,
+    673
+   ],
+   "ratio_matches": 427,
+   "inliers": 376,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    806,
+    810
+   ],
+   "ratio_matches": 513,
+   "inliers": 458,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    885,
+    867
+   ],
+   "ratio_matches": 572,
+   "inliers": 520,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    780,
+    809
+   ],
+   "ratio_matches": 509,
+   "inliers": 436,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    158,
+    156
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    158,
+    128
+   ],
+   "ratio_matches": 18,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    158,
+    163
+   ],
+   "ratio_matches": 18,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    156,
+    128
+   ],
+   "ratio_matches": 21,
+   "inliers": 17,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    156,
+    163
+   ],
+   "ratio_matches": 30,
+   "inliers": 12,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    128,
+    163
+   ],
+   "ratio_matches": 8,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    158,
+    149
+   ],
+   "ratio_matches": 57,
+   "inliers": 36,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    156,
+    159
+   ],
+   "ratio_matches": 48,
+   "inliers": 24,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    128,
+    144
+   ],
+   "ratio_matches": 45,
+   "inliers": 27,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    163,
+    188
+   ],
+   "ratio_matches": 79,
+   "inliers": 49,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "kind": "colmap",
+   "registered_images_of_4": 4,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    640,
+    795
+   ],
+   "ratio_matches": 113,
+   "inliers": 57,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    640,
+    927
+   ],
+   "ratio_matches": 137,
+   "inliers": 53,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    640,
+    789
+   ],
+   "ratio_matches": 143,
+   "inliers": 74,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    795,
+    927
+   ],
+   "ratio_matches": 140,
+   "inliers": 74,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    795,
+    789
+   ],
+   "ratio_matches": 179,
+   "inliers": 94,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    927,
+    789
+   ],
+   "ratio_matches": 156,
+   "inliers": 78,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    640,
+    651
+   ],
+   "ratio_matches": 433,
+   "inliers": 382,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    795,
+    811
+   ],
+   "ratio_matches": 536,
+   "inliers": 472,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    927,
+    986
+   ],
+   "ratio_matches": 645,
+   "inliers": 577,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    789,
+    811
+   ],
+   "ratio_matches": 541,
+   "inliers": 474,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    118,
+    153
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    118,
+    173
+   ],
+   "ratio_matches": 7,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    118,
+    170
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    153,
+    173
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    153,
+    170
+   ],
+   "ratio_matches": 19,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    173,
+    170
+   ],
+   "ratio_matches": 12,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    118,
+    114
+   ],
+   "ratio_matches": 55,
+   "inliers": 37,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    153,
+    173
+   ],
+   "ratio_matches": 81,
+   "inliers": 57,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    173,
+    199
+   ],
+   "ratio_matches": 97,
+   "inliers": 75,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    170,
+    191
+   ],
+   "ratio_matches": 99,
+   "inliers": 77,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    724,
+    764
+   ],
+   "ratio_matches": 132,
+   "inliers": 75,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    724,
+    765
+   ],
+   "ratio_matches": 133,
+   "inliers": 69,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    724,
+    735
+   ],
+   "ratio_matches": 144,
+   "inliers": 70,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    764,
+    765
+   ],
+   "ratio_matches": 131,
+   "inliers": 65,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    764,
+    735
+   ],
+   "ratio_matches": 181,
+   "inliers": 96,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    735
+   ],
+   "ratio_matches": 128,
+   "inliers": 72,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    724,
+    809
+   ],
+   "ratio_matches": 469,
+   "inliers": 426,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    764,
+    807
+   ],
+   "ratio_matches": 459,
+   "inliers": 429,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    765,
+    743
+   ],
+   "ratio_matches": 470,
+   "inliers": 424,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    735,
+    741
+   ],
+   "ratio_matches": 398,
+   "inliers": 360,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    134,
+    154
+   ],
+   "ratio_matches": 18,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    134,
+    149
+   ],
+   "ratio_matches": 11,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    134,
+    171
+   ],
+   "ratio_matches": 8,
+   "inliers": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    154,
+    149
+   ],
+   "ratio_matches": 13,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    154,
+    171
+   ],
+   "ratio_matches": 16,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    149,
+    171
+   ],
+   "ratio_matches": 12,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    134,
+    190
+   ],
+   "ratio_matches": 35,
+   "inliers": 22,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    154,
+    157
+   ],
+   "ratio_matches": 26,
+   "inliers": 14,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    149,
+    137
+   ],
+   "ratio_matches": 39,
+   "inliers": 25,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    171,
+    191
+   ],
+   "ratio_matches": 31,
+   "inliers": 17,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    645,
+    765
+   ],
+   "ratio_matches": 114,
+   "inliers": 62,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    645,
+    1001
+   ],
+   "ratio_matches": 125,
+   "inliers": 54,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    645,
+    719
+   ],
+   "ratio_matches": 140,
+   "inliers": 79,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    1001
+   ],
+   "ratio_matches": 142,
+   "inliers": 70,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    719
+   ],
+   "ratio_matches": 174,
+   "inliers": 88,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    1001,
+    719
+   ],
+   "ratio_matches": 156,
+   "inliers": 82,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    645,
+    644
+   ],
+   "ratio_matches": 366,
+   "inliers": 332,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    765,
+    763
+   ],
+   "ratio_matches": 480,
+   "inliers": 416,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    1001,
+    953
+   ],
+   "ratio_matches": 641,
+   "inliers": 582,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    719,
+    743
+   ],
+   "ratio_matches": 420,
+   "inliers": 383,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    178
+   ],
+   "ratio_matches": 14,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    184
+   ],
+   "ratio_matches": 17,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    160
+   ],
+   "ratio_matches": 11,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    178,
+    184
+   ],
+   "ratio_matches": 15,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    178,
+    160
+   ],
+   "ratio_matches": 22,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    184,
+    160
+   ],
+   "ratio_matches": 13,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    160,
+    165
+   ],
+   "ratio_matches": 55,
+   "inliers": 42,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    178,
+    146
+   ],
+   "ratio_matches": 70,
+   "inliers": 45,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    184,
+    166
+   ],
+   "ratio_matches": 59,
+   "inliers": 43,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    160,
+    168
+   ],
+   "ratio_matches": 43,
+   "inliers": 29,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    792
+   ],
+   "ratio_matches": 106,
+   "inliers": 59,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    849
+   ],
+   "ratio_matches": 128,
+   "inliers": 66,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    735,
+    778
+   ],
+   "ratio_matches": 151,
+   "inliers": 72,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    849
+   ],
+   "ratio_matches": 150,
+   "inliers": 64,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    792,
+    778
+   ],
+   "ratio_matches": 182,
+   "inliers": 88,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    849,
+    778
+   ],
+   "ratio_matches": 149,
+   "inliers": 88,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    735,
+    714
+   ],
+   "ratio_matches": 411,
+   "inliers": 367,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    792,
+    828
+   ],
+   "ratio_matches": 495,
+   "inliers": 432,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    849,
+    889
+   ],
+   "ratio_matches": 510,
+   "inliers": 434,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    778,
+    755
+   ],
+   "ratio_matches": 439,
+   "inliers": 381,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    152,
+    159
+   ],
+   "ratio_matches": 16,
+   "inliers": 11,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    152,
+    193
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    152,
+    188
+   ],
+   "ratio_matches": 14,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    159,
+    193
+   ],
+   "ratio_matches": 16,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    159,
+    188
+   ],
+   "ratio_matches": 19,
+   "inliers": 10,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    193,
+    188
+   ],
+   "ratio_matches": 14,
+   "inliers": 8,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    152,
+    176
+   ],
+   "ratio_matches": 27,
+   "inliers": 19,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    159,
+    169
+   ],
+   "ratio_matches": 47,
+   "inliers": 28,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    193,
+    166
+   ],
+   "ratio_matches": 57,
+   "inliers": 25,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    188,
+    166
+   ],
+   "ratio_matches": 53,
+   "inliers": 29,
+   "frame_index": 40
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 40
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    746,
+    778
+   ],
+   "ratio_matches": 98,
+   "inliers": 48,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    746,
+    882
+   ],
+   "ratio_matches": 109,
+   "inliers": 59,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    746,
+    729
+   ],
+   "ratio_matches": 111,
+   "inliers": 67,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    778,
+    882
+   ],
+   "ratio_matches": 121,
+   "inliers": 67,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    778,
+    729
+   ],
+   "ratio_matches": 158,
+   "inliers": 75,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    882,
+    729
+   ],
+   "ratio_matches": 136,
+   "inliers": 72,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    746,
+    732
+   ],
+   "ratio_matches": 420,
+   "inliers": 382,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    778,
+    870
+   ],
+   "ratio_matches": 498,
+   "inliers": 464,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    882,
+    873
+   ],
+   "ratio_matches": 588,
+   "inliers": 540,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    729,
+    747
+   ],
+   "ratio_matches": 428,
+   "inliers": 391,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    280,
+    172
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    280,
+    209
+   ],
+   "ratio_matches": 22,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    280,
+    206
+   ],
+   "ratio_matches": 24,
+   "inliers": 14,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    172,
+    209
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    172,
+    206
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    209,
+    206
+   ],
+   "ratio_matches": 15,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    280,
+    275
+   ],
+   "ratio_matches": 100,
+   "inliers": 83,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    172,
+    205
+   ],
+   "ratio_matches": 60,
+   "inliers": 52,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    209,
+    212
+   ],
+   "ratio_matches": 96,
+   "inliers": 82,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    206,
+    193
+   ],
+   "ratio_matches": 75,
+   "inliers": 67,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take1",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    670,
+    865
+   ],
+   "ratio_matches": 107,
+   "inliers": 54,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    670,
+    841
+   ],
+   "ratio_matches": 119,
+   "inliers": 56,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    670,
+    852
+   ],
+   "ratio_matches": 125,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    865,
+    841
+   ],
+   "ratio_matches": 125,
+   "inliers": 66,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    865,
+    852
+   ],
+   "ratio_matches": 145,
+   "inliers": 67,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    841,
+    852
+   ],
+   "ratio_matches": 131,
+   "inliers": 69,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    670,
+    709
+   ],
+   "ratio_matches": 303,
+   "inliers": 271,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    865,
+    815
+   ],
+   "ratio_matches": 399,
+   "inliers": 367,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    841,
+    782
+   ],
+   "ratio_matches": 416,
+   "inliers": 384,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    852,
+    866
+   ],
+   "ratio_matches": 516,
+   "inliers": 491,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    185,
+    302
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    185,
+    223
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    185,
+    170
+   ],
+   "ratio_matches": 12,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    302,
+    223
+   ],
+   "ratio_matches": 22,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    302,
+    170
+   ],
+   "ratio_matches": 21,
+   "inliers": 13,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    223,
+    170
+   ],
+   "ratio_matches": 17,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    185,
+    234
+   ],
+   "ratio_matches": 9,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    302,
+    267
+   ],
+   "ratio_matches": 32,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    223,
+    201
+   ],
+   "ratio_matches": 17,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    170,
+    192
+   ],
+   "ratio_matches": 12,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take10",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    887,
+    864
+   ],
+   "ratio_matches": 129,
+   "inliers": 69,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    887,
+    861
+   ],
+   "ratio_matches": 138,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    887,
+    783
+   ],
+   "ratio_matches": 125,
+   "inliers": 69,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    864,
+    861
+   ],
+   "ratio_matches": 140,
+   "inliers": 84,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    864,
+    783
+   ],
+   "ratio_matches": 148,
+   "inliers": 79,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    861,
+    783
+   ],
+   "ratio_matches": 121,
+   "inliers": 58,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    887,
+    901
+   ],
+   "ratio_matches": 588,
+   "inliers": 502,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    864,
+    857
+   ],
+   "ratio_matches": 578,
+   "inliers": 532,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    861,
+    954
+   ],
+   "ratio_matches": 549,
+   "inliers": 468,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    783,
+    808
+   ],
+   "ratio_matches": 418,
+   "inliers": 388,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    239,
+    166
+   ],
+   "ratio_matches": 17,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    239,
+    202
+   ],
+   "ratio_matches": 19,
+   "inliers": 12,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    239,
+    274
+   ],
+   "ratio_matches": 10,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    166,
+    202
+   ],
+   "ratio_matches": 11,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    166,
+    274
+   ],
+   "ratio_matches": 4,
+   "inliers": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    202,
+    274
+   ],
+   "ratio_matches": 10,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    239,
+    230
+   ],
+   "ratio_matches": 97,
+   "inliers": 58,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    166,
+    157
+   ],
+   "ratio_matches": 57,
+   "inliers": 41,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    202,
+    215
+   ],
+   "ratio_matches": 110,
+   "inliers": 65,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    274,
+    268
+   ],
+   "ratio_matches": 82,
+   "inliers": 60,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take3",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    704,
+    762
+   ],
+   "ratio_matches": 107,
+   "inliers": 53,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    704,
+    996
+   ],
+   "ratio_matches": 107,
+   "inliers": 53,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    704,
+    826
+   ],
+   "ratio_matches": 124,
+   "inliers": 71,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    762,
+    996
+   ],
+   "ratio_matches": 103,
+   "inliers": 38,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    762,
+    826
+   ],
+   "ratio_matches": 126,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    996,
+    826
+   ],
+   "ratio_matches": 133,
+   "inliers": 73,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    704,
+    731
+   ],
+   "ratio_matches": 341,
+   "inliers": 285,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    762,
+    736
+   ],
+   "ratio_matches": 384,
+   "inliers": 330,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    996,
+    988
+   ],
+   "ratio_matches": 555,
+   "inliers": 485,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    826,
+    853
+   ],
+   "ratio_matches": 408,
+   "inliers": 351,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    257,
+    211
+   ],
+   "ratio_matches": 22,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    257,
+    219
+   ],
+   "ratio_matches": 16,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    257,
+    260
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    211,
+    219
+   ],
+   "ratio_matches": 19,
+   "inliers": 12,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    211,
+    260
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    219,
+    260
+   ],
+   "ratio_matches": 11,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    257,
+    273
+   ],
+   "ratio_matches": 47,
+   "inliers": 25,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    211,
+    173
+   ],
+   "ratio_matches": 40,
+   "inliers": 20,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    219,
+    215
+   ],
+   "ratio_matches": 58,
+   "inliers": 32,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    260,
+    267
+   ],
+   "ratio_matches": 61,
+   "inliers": 34,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take4",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    895
+   ],
+   "ratio_matches": 121,
+   "inliers": 67,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    957
+   ],
+   "ratio_matches": 131,
+   "inliers": 66,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    765,
+    753
+   ],
+   "ratio_matches": 144,
+   "inliers": 85,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    895,
+    957
+   ],
+   "ratio_matches": 175,
+   "inliers": 98,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    895,
+    753
+   ],
+   "ratio_matches": 212,
+   "inliers": 115,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    957,
+    753
+   ],
+   "ratio_matches": 133,
+   "inliers": 65,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    765,
+    742
+   ],
+   "ratio_matches": 423,
+   "inliers": 372,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    895,
+    911
+   ],
+   "ratio_matches": 604,
+   "inliers": 549,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    957,
+    1004
+   ],
+   "ratio_matches": 648,
+   "inliers": 567,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    753,
+    760
+   ],
+   "ratio_matches": 449,
+   "inliers": 396,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    265,
+    146
+   ],
+   "ratio_matches": 17,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    265,
+    186
+   ],
+   "ratio_matches": 10,
+   "inliers": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    265,
+    235
+   ],
+   "ratio_matches": 10,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    146,
+    186
+   ],
+   "ratio_matches": 13,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    146,
+    235
+   ],
+   "ratio_matches": 7,
+   "inliers": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    186,
+    235
+   ],
+   "ratio_matches": 6,
+   "inliers": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    265,
+    261
+   ],
+   "ratio_matches": 87,
+   "inliers": 64,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    146,
+    180
+   ],
+   "ratio_matches": 62,
+   "inliers": 54,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    186,
+    205
+   ],
+   "ratio_matches": 76,
+   "inliers": 42,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    235,
+    234
+   ],
+   "ratio_matches": 75,
+   "inliers": 50,
+   "frame_index": 70
+  },
+  {
+   "take": "00134/Inner/Take5",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    688,
+    789
+   ],
+   "ratio_matches": 115,
+   "inliers": 51,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    688,
+    883
+   ],
+   "ratio_matches": 117,
+   "inliers": 50,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    688,
+    760
+   ],
+   "ratio_matches": 141,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    789,
+    883
+   ],
+   "ratio_matches": 148,
+   "inliers": 79,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    789,
+    760
+   ],
+   "ratio_matches": 177,
+   "inliers": 79,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    883,
+    760
+   ],
+   "ratio_matches": 154,
+   "inliers": 76,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    688,
+    669
+   ],
+   "ratio_matches": 403,
+   "inliers": 357,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    789,
+    835
+   ],
+   "ratio_matches": 528,
+   "inliers": 464,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    883,
+    870
+   ],
+   "ratio_matches": 548,
+   "inliers": 517,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    760,
+    771
+   ],
+   "ratio_matches": 435,
+   "inliers": 381,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    145,
+    150
+   ],
+   "ratio_matches": 17,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    145,
+    144
+   ],
+   "ratio_matches": 20,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    145,
+    181
+   ],
+   "ratio_matches": 22,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    150,
+    144
+   ],
+   "ratio_matches": 15,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    150,
+    181
+   ],
+   "ratio_matches": 20,
+   "inliers": 13,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    144,
+    181
+   ],
+   "ratio_matches": 14,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    145,
+    165
+   ],
+   "ratio_matches": 53,
+   "inliers": 38,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    150,
+    150
+   ],
+   "ratio_matches": 46,
+   "inliers": 22,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    144,
+    137
+   ],
+   "ratio_matches": 30,
+   "inliers": 20,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    181,
+    179
+   ],
+   "ratio_matches": 47,
+   "inliers": 30,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take1",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    619,
+    779
+   ],
+   "ratio_matches": 112,
+   "inliers": 59,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    619,
+    915
+   ],
+   "ratio_matches": 123,
+   "inliers": 56,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    619,
+    793
+   ],
+   "ratio_matches": 129,
+   "inliers": 70,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    779,
+    915
+   ],
+   "ratio_matches": 131,
+   "inliers": 65,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    779,
+    793
+   ],
+   "ratio_matches": 148,
+   "inliers": 76,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    915,
+    793
+   ],
+   "ratio_matches": 148,
+   "inliers": 70,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    619,
+    615
+   ],
+   "ratio_matches": 373,
+   "inliers": 337,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    779,
+    753
+   ],
+   "ratio_matches": 475,
+   "inliers": 373,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    915,
+    975
+   ],
+   "ratio_matches": 586,
+   "inliers": 531,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    793,
+    773
+   ],
+   "ratio_matches": 462,
+   "inliers": 353,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    109,
+    164
+   ],
+   "ratio_matches": 20,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    109,
+    138
+   ],
+   "ratio_matches": 11,
+   "inliers": 7,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    109,
+    202
+   ],
+   "ratio_matches": 12,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    164,
+    138
+   ],
+   "ratio_matches": 18,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    164,
+    202
+   ],
+   "ratio_matches": 18,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    138,
+    202
+   ],
+   "ratio_matches": 13,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    109,
+    121
+   ],
+   "ratio_matches": 31,
+   "inliers": 18,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    164,
+    152
+   ],
+   "ratio_matches": 86,
+   "inliers": 51,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    138,
+    166
+   ],
+   "ratio_matches": 47,
+   "inliers": 30,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    202,
+    212
+   ],
+   "ratio_matches": 89,
+   "inliers": 58,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take11",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    758,
+    707
+   ],
+   "ratio_matches": 138,
+   "inliers": 69,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    758,
+    748
+   ],
+   "ratio_matches": 157,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    758,
+    735
+   ],
+   "ratio_matches": 145,
+   "inliers": 65,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    707,
+    748
+   ],
+   "ratio_matches": 140,
+   "inliers": 76,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    707,
+    735
+   ],
+   "ratio_matches": 170,
+   "inliers": 73,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    748,
+    735
+   ],
+   "ratio_matches": 157,
+   "inliers": 81,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    758,
+    779
+   ],
+   "ratio_matches": 498,
+   "inliers": 445,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    707,
+    830
+   ],
+   "ratio_matches": 474,
+   "inliers": 436,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    748,
+    824
+   ],
+   "ratio_matches": 503,
+   "inliers": 447,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    735,
+    773
+   ],
+   "ratio_matches": 402,
+   "inliers": 360,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    136,
+    126
+   ],
+   "ratio_matches": 16,
+   "inliers": 13,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    136,
+    137
+   ],
+   "ratio_matches": 15,
+   "inliers": 9,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    136,
+    196
+   ],
+   "ratio_matches": 8,
+   "inliers": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    126,
+    137
+   ],
+   "ratio_matches": 14,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    126,
+    196
+   ],
+   "ratio_matches": 17,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    137,
+    196
+   ],
+   "ratio_matches": 16,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    136,
+    168
+   ],
+   "ratio_matches": 39,
+   "inliers": 26,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    126,
+    179
+   ],
+   "ratio_matches": 47,
+   "inliers": 35,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    137,
+    154
+   ],
+   "ratio_matches": 45,
+   "inliers": 27,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    196,
+    209
+   ],
+   "ratio_matches": 43,
+   "inliers": 16,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take12",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    646,
+    762
+   ],
+   "ratio_matches": 105,
+   "inliers": 54,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    646,
+    986
+   ],
+   "ratio_matches": 127,
+   "inliers": 54,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    646,
+    728
+   ],
+   "ratio_matches": 127,
+   "inliers": 77,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    762,
+    986
+   ],
+   "ratio_matches": 148,
+   "inliers": 68,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    762,
+    728
+   ],
+   "ratio_matches": 198,
+   "inliers": 108,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    986,
+    728
+   ],
+   "ratio_matches": 163,
+   "inliers": 78,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    646,
+    646
+   ],
+   "ratio_matches": 358,
+   "inliers": 318,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    762,
+    792
+   ],
+   "ratio_matches": 476,
+   "inliers": 425,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    986,
+    968
+   ],
+   "ratio_matches": 623,
+   "inliers": 589,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    728,
+    702
+   ],
+   "ratio_matches": 438,
+   "inliers": 394,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    156
+   ],
+   "ratio_matches": 20,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    157
+   ],
+   "ratio_matches": 24,
+   "inliers": 12,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    160,
+    168
+   ],
+   "ratio_matches": 19,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    156,
+    157
+   ],
+   "ratio_matches": 25,
+   "inliers": 14,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    156,
+    168
+   ],
+   "ratio_matches": 32,
+   "inliers": 14,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    157,
+    168
+   ],
+   "ratio_matches": 24,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    160,
+    176
+   ],
+   "ratio_matches": 44,
+   "inliers": 33,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    156,
+    156
+   ],
+   "ratio_matches": 52,
+   "inliers": 33,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    157,
+    126
+   ],
+   "ratio_matches": 41,
+   "inliers": 26,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    168,
+    164
+   ],
+   "ratio_matches": 45,
+   "inliers": 32,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take13",
+   "kind": "colmap",
+   "registered_images_of_4": 2,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    756,
+    859
+   ],
+   "ratio_matches": 129,
+   "inliers": 66,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    756,
+    849
+   ],
+   "ratio_matches": 137,
+   "inliers": 78,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    756,
+    752
+   ],
+   "ratio_matches": 144,
+   "inliers": 74,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    859,
+    849
+   ],
+   "ratio_matches": 166,
+   "inliers": 83,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    859,
+    752
+   ],
+   "ratio_matches": 190,
+   "inliers": 100,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": false,
+   "kind": "views",
+   "features": [
+    849,
+    752
+   ],
+   "ratio_matches": 140,
+   "inliers": 76,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    756,
+    762
+   ],
+   "ratio_matches": 448,
+   "inliers": 388,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    859,
+    834
+   ],
+   "ratio_matches": 563,
+   "inliers": 488,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    849,
+    836
+   ],
+   "ratio_matches": 541,
+   "inliers": 473,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": false,
+   "kind": "control",
+   "features": [
+    752,
+    767
+   ],
+   "ratio_matches": 458,
+   "inliers": 369,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0028",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    210,
+    152
+   ],
+   "ratio_matches": 22,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    210,
+    166
+   ],
+   "ratio_matches": 24,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    210,
+    189
+   ],
+   "ratio_matches": 20,
+   "inliers": 11,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0052",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    152,
+    166
+   ],
+   "ratio_matches": 14,
+   "inliers": 8,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    152,
+    189
+   ],
+   "ratio_matches": 15,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052-0076",
+   "masked": true,
+   "kind": "views",
+   "features": [
+    166,
+    189
+   ],
+   "ratio_matches": 21,
+   "inliers": 10,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0004",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    210,
+    196
+   ],
+   "ratio_matches": 51,
+   "inliers": 33,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0028",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    152,
+    169
+   ],
+   "ratio_matches": 64,
+   "inliers": 41,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0052",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    166,
+    171
+   ],
+   "ratio_matches": 66,
+   "inliers": 47,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "pair": "0076",
+   "masked": true,
+   "kind": "control",
+   "features": [
+    189,
+    196
+   ],
+   "ratio_matches": 60,
+   "inliers": 41,
+   "frame_index": 70
+  },
+  {
+   "take": "00136/Inner/Take15",
+   "kind": "colmap",
+   "registered_images_of_4": 0,
+   "frame_index": 70
   }
  ],
+ "cameras": [
+  "0004",
+  "0028",
+  "0052",
+  "0076"
+ ],
+ "ratio": 0.8,
+ "frame_indices": [
+  10,
+  40,
+  70
+ ],
+ "control_step": 5,
  "summary": {
   "views_full": {
-   "pairs": 36,
-   "median_features": 738.0,
-   "median_ratio_matches": 137.5,
-   "median_inliers": 69.5
+   "pairs": 180,
+   "median_features": 735.0,
+   "median_ratio_matches": 136.0,
+   "median_inliers": 69.0
   },
   "views_masked": {
-   "pairs": 36,
+   "pairs": 180,
    "median_features": 160.0,
-   "median_ratio_matches": 14.0,
+   "median_ratio_matches": 15.0,
    "median_inliers": 9.0
   },
   "control_full": {
-   "pairs": 24,
-   "median_features": 782.5,
-   "median_ratio_matches": 500.0,
-   "median_inliers": 443.5
+   "pairs": 120,
+   "median_features": 775.5,
+   "median_ratio_matches": 483.5,
+   "median_inliers": 427.5
   },
   "control_masked": {
-   "pairs": 24,
-   "median_features": 159.0,
-   "median_ratio_matches": 67.5,
-   "median_inliers": 52.0
+   "pairs": 120,
+   "median_features": 169.5,
+   "median_ratio_matches": 61.0,
+   "median_inliers": 42.0
   },
   "colmap_registered_of_4": [
    0,
    0,
    0,
+   2,
    0,
    0,
-   4
+   0,
+   0,
+   0,
+   0,
+   4,
+   0,
+   0,
+   3,
+   2,
+   4,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0
   ]
  }
 }

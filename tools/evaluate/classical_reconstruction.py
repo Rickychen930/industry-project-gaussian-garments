@@ -188,7 +188,7 @@ def _median(values):
 def summarise(rows: list[dict]) -> dict:
     motion = [m for r in rows for m in r["motion"]]
     return {
-        "takes": len(rows),
+        "frames": len(rows),
         "pairs": len(motion),
         "pairs_with_pose": sum(m["rotation_error_deg"] is not None for m in motion),
         "median_camera_rotation_error_deg": _median([m["rotation_error_deg"] for m in motion]),
@@ -205,16 +205,16 @@ def summarise(rows: list[dict]) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--takes", type=int, default=3, help="takes per subject")
-    parser.add_argument("--frame-index", type=int, default=10)
+    parser.add_argument("--takes", type=int, default=5, help="takes per subject")
+    parser.add_argument("--frame-index", type=int, nargs="+", default=[10, 40, 70], help="frame positions per take")
     parser.add_argument("--out", default=str(OUTPUT))
     args = parser.parse_args()
     schp = SCHPParser()
     takes = []
     for subject in ("00134", "00136"):
         takes += sorted((paths.DATA_ROOT / "4d-dress" / subject / "Inner").glob("Take*"))[: args.takes]
-    rows = [evaluate_take(take, args.frame_index, schp) for take in takes]
-    result = {"cameras": list(CAMERAS), "frame_index": args.frame_index, "voxel_m": VOXEL,
+    rows = [{**evaluate_take(take, index, schp), "frame_index": index} for take in takes for index in args.frame_index]
+    result = {"cameras": list(CAMERAS), "frame_indices": args.frame_index, "voxel_m": VOXEL,
               "threshold_m": THRESHOLD, "rows": rows, "summary": summarise(rows)}
     write_json(Path(args.out), result)
     print(json.dumps(result["summary"], indent=1))
