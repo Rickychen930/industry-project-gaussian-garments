@@ -164,5 +164,6 @@ against the real shirt over whole release clips), `dropouts.py` (how often
 the garment disappears), `async_display.py` and `live_display.py` (the
 smooth display), `tracking_jitter.py` and `real_fit.py` (the body),
 `cloth_trajectory.py` and `resize_trajectories.py` (the cloth against the
-authors' simulation), `reference_frame.py` (where quality is lost, level by
+authors' simulation), `classical_matching.py` (SIFT with RANSAC and COLMAP on the four
+4D-DRESS cameras), `reference_frame.py` (where quality is lost, level by
 level), `background_fill.py`, `shading_students.py` (the shading networks).
