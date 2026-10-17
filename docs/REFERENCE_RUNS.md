@@ -1,13 +1,14 @@
 # Reference systems, actually run on this machine
 
-The reading notes on these repositories are in `docs/LOG.md`. This file
-records what happened when each was **installed and run by its README** on
+This file records what happened when each was **installed and run by its README** on
 this Apple M1 (16 GB, no CUDA), and how its output compares with ours on the
-same frame. Everything lives outside the project environment:
+same frame. In the final report this is objective O6: FASHN VTON 1.5 and CatVTON were
+scored on all five measures, VTON 360 was run but judged by eye (partly met).
+Everything lives outside the project environment:
 `~/Downloads/tryon_refs/` (clones, one virtualenv per system, runner
 scripts), weights and data under `~/Downloads/`.
 
-## VTON360 (He et al., CVPR 2025) - multi-view try-on, run 27 Sep 2026
+## VTON 360 (He et al., CVPR 2025; `VTON360` in its repository) - multi-view try-on, run 27 Sep 2026
 
 **What it is.** An offline per-subject editor: a textured 3D scan
 (THuman2.1) is rendered from 80 views; a multi-view-consistent diffusion
@@ -62,7 +63,7 @@ print's text is illegible.
 about 4 min per step with heavy swapping; the 3D lifting stage (Splatfacto,
 CUDA-only gsplat) was not run.
 
-**What it means for this project.** VTON360 answers a different question -
+**What it means for this project.** VTON 360 answers a different question -
 "what would this scanned person look like in this garment, from every side"
 - in two hours per subject, offline. It confirms the value of two ideas we
 already use (SMPL-X-derived pose conditioning; a clothing-agnostic region
@@ -94,7 +95,7 @@ run below is on the CPU at the README defaults (30 steps, CFG 1.5, seed 42):
 `docs/baseline/compare-tryon-systems-00152_outer.json`): every system gets
 the same person - release video 00152_outer frame 0 with the shirt erased -
 and is judged against the real frame (shirt IoU from the SCHP parser on
-both images; PSNR over the union of the shirts; SSIM / DISTS / LPIPS on the
+both images, the real garment's mask from the real frame; PSNR over the union of the shirts; SSIM / DISTS / LPIPS on the
 real shirt's box at 256 x 341, TryOffDiff's protocol; lower DISTS/LPIPS is
 better). FASHN's garment image is the same shirt photographed at frame 60
 or 120 of the same video.
@@ -150,8 +151,8 @@ scene is a controlled stand-in for a real webcam, whose ground truth we do
 not have). Figure: `docs/figures/harmonizer_cast_test.jpg`. Cost at 640 x
 870: argument prediction 31 ms on MPS, application 57 ms on the CPU, so
 `tryon/app/harmonize.py` predicts every 10 frames (EMA 0.5) and applies every
-frame. Off by default (`live.py --harmonize`); loaded from its own clone at
-`~/Downloads/tryon_refs/survey/Harmonizer`, not vendored.
+frame. Off by default (`./live-tryon --harmonize`); loaded from its own clone at
+`~/tryon-data/references/Harmonizer` (`HARMONIZER` in `tryon/paths.py`), not vendored.
 
 ## Survey of live try-on work (27 Sep 2026)
 

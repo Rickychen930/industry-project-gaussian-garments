@@ -1,7 +1,7 @@
 """An orientation classifier for 360-degree tracking.
 
 Two failure modes are already solved elsewhere in this project and are
-NOT what this file targets (see docs/LOG.md, 360-degree orientation):
+NOT what this file targets:
 
 - The discrete front/back (yaw=0 vs yaw=pi) ambiguity at cold start:
   `BodyFitter.fit()` already tries both hypotheses and keeps whichever

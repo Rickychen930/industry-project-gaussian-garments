@@ -124,7 +124,7 @@ case "${1:-}" in
     shift
     [[ $# -ge 1 ]] || { echo "usage: ./live-tryon compare <branch|tag> [video=00170_upper] [frames=150]" >&2; exit 2; }
     ref="$1"; video="${2:-00170_upper}"; frames="${3:-150}"
-    git -C "$ROOT" rev-parse --verify --quiet "$ref^{commit}" >/dev/null || { echo "No branch or tag '$ref' (see docs/BRANCHES.md)" >&2; exit 2; }
+    git -C "$ROOT" rev-parse --verify --quiet "$ref^{commit}" >/dev/null || { echo "No branch or tag '$ref'" >&2; exit 2; }
     tmp="$(mktemp -d "${TMPDIR:-/tmp}/tryon-compare.XXXXXX")"
     trap 'git -C "$ROOT" worktree remove --force "$tmp" >/dev/null 2>&1 || true' EXIT
     git -C "$ROOT" worktree add --detach "$tmp" "$ref" >/dev/null
@@ -165,7 +165,7 @@ Live 3D virtual try-on (Gaussian Garments on an SMPL-X body)
   ./live-tryon test              run the test suite
   ./live-tryon compare <branch|tag> [video] [frames]
                                  the same release-video measurement on any branch or tag
-                                 (garment IoU vs the real shirt) - see docs/BRANCHES.md
+                                 (garment IoU vs the real shirt)
 USAGE
     ;;
   *) echo "Unknown command: $1 (see ./live-tryon help)" >&2; exit 2 ;;

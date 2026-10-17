@@ -12,7 +12,7 @@ measured number; what is planned and what was tried and dropped is in
 
 ```bash
 ./live-tryon                # pick a garment, then the live webcam try-on
-./live-tryon help           # every command: run, garments, doctor, test, compare
+./live-tryon help           # every command: menu, run, garments, bench, record, pipeline, doctor, test, compare
 ./live-tryon doctor         # what this machine has, and which GPU each stage uses
 ```
 
@@ -23,9 +23,9 @@ measured number; what is planned and what was tried and dropped is in
 [docs/demo/live-run-20261017.mp4](docs/demo/live-run-20261017.mp4) is a live run on the laptop camera (17 Oct 2026).
 
 [docs/demo/demo.mp4](docs/demo/demo.mp4) (59 s): the laptop camera on the left, the live try-on on the right
-(garment 00190_upper on a team member, Apple M1, no CUDA GPU), then the measured results. The wearer is Ricky,
-who gave consent; the garment belongs to the Gaussian Garments authors and is shown for research and
-evaluation (third-party terms in `LICENSE`). Record your own:
+(garment 00190_upper, Apple M1, no CUDA GPU; wearer not recorded), then the measured results. The
+garment belongs to the Gaussian Garments authors and is shown for research and evaluation (third-party
+terms in `LICENSE`). Record your own:
 
 ```bash
 ./live-tryon bench 00190_upper 200       # stand 2-3 m from the camera; saves the camera frames and the output
@@ -41,14 +41,11 @@ python -m tools.data.make_demo_video --camera ~/tryon-data/captures/bench-<time>
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the code: one frame through the modules, what each folder holds, a reading order |
 | [docs/DATASETS.md](docs/DATASETS.md) | every dataset and model file: where it lives, where it was downloaded from, what was dropped |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | where the project stands, the targets, what is next, what was tried and dropped |
-| [docs/LOG.md](docs/LOG.md) | the dated engineering log: every measurement and decision, in order |
 | [docs/REFERENCE_RUNS.md](docs/REFERENCE_RUNS.md) | other try-on systems run on this machine for comparison |
-| [docs/AUDIT.md](docs/AUDIT.md) | the code audit: every module's size, complexity, findings and what was done |
-| [docs/BRANCHES.md](docs/BRANCHES.md) | the branch and comparing two versions |
 
 ## Project layout
 
-    live-tryon          the launcher: menu, run, garments, doctor, test, compare
+    live-tryon          the launcher: menu, run, garments, bench, record, pipeline, doctor, test, compare
     setup.sh, doctor.py first-time setup; a check of this machine
     tryon/              the system, one package by responsibility
       app/              the live loop (pipeline.py), display modes, command line (cli.py)
@@ -60,7 +57,8 @@ python -m tools.data.make_demo_video --camera ~/tryon-data/captures/bench-<time>
     tools/
       evaluate/         one tool per measurement; results go to docs/baseline/
       train/            training the project's own networks (shading students, orientation)
-      data/             downloads, pose fits
+      data/             downloads, pose fits, the demo video (make_demo_video.py)
+      record_session.py the guided camera recording behind ./live-tryon record
     tests/              test_<folder>_<module>.py for each module
     docs/               the documents above; baseline/ (results), figures/
     models/, data/      weights and test data (git-ignored; ./setup.sh fills models/)
@@ -88,20 +86,23 @@ system, `python -m tools.evaluate.<tool>` for a measurement.
 The loop that runs it is `tryon/app/pipeline.py::run`. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
 walks through one frame in the code and suggests a reading order.
 
-By default every shown frame carries the garment drawn for it, at the
+In the default display every shown frame carries the garment drawn for it, at the
 pipeline's rate (7.3-7.5 fps on the M1 on a video file, 4.4-4.8 before the 8 Oct speed work; the body regressor works on the
-next frame while this one is drawn). `--smooth` shows
-every camera frame and carries the newest garment with the torso;
-`--delayed` shows that about a second late, with the garment from the
+next frame while this one is drawn). Smooth mode (`--smooth`) shows
+every camera frame and carries the newest garment with the torso; it shows the clip's rate
+(25 fps on the release clips), and its rate on the webcam was never logged.
+`--delayed` shows smooth mode about a second late, with the garment from the
 nearest pipeline frame.
 
 ## Where it stands (measured)
 
 | | number | source |
 |---|---|---|
-| garment IoU vs the real shirt, 5 release videos | **0.730** (the authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
-| body accuracy, 16 annotated views (PA-MPJPE) | **24.6 mm** (keypoint fit 87-94 mm) | `docs/baseline/body-regressors.json` |
-| pipeline time a frame, M1 | 0.1-0.2 s of work (0.085-0.10 s on a quiet machine, 125 ms in the 13 Oct profiled run; 0.21-0.23 s before the 8 Oct speed work); smooth display at camera rate | `python -m tryon.app --profile` |
+| garment IoU vs the real garment, 5 release videos | **0.730** (the authors' fit, four cameras: 0.827) | `tools/evaluate/vs_registration.py` |
+| body accuracy (PA-MPJPE) | **24.6 mm** on 16 development views (keypoint fit 87-94 mm); 42.5 mm on 4,208 unselected views | `docs/baseline/body-regressors.json`, `docs/baseline/body-accuracy-4ddress.json` |
+| garment present, 6 recorded webcam sessions | **98.6 %** of 13,178 frames (100 % on 15 release videos; 90.1 % on session 1 and 89.5 % on the 17 Oct recording) | `tools/evaluate/session_benchmark.py` |
+| tests | **512** on 17 Oct (503 passed, 9 skipped); 513 after the intrinsics fix of the classical tool | `./live-tryon test` |
+| work a frame, M1 (median per run) | 106-411 ms in 16 of 19 timed runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); default display 7.3-7.5 fps on a video file (smooth mode's rate on the webcam was never logged) | `python -m tryon.app --profile`, `tools/evaluate/session_benchmark.py` |
 
 ## Setup, step by step
 
@@ -156,13 +157,13 @@ including NVIDIA, are in docs/USAGE.md, "GPU setup".
 | rendering | 3D Gaussian splatting (EWA splats), CPU (numba) and OpenGL | Kerbl et al., *3D Gaussian Splatting for Real-Time Radiance Field Rendering*, SIGGRAPH 2023; Zwicker et al., *EWA Splatting*, 2002 |
 | clothing parser | SCHP (ATR and LIP label sets) | Li et al., *Self-Correction for Human Parsing*, TPAMI 2020 |
 | fill | learned background plate, Telea inpainting; Big-LaMa (offline) | Telea, 2004; Suvorov et al., *LaMa*, WACV 2022 |
-| evaluation reference | the authors' own registration in their release videos | Gaussian Garments release videos |
+| evaluation reference | the real garment (SCHP mask of the real frame); the authors' fit (their four-camera fit of garment and body) scored the same way | Gaussian Garments release videos |
 
-Compared and not adopted (docs/ROADMAP.md, "Tried and dropped"; numbers in docs/LOG.md): SAM 2 for the
+Compared and not adopted (docs/ROADMAP.md, "Tried and dropped"): SAM 2 for the
 clothing mask, FASHN parser (more accurate, 8x slower), RTMPose,
 ContourCraft, learned pose correctives, SMPLer-X, Multi-HMR 672_B,
 video diffusion try-on (ViViD, CatVTON - tens of seconds a frame on the M1),
-FitMe360 and VTON360 (reproduced as references).
+FitMe360 and VTON 360 (reproduced as references).
 
 ## Licence
 
@@ -170,16 +171,30 @@ The code and documentation written for this project are MIT-licensed (`LICENSE`)
 
 ## Targets and checkpoints
 
-The targets (garment IoU 0.80, body 30 mm, camera-rate display, under 0.5 s a
-frame, ...), which are met, and what is next are in [docs/ROADMAP.md](docs/ROADMAP.md).
+The final report (32040 Industry Project, 17 Oct 2026) grades the six objectives against the
+thresholds set in it; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind each verdict.
+
+| objective | verdict |
+|---|---|
+| O1 body placed accurately and a garment drawn in almost every frame | partly met (24.6 mm on the 16 development views, 42.5 mm on 4,208 unselected views; 90.1 % and 89.5 % dressed in two recordings) |
+| O2 garment turns with the wearer through 360 degrees | partly met (synthetic full turn passes; real recordings reach side-on only) |
+| O3 the wearer's own top hidden | partly met (3 of 6 sessions at or under 0.10 uncovered) |
+| O4 garment IoU >= 0.80 | missed (0.730) |
+| O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 20 fps | partly met (work within 0.5 s in 16 of 19 runs; display 7.3-7.5 fps in the default display, so R5, the display rate, is missed) |
+| O6 three current systems scored on the same frame with the same measures | partly met (two of three scored; VTON 360 judged by eye) |
+
+Learning outcomes: LO1 partly met, LO2 and LO3 met with limits, LO4 and LO5 met, LO6 met with
+limits (one member wrote all the code). The classical pipeline on four calibrated cameras rebuilt
+the upper garment with an F-score of 0.50 at 2 cm and could not recover camera motion from
+features.
 
 ## Measuring
 
-Each number above comes from a tool in `tools/evaluate/`, which writes its
-result as JSON under `docs/baseline/`: `vs_registration.py` (the garment
-against the real shirt over whole release clips), `dropouts.py` (how often
-the garment disappears), `async_display.py` and `live_display.py` (the
-smooth display), `tracking_jitter.py` and `real_fit.py` (the body),
+Each number above comes from one of the 28 tools in `tools/evaluate/`, which writes its
+result as JSON under `docs/baseline/`; among them `vs_registration.py` (the garment
+against the real garment over whole release clips), `dropouts.py` (how often
+the garment disappears), `async_display.py` and `live_display.py` (smooth
+mode), `tracking_jitter.py` and `real_fit.py` (the body),
 `cloth_trajectory.py` and `resize_trajectories.py` (the cloth against the
 authors' simulation), `classical_matching.py` and `classical_reconstruction.py` (SIFT, COLMAP and a
 visual hull on the four 4D-DRESS cameras, against the scan), `classical_factors.py` (matches against garment, light, blur, background and view), `bootstrap_iou.py` (95 percent intervals of the garment IoU), `turn_profile.py` (garment and person width against the angle to the camera, from

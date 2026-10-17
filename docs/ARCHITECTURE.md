@@ -3,7 +3,7 @@
 A guide for reading and changing this project. It follows one live frame
 through the code, lists what each folder holds, and suggests an order to
 read it in. What is planned is in [`ROADMAP.md`](ROADMAP.md), the history of
-every measurement and decision in [`LOG.md`](LOG.md); how to run things is in
+every measurement is in docs/baseline; how to run things is in
 [`USAGE.md`](USAGE.md).
 
 ## The idea in one paragraph
@@ -45,15 +45,15 @@ camera frame
   ├─ removal/remover.py   remove()              erase + fill (removal/background.py learns the room)
   ├─ app/compositing.py   composite_garment()   garment over the frame
   │                       keep_in_front()       face, hair, hands back on top
-  └─ shown (app/pipeline.py), or handed to app/smooth_display.py
+  └─ shown (app/pipeline.py, default display), or handed to app/smooth_display.py (smooth mode)
 ```
 
 `app/pipeline.py` holds it: `LiveSession` keeps what lives from frame to frame (the
 models, the tracked body) and `process()` is one frame, in small named steps
-(`_update_body`, `_handle_loss`, `_dress`, `_erase_and_composite`); `run()` is the
-camera loop around it, between a `FrameSource` (camera, file, or the smooth display's
-channel) and a `FrameOutput` (window, video, keys). `app/smooth_display.py` is the
-fluid display: `_live_loop` / `_delayed_loop` with a shared `DisplayOutput`.
+(`_update_body`, `_handle_loss`, `_dress`, `_start_erase` / `_erase`); `run()` is the
+camera loop around it, between a `FrameSource` (camera, file, or smooth mode's
+channel) and a `FrameOutput` (window, video, keys). `app/smooth_display.py` is smooth
+mode (`--smooth`, a separate display process): `_live_loop` / `_delayed_loop` with a shared `DisplayOutput`.
 The loop reads one frame ahead: frame t+1's landmarks are found, it is sent
 to the NLF worker and its clothing parse is started (`LiveSession.prefetch`,
 `ClothingRemover.parse_clothing`, chained `MaskJob`s) before frame t is drawn,
@@ -69,17 +69,13 @@ render (`pipeline.ERASE_BESIDE_RENDER`).
 | `tryon/garment/` | What does the garment look like on that body? | `renderer.py` (`GarmentRenderer`) |
 | `tryon/rendering/` | How are Gaussian splats drawn into pixels? | `splat_cpu.py` (readable reference), then `splat_gl.py` |
 | `tryon/removal/` | How is the person's own clothing erased? | `remover.py` (`ClothingRemover`) |
-| `tryon/app/` | The live application: loop, display modes, command line | `pipeline.py` (`run`), `cli.py` |
+| `tryon/app/` | The live application: loop, display modes, command line, camera, the window's garment bar | `pipeline.py` (`run`), `cli.py`; `camera.py`, `ui.py` |
 | `tools/evaluate/` | How good is it? Each tool scores one part against ground truth | `vs_registration.py` |
 | `tools/train/` | Training the project's own networks | `shading_student.py` |
-| `tools/data/` | Downloads, dataset preparation, pose fits | `download_pretrained.py` |
+| `tools/data/` | Downloads, dataset preparation, pose fits, the demo video | `download_pretrained.py` |
+| `tools/record_session.py` | The guided camera recording (`./live-tryon record`) | |
 | `tests/` | `test_<folder>_<module>.py` for each module | `test_goals.py` (what the system must do) |
 | `docs/baseline/` | Every measured result as JSON, written by `tools/evaluate/` | |
-
-## Where each piece of a module's quality stands
-
-[`AUDIT.md`](AUDIT.md) lists every module of `tryon/` with its size, its
-most complex function, what is wrong with it and what was done.
 
 ## Where files live
 

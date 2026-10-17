@@ -51,6 +51,16 @@ class ReconstructionTests(unittest.TestCase):
         self.assertLess(motion["rotation_error_deg"], 2.0)
         self.assertLess(motion["direction_error_deg"], 5.0)
 
+    def test_camera_motion_uses_each_cameras_own_intrinsics(self):
+        points = _points(400)
+        cam_a, cam_b = _camera(0), _camera(30, focal=1400.0)
+        cam_b["intrinsics"][:2, 2] = [560.0, 720.0]
+        pts_a = classical_reconstruction._project(points, cam_a).astype(np.float32)
+        pts_b = classical_reconstruction._project(points, cam_b).astype(np.float32)
+        motion = classical_reconstruction.camera_motion(pts_a, pts_b, cam_a, cam_b)
+        self.assertLess(motion["rotation_error_deg"], 2.0)
+        self.assertLess(motion["direction_error_deg"], 5.0)
+
     def test_camera_motion_with_too_few_matches_reports_no_pose(self):
         few = np.zeros((3, 2), np.float32)
         motion = classical_reconstruction.camera_motion(few, few, _camera(0), _camera(30))

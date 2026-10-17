@@ -3,9 +3,7 @@
 This guide covers the current system (branch `main`): how to
 start it, what each option does, how it works inside, how fast and how
 accurate it is (measured, with where each number comes from), its
-limits, and how to fix common problems. Branches and comparisons are in
-[`BRANCHES.md`](BRANCHES.md); what is planned is in [`ROADMAP.md`](ROADMAP.md)
-and the dated record of every measurement in [`LOG.md`](LOG.md).
+limits, and how to fix common problems. What is planned is in [`ROADMAP.md`](ROADMAP.md).
 
 ## 1. Quick start
 
@@ -40,17 +38,17 @@ a list in the terminal instead: `./live-tryon menu`.
 | command | what it does |
 |---|---|
 | `./live-tryon` | The live try-on from the webcam; the garment is chosen in the window (`menu`: from a terminal list first). |
-| `./live-tryon --smooth` | Camera at full rate; the garment is carried with the torso between pipeline frames (fluid, but the garment trails on moves). |
+| `./live-tryon --smooth` | Smooth mode: camera at full rate; the garment is carried with the torso between pipeline frames (fluid, but the garment trails on moves). |
 | `./live-tryon --delayed` | `--smooth` shown ~1 s late, with the garment from the nearest pipeline frame (fluid and closer, but delayed). |
 | `./live-tryon --harmonize` | Also recolour the garment to the room's light (Harmonizer; needs its clone, see 7). |
 | `./live-tryon --source video.mp4` | Run on a recorded video instead of the camera. |
 | `./live-tryon run [N or name] [flags]` | Start with a given garment, e.g. `./live-tryon run 13`. |
-| `./live-tryon bench [N\|name] [frames] [source]` | Time the pipeline on the camera (source 0) or a video; prints the median ms of each stage, saves the output and the camera frames as read (`captures/bench-<time>[-input].mp4`). Run it in your own terminal (the camera permission) with nothing else busy. |
+| `./live-tryon bench [N\|name] [frames] [source]` | Time the pipeline on the laptop camera (source `builtin`, the default, or an index) or a video; prints the median ms of each stage, saves the output and the camera frames as read (`captures/bench-<time>[-input].mp4`). Run it in your own terminal (the camera permission) with nothing else busy. |
 | `./live-tryon record [seconds] [basic\|extended]` | Film yourself while it says which pose to take (basic: 12 poses, 5 s each; extended: 31 poses, `record 8 extended` is ~4 min); replay with `./live-tryon run NAME --source FILE`. |
 | `python -m tools.evaluate.session_benchmark FILE --garment NAME --out docs/baseline/session-X.json` | One recording through the live pipeline, with numbers (dressed share, reprojection, shoulder ratio, uncovered clothing, stage times): the same recording before and after a change says whether it helped. |
 | `--source builtin` (default) | The laptop's own camera, found by name, so an iPhone offered as a camera (Continuity Camera) never takes its place. `--source 1` picks an index, `--source clip.mp4` a file. The camera it chose is printed at start (`camera 0: FaceTime HD Camera`). It reads the list with `ffmpeg`; without it, index 0 is used. |
 | `./live-tryon garments` | List the garments by number and open `docs/figures/garments.jpg` (a picture of each). |
-| `./live-tryon compare <branch> [video] [frames]` | Measure any branch or tag on a release video (see `BRANCHES.md`). |
+| `./live-tryon compare <branch> [video] [frames]` | Measure any branch or tag on a release video. |
 | `./live-tryon test` | Run the test suite (`unittest`). |
 | `./live-tryon doctor` | Check what this machine has installed. |
 | `./live-tryon pipeline [flags]` | `tryon.app` with every flag spelled out (for development). |
@@ -59,17 +57,17 @@ a list in the terminal instead: `./live-tryon menu`.
 
 `./live-tryon run` turns on the recommended set for you: `--remove-clothing
 --orientation-regressor models/pose_regressor.pt --gpu-render
---appearance --async-appearance --student-shading`, with the synchronous
+--appearance --async-appearance --student-shading`, with the default
 display (each shown frame carries the garment drawn for it).
 
 | flag | effect |
 |---|---|
 | `--garment DIR` | Garment checkpoint folder (`~/tryon-data/garments/<name>`). |
 | `--remove-clothing` | Erase the wearer's own upper clothing before drawing the garment. |
-| `--smooth-display` | Show every camera frame; the pipeline runs behind it (see 3). |
+| `--smooth-display` | Smooth mode: show every camera frame; the pipeline runs behind it (see 3). `./live-tryon --smooth` sets it. |
 | `--gpu-render` | Composite the splats with OpenGL instead of the CPU loop. |
 | `--rigid` | No cloth motion: the garment follows the body by skinning only (for comparison). |
-| `--delayed-sync` | With `--smooth-display`: show the video about one pipeline period (~1 s) late and take the garment from the pipeline frame nearest in time, before or after (default in the launchers). |
+| `--delayed-sync` | With `--smooth-display`: show the video about one pipeline period (~1 s) late and take the garment from the pipeline frame nearest in time, before or after (`./live-tryon --delayed` sets both flags). |
 | `--dump-alpha out.npz` | With `--smooth-display`: record the garment shown on every frame (for `tools/evaluate/live_display.py`). |
 | `--appearance --async-appearance` | The garment's own shading network (folds, shadows), updated on a worker thread. |
 | `--harmonize` | Match the garment's colours to the scene. |
@@ -83,13 +81,16 @@ display (each shown frame carries the garment drawn for it).
 
 ## 3. How it works
 
+The sketch shows smooth mode; in the default display the pipeline's own frames are shown and
+there is no display process.
+
 ```
  camera ──► DISPLAY PROCESS (camera rate) ─────────────────────────► window
               │  MediaPipe lite + person mask (every frame)        ▲
               │  newest garment layer, moved with the torso ───────┘
               │  (this frame's face and hands stay in front)
               │
-              └─ newest frame ─► PIPELINE PROCESS (~0.2-0.25 s a frame)
+              └─ newest frame ─► PIPELINE PROCESS (median 0.11-0.41 s a frame, 16 of 19 runs)
                                   1. MediaPipe landmarks
                                   2. SMPL-X body from NLF-S (image regressor)
                                   3. garment skinned to the body + cloth springs
@@ -120,14 +121,14 @@ display (each shown frame carries the garment drawn for it).
 - **Clothing removal** parses the frame with SCHP, erases the upper
   clothing near the body (not shirts hanging behind you), and fills the
   hole with skin colour or the room learned from earlier frames.
-- **The smooth display** runs in its own process, so Python's interpreter
+- **Smooth mode's display** runs in its own process, so Python's interpreter
   lock cannot stall it. Between pipeline results it moves the newest layer
   with a clamped torso similarity (shoulders and hips). That warp is
   limited to scale 0.85-1.18 and 20 degrees of rotation, so a side-on body
   cannot blow it up.
 
 Main code (a walk-through is in docs/ARCHITECTURE.md): `tryon/app/pipeline.py`
-(loop), `tryon/app/smooth_display.py` (fluid display), `tryon/body/fitter.py`
+(loop), `tryon/app/smooth_display.py` (smooth mode), `tryon/body/fitter.py`
 and `tryon/body/regressor.py` (body), `tryon/garment/skinning.py` and
 `tryon/garment/renderer.py` (garment), `tryon/garment/cloth.py` (cloth),
 `tryon/garment/appearance.py` (shading), `tryon/rendering/splat_cpu.py` and `tryon/rendering/splat_gl.py`
@@ -138,15 +139,16 @@ and `tryon/body/regressor.py` (body), `tryon/garment/skinning.py` and
 
 | | value | source |
 |---|---|---|
-| Display frame rate (smooth mode) | 25 fps | `smooth_display`, dancer clip |
-| Pipeline time per frame | 0.1-0.2 s of work (0.085-0.10 s on a quiet machine), HUD 7.3-7.5 fps on a video file (decode adds ~40 ms), sync mode; 0.21-0.23 s before 8 Oct | `--profile`; the pipeline's HUD |
+| Display frame rate (default display) | 7.3-7.5 fps on a video file | the pipeline's HUD |
+| Display frame rate (smooth mode) | 25 fps on a release clip: the clip's own rate, not a faster garment; never logged on the webcam | `smooth_display`, dancer clip |
+| Pipeline time per frame | median 106-411 ms of work in 16 of 19 timed runs of the final report; three above 0.5 s, all on a loaded machine (670, 602 and 1,034 ms); 0.085-0.10 s on a quiet machine; 129 ms on the laptop camera on 17 Oct (busy machine); 0.21-0.23 s before 8 Oct. Default display; a video file's decode adds ~40 ms | `--profile`; the pipeline's HUD |
 | Stages (960-wide frame, medians) | MediaPipe 13, fit 8, render 56-66, erase beside the render (a worker thread; 0-23 ms of waiting), composite 5 ms; the body regressor and the clothing mask of the NEXT frame run during this frame | `--profile` |
-| Garment IoU vs the real shirt, per frame (`--sync`) | 0.728 on 5 release videos with the cloth stepped at the clip's own dt (0.722 without cloth; authors' 4-camera registration: 0.827) | `tools/evaluate/vs_registration.py` |
+| Garment IoU vs the real garment, per frame (default display) | 0.728 on 5 release videos with the cloth stepped at the clip's own dt (0.722 without cloth); 0.730 in the final report's run; the authors' fit (four cameras): 0.827 | `tools/evaluate/vs_registration.py` |
 | Smooth mode, share of the per-frame accuracy | 77 % at the dancers' speed, 86-93 % at a quarter to an eighth of it | `tools/evaluate/async_display.py` (simulated) |
 | Smooth mode run in real time, garment IoU on every shown frame | 0.575 live (torso warp), **0.625 delayed ~1 s** (`--delayed-sync`) mean of 00152 / 00170 / 00134 | `tools/evaluate/live_display.py` |
 | Shading | the student against the 55M teacher, every garment | `tools/evaluate/shading_students.py`, `docs/baseline/shading-students.json` |
 
-**Sync (default) vs smooth vs delayed.** The default shows only finished
+**Default display vs smooth mode vs delayed.** The default display shows only finished
 pipeline frames: the garment always matches the frame it is on (nothing
 floats), at the pipeline's rate (7.3-7.5 fps on the M1, video file). `--smooth` and
 `--delayed` trade that for a fluid video. With `--delayed` the video is shown about one
@@ -154,11 +156,10 @@ pipeline period (~1 s) late: every shown frame then has a pipeline result
 both before and after it, and the garment comes from the nearer one, so it
 is never carried more than half a period (garment IoU 0.625 vs 0.575 live,
 measured end to end). Blending the two results instead scored 0.638 but
-showed both garments half-transparent. With `--smooth` the video is live
-and the garment trails on moves (it looks like it floats). With `--sync` the garment fits the shown frame
-exactly, but that frame is ~0.2 s old and stays frozen until the next
-one. With the smooth display the video is live and fluid, and the
-garment trails a little on fast moves.
+showed both garments half-transparent. In smooth mode (`--smooth`) the video is live
+and fluid and the garment trails on moves (it looks like it floats). In the default display
+(`--sync`) the garment fits the shown frame exactly, but that frame is a pipeline period old
+and stays frozen until the next one.
 
 ## 5. Limitations
 
@@ -199,7 +200,7 @@ garment trails a little on fast moves.
 | Orientation regressor | `models/pose_regressor.pt` | `tools/train/orientation.py` |
 | Harmonizer (optional) | `~/tryon-data/references/Harmonizer` | only for `--harmonize` |
 
-External systems run for comparison (VTON360, FASHN, CatVTON, RTV, SAM2)
+External systems run for comparison (VTON 360, FASHN VTON 1.5, CatVTON, RTV, SAM2)
 keep their clones and venvs under `~/Downloads/tryon_refs/`, outside the
 data root (a virtualenv cannot be moved); see `docs/REFERENCE_RUNS.md`.
 `TRYON_DATA` moves the data root.

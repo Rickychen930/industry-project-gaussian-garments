@@ -78,11 +78,17 @@ def camera_motion(pts_a, pts_b, cam_a, cam_b) -> dict:
     empty = {"matches": len(pts_a), "inliers": 0, "rotation_error_deg": None, "direction_error_deg": None}
     if len(pts_a) < 8:
         return empty
-    k = cam_a["intrinsics"]
-    essential, inliers = cv2.findEssentialMat(pts_a, pts_b, k, method=cv2.RANSAC, prob=0.999, threshold=1.0)
+    # Each camera has its own intrinsics: normalise both sets, then work with an identity camera matrix.
+    k_a, k_b = cam_a["intrinsics"], cam_b["intrinsics"]
+    norm_a = cv2.undistortPoints(pts_a.reshape(-1, 1, 2).astype(np.float64), k_a, None).reshape(-1, 2)
+    norm_b = cv2.undistortPoints(pts_b.reshape(-1, 1, 2).astype(np.float64), k_b, None).reshape(-1, 2)
+    focal = (k_a[0, 0] + k_a[1, 1] + k_b[0, 0] + k_b[1, 1]) / 4
+    identity = np.eye(3)
+    essential, inliers = cv2.findEssentialMat(norm_a, norm_b, identity, method=cv2.RANSAC, prob=0.999,
+                                              threshold=1.0 / focal)  # 1 px in normalised units
     if essential is None or essential.shape != (3, 3):
         return empty
-    count, rot, trans, _ = cv2.recoverPose(essential, pts_a, pts_b, k, mask=inliers)
+    count, rot, trans, _ = cv2.recoverPose(essential, norm_a, norm_b, identity, mask=inliers)
     r_a, t_a = cam_a["extrinsics"][:, :3], cam_a["extrinsics"][:, 3]
     r_b, t_b = cam_b["extrinsics"][:, :3], cam_b["extrinsics"][:, 3]
     r_true = r_b @ r_a.T
