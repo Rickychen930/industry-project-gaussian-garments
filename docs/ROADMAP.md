@@ -113,7 +113,7 @@ erased clothing (grey patches, a flat pale skin fill on the arms), not the garme
 
 ## Done
 
-Measured on 17 Oct, after the report text was first fixed:
+Latest measurements (17 Oct):
 
 - Quiet machine, current code: white-shirt session 380 ms, floral-shirt session 384 ms, guided recording 395 ms of work a frame
   (`session-*-quiet-20261017.json`, `session-20261017-150621-yaw.json`).
@@ -143,27 +143,44 @@ Improvement areas, each tied to a detailed target, in the order they would be ta
 5. O4: IoU 0.80, closer to the authors' fit of 0.827 (now 0.730).
 6. O6: a score for VTON 360 on the five measures (now judged by eye).
 
-1. **Garment shape closer to the real garment** (IoU 0.730 -> 0.80):
-   the gap is the garment's shape, not placement, cloth or size ("Where the
-   IoU gap is" above; `tools/evaluate/reference_frame.py` splits the loss level by level).
-2. **Scene lighting on the garment**: light estimated from the face; the
-   garments carry studio light (`--harmonize` is the stop-gap).
-3a. **A recorded webcam session** (the arm reaching toward the camera is fixed, 9 Oct: `BodyFitter.ARM_REFINE` on at a gate of 0.4 torso lengths, IoU unchanged on five release videos) (`./live-tryon record`, 9 Oct): blind frames limited to 4 in a row and the collar below the chin blended into the neck are fixed; a sleeve cuff drawn as a ring in front of a hand reaching to the camera, and the pale background patches either side of the neck (the fitted body is narrower than the real neck at a low camera angle), are not; the cuff ring (the arm's depth toward the camera, NLF) and the pale shards in the neckline (the wearer's own collar stripes, labelled face and restored over the garment by `keep_in_front`) are both fixed.
-3. **Hem and the closed jacket** are done as far as measured (9 Oct): the hem hangs low because the sleeves carry the real shirt up at the armhole, fixed by a sleeve-anchored long-range attachment plus a gentle narrowing (loose-garment mean IoU +0.015); the closed-worn 00136_outer is a per-garment flag (`assets/closed_front/`, +0.038). What is left: the lower front of loose open shirts hangs open about 30 % of the width in the real video and is nearly closed in ours (the 'torso 13-16 % too wide' of earlier entries was a hole in the real mask, not an excess of width), and fully erased arms that still read as sticks (a learned limb inpainting, not shading).
-4. **The erased clothing** (the arm study of 9 Oct says the arm fill is seen on 7-20 % of its area on most garments, 48 % on a T-shirt, and that no shading, texture or general inpainter makes it read as an arm: a person-aware learned inpainter is the only real fix, not downloaded) (the weakest thing on the fit-audit sheets after the 8 Oct fill: arm tubes read as sausages, a flat torso skin, a pale halo on 00122_outer) and **loose shirts** (the long hem and wide torso of 00152_outer; closed-worn jackets against open templates). The open-front 'floating panel' was a sleeve on a wrong scan pose, fixed 8 Oct.
-5. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth + posed mesh ~54 ms of which `push_out_of_body` 22; `render_splats_gl` ~59 ms of which `_instances` 26; MediaPipe for the next frame could run beside the render): each needs to be bit-identical and >= 3 ms.
-6. **Shading refresh rate**: the student updates every 0.7 s on a worker
-   thread; test 0.35 s with the GPU free and keep it only if fps holds.
-7. **AnyWear / Decart comparison**: possible only with a paid API
-   key and their approval to upload the release videos.
-8. **4D-DRESS**: access was granted late (manual approval; the data cannot be
-   redistributed, so no copies are in the repository) and used only for the body test; see [`DATASETS.md`](DATASETS.md).
+Other open items:
+
+1. **Garment shape closer to the real garment** (IoU 0.730 -> 0.80): the gap is the garment's shape, not placement,
+   cloth or size ("Where the IoU gap is" above; `tools/evaluate/reference_frame.py` splits the loss level by level).
+2. **Scene lighting on the garment**: light estimated from the face; the garments carry studio light
+   (`--harmonize` is the stop-gap).
+3. **Webcam findings from the recorded session** (`./live-tryon record`, 9 Oct). Fixed: the arm reaching toward the
+   camera (`BodyFitter.ARM_REFINE` on at a gate of 0.4 torso lengths, IoU unchanged on five release videos), blind
+   frames limited to 4 in a row, the collar below the chin blended into the neck, the sleeve cuff drawn as a ring in
+   front of a hand (the arm's depth toward the camera, from NLF) and the pale shards in the neckline (the wearer's
+   own collar stripes, labelled face and restored over the garment by `keep_in_front`). Still open: the pale
+   background patches either side of the neck, because the fitted body is narrower than the real neck at a low
+   camera angle.
+4. **Hem and the closed jacket** are done as far as measured (9 Oct): the hem hangs low because the sleeves carry the
+   real shirt up at the armhole, fixed by a sleeve-anchored long-range attachment plus a gentle narrowing
+   (loose-garment mean IoU +0.015); the closed-worn 00136_outer is a per-garment flag (`assets/closed_front/`,
+   +0.038). Left: the lower front of loose open shirts hangs open about 30 % of the width in the real video and is
+   nearly closed in ours, and fully erased arms that still read as sticks (a learned limb inpainting, not shading).
+5. **The erased clothing**: the arm study of 9 Oct says the arm fill is seen on 7-20 % of its area on most garments
+   (48 % on a T-shirt) and that no shading, texture or general inpainter makes it read as an arm; a person-aware
+   learned inpainter is the only real fix and is not downloaded. It is the weakest thing on the fit-audit sheets
+   (arm tubes, a flat torso skin, a pale halo on 00122_outer), together with **loose shirts** (the long hem and
+   wide torso of 00152_outer; closed-worn jackets against open templates). The open-front "floating panel" was a
+   sleeve on a wrong scan pose, fixed 8 Oct.
+6. **Render and cloth on the critical path** (profile after the 8 Oct work: cloth and posed mesh about 54 ms, of which
+   `push_out_of_body` 22; `render_splats_gl` about 59 ms, of which `_instances` 26; MediaPipe for the next frame
+   could run beside the render): each change needs to be bit-identical and save at least 3 ms.
+7. **Shading refresh rate**: the student updates every 0.7 s on a worker thread; test 0.35 s with the GPU free and
+   keep it only if fps holds.
+8. **AnyWear / Decart comparison**: possible only with a paid API key and their approval to upload the release videos.
+9. **4D-DRESS**: access was granted late (manual approval; the data cannot be redistributed, so no copies are in the
+   repository) and used only for the body tests; see [`DATASETS.md`](DATASETS.md).
 
 ## Tried and dropped
 
 Switches that measured no gain were removed from the code on 10 Oct: the arm shading model, skin texture transfer and body-outline tube of the fill; importance subsampling; the relaxed rest; the front opening; ride-up; neighbour coupling, wrap, target filter, velocity inheritance and the vertical attachment of the cloth; the fitter's skin term; and the studies that only measured them.
 
-Each row was measured..
+Each row was measured.
 
 | idea | why not |
 |---|---|

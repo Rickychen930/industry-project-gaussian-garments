@@ -1,7 +1,7 @@
 # Datasets
 
 What the project uses and where it was downloaded from, the request that
-was archived, and what was dropped and why. Updated 8 Oct 2026.
+was archived, and what was dropped and why. Updated 17 Oct 2026.
 
 Everything outside the repository lives under one data root, `~/tryon-data/`
 (`TRYON_DATA` moves it; `tryon/paths.py` is the one place the folders are
@@ -34,7 +34,7 @@ named): `garments/`, `trajectories/`, `release_videos/`, `body_models/smplx/`,
 
 The pretrained models are fetched by `./setup.sh` (`tools/data/download_pretrained.py`).
 
-## 4D-DRESS (full release, late; used only for body accuracy)
+## 4D-DRESS (full release, late; used for the body tests and the classical reconstruction test)
 
 4D-DRESS (ETH Zurich, CVPR 2024, https://4d-dress.ait.ethz.ch) is the
 dataset the 15 garments were captured from. It is only available through a
@@ -43,11 +43,11 @@ days to weeks; there is no download in the official repository
 (github.com/eth-ait/4d-dress, code only) or on the project page, and the
 licence forbids redistribution, so no copy elsewhere may be used. The plan
 was archived on 7 Oct 2026 without it; the full release reached us later and
-was used only for the body-accuracy test in `docs/baseline/body-accuracy-4ddress.json`
+was used for the body-accuracy test in `docs/baseline/body-accuracy-4ddress.json`
 (4,208 views of subjects 00134 and 00136: mean PA-MPJPE 42.5 mm, 14.7% of
 views above 60 mm, against 24.6 mm on the 16-view sample; a 440-view sample (22 takes, four cameras, five frames each), in `body-accuracy-4ddress.json`, gives 42.4 mm), the corrector in
 `body-corrector.json` (did not help on the held-out subject) and the failure
-detector in `failure-detector.json` (AUC 0.75 and 0.80). Garment overlap was
+detector in `failure-detector.json` (AUC 0.75 and 0.80). It also gave the facing-direction test in `body-orientation-4ddress.json` (440 views: median error 3.6 degrees, no flips) and, on 17 Oct, the classical matching and reconstruction tests (`classical-*.json`). Garment overlap was
 not scored against its captured shirts.
 
 The project does not need it to run or to be evaluated: a small official

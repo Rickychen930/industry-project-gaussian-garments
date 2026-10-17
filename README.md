@@ -20,10 +20,10 @@ measured number; what is planned and what was tried and dropped is in
 
 ![The garment turns with the wearer](docs/demo/demo-preview.gif)
 
-[docs/demo/live-run-20261017.mp4](docs/demo/live-run-20261017.mp4) is a live run on the laptop camera (17 Oct 2026).
+[docs/demo/live-run-20261017.mp4](docs/demo/live-run-20261017.mp4) is a live run on the laptop camera (17 Oct 2026); the wearer is Ricky.
 
 [docs/demo/demo.mp4](docs/demo/demo.mp4) (59 s): the laptop camera on the left, the live try-on on the right
-(garment 00190_upper, Apple M1, no CUDA GPU; wearer not recorded), then the measured results. The
+(garment 00190_upper, Apple M1, no CUDA GPU; the wearer is Ricky), then the measured results. The
 garment belongs to the Gaussian Garments authors and is shown for research and evaluation (third-party
 terms in `LICENSE`). Record your own:
 
