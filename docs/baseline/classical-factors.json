@@ -1,0 +1,4969 @@
+{
+ "cameras": [
+  "0004",
+  "0028",
+  "0052",
+  "0076"
+ ],
+ "frame_index": 40,
+ "rows": [
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 55
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 53
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 67
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 77
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 73
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 36
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 41
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 32
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 37
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 56
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 33
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 65
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 51
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 53
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 57
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 73
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 13
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 16
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 48
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 43
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 48
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 46
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 60
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 42
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 83
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 46
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 86
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 63
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 388
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 413
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 499
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 479
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 64
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 68
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 71
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 92
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 97
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 83
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 41
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 37
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 46
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 72
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 70
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 59
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 57
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 89
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 66
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 14
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 23
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 20
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 16
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 49
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 50
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 73
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 82
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 62
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 68
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 45
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 76
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 67
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 359
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 511
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 589
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take10",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 412
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 70
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 66
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 81
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 110
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 81
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 39
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 40
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 38
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 51
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 62
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 61
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 67
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 77
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 69
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 91
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 75
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 15
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 16
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 22
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 19
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 51
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 63
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 48
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 76
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 87
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 69
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 56
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 42
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 50
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 46
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 349
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 444
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 569
+  },
+  {
+   "group": "00134 inner",
+   "take": "Take3",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 405
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 17
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 12
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 63
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 58
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 83
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 81
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 18
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 20
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 35
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 34
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 41
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 50
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 72
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 62
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 57
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 55
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 66
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 60
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 81
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 69
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 15
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 16
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 17
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 47
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 50
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 66
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 64
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 36
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 24
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 27
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 49
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 376
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 458
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 520
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take1",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 436
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 57
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 53
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 74
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 74
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 94
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 78
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 17
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 33
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 40
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 41
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 40
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 58
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 43
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 57
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 63
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 77
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 83
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 15
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 21
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 18
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 12
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 42
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 55
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 55
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 37
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 57
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 75
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 77
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 382
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 472
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 577
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take11",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 474
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 75
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 69
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 70
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 65
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 96
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 72
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 46
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 46
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 42
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 69
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 39
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 73
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 51
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 67
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 53
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 86
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 15
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 16
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 20
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 12
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 54
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 54
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 55
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 60
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 45
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 22
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 14
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 25
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 17
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 426
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 429
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 424
+  },
+  {
+   "group": "00136 inner",
+   "take": "Take12",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 360
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 67
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 95
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 84
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 39
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 41
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 45
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 39
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 47
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 39
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 67
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 65
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 78
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 71
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 95
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 74
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 17
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 16
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 22
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 51
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 52
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 55
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 50
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 66
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 34
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 28
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 51
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 33
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 364
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 393
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 457
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take17",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 433
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 66
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 61
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 68
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 79
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 105
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 75
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 32
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 53
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 49
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 61
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 73
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 45
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 51
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 63
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 73
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 69
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 115
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 83
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 18
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 14
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 20
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 23
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 13
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 43
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 54
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 46
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 66
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 75
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 54
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 55
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 51
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 38
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 64
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 374
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 519
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 456
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take18",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 386
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 56
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 54
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 72
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 65
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 76
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 73
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 11
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 37
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 42
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 35
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 38
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 49
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "dark (gamma 2.2)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 38
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 55
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 47
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 59
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 60
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "bright (gamma 0.45)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 64
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 7
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 12
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 14
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 15
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 18
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "blur (sigma 3)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 13
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 8
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 9
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "opposite",
+   "inliers": 10
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "person",
+   "view": "adjacent",
+   "inliers": 0
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 50
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 52
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 54
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "opposite",
+   "inliers": 51
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "noise (sigma 10)",
+   "region": "whole image",
+   "view": "adjacent",
+   "inliers": 42
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 27
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 41
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 44
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "person",
+   "view": "same camera, 5 frames later",
+   "inliers": 72
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 311
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 404
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 418
+  },
+  {
+   "group": "00136 outer",
+   "take": "Take19",
+   "factor": "none",
+   "region": "whole image",
+   "view": "same camera, 5 frames later",
+   "inliers": 395
+  }
+ ],
+ "summary": {
+  "by_garment": {
+   "00134 inner": {
+    "n": 18,
+    "median_inliers": 8.0
+   },
+   "00136 inner": {
+    "n": 18,
+    "median_inliers": 9.0
+   },
+   "00136 outer": {
+    "n": 18,
+    "median_inliers": 9.0
+   }
+  },
+  "by_light_and_degradation": {
+   "none": {
+    "n": 54,
+    "median_inliers": 9.0
+   },
+   "dark (gamma 2.2)": {
+    "n": 54,
+    "median_inliers": 9.0
+   },
+   "bright (gamma 0.45)": {
+    "n": 54,
+    "median_inliers": 8.0
+   },
+   "blur (sigma 3)": {
+    "n": 54,
+    "median_inliers": 0.0
+   },
+   "noise (sigma 10)": {
+    "n": 54,
+    "median_inliers": 10.0
+   }
+  },
+  "by_region": {
+   "person": {
+    "n": 54,
+    "median_inliers": 9.0
+   },
+   "whole image": {
+    "n": 54,
+    "median_inliers": 70.0
+   }
+  },
+  "by_view": {
+   "same camera, 5 frames later": {
+    "n": 36,
+    "median_inliers": 46.0
+   },
+   "adjacent": {
+    "n": 36,
+    "median_inliers": 9.0
+   },
+   "opposite": {
+    "n": 18,
+    "median_inliers": 9.0
+   }
+  }
+ }
+}
