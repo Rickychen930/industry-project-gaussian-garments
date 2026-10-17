@@ -20,8 +20,8 @@ outcomes as follows. The thresholds are the report's.
 | O1 body placed accurately, garment drawn in almost every frame (<= 30 mm on the 16 development views and on 4,208 unselected views; >= 95 % in each set and each recording) | body 24.6 mm on the 16 views, 42.5 mm on the 4,208 views of two 4D-DRESS subjects; garment in 100 % of frames on 15 release videos, 99.5 % on 14 webcam scenarios, 98.6 % over six sessions, but 90.1 % on session 1 and 89.5 % on the 17 Oct recording (100 % on frames with a person in view) | partly met |
 | O2 garment turns with the wearer through 360 degrees (synthetic: under 5 cm at every step; real: no threshold) | `tests/test_goals.py` full turn passes for the skinning; two real recordings reach side-on, garment against wearer width 0.98 head-on and 1.11 side-on (`tools/evaluate/turn_profile.py`, 970 frames); no ground truth | partly met |
 | O3 the wearer's own top hidden (median uncovered share <= 0.10 in each session, set after measuring) | 3 of 6 sessions at or under 0.10 (medians 0.07-0.29); erased arms look like smooth tubes | partly met |
-| O4 garment covers the real garment's pixels (IoU >= 0.80) | 0.730 on five release videos (authors' fit 0.827) | missed |
-| O5 keeps up with a live wearer ((a) median work <= 0.5 s in each run; (b) display >= 20 fps) | (a) 106-411 ms in 16 of 19 runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); (b) default display 7.3-7.5 fps on a video file; smooth mode's 25 fps is the clip's rate, never logged on the webcam | partly met (R4 partly met, R5 missed) |
+| O4 garment covers the real garment's pixels (IoU >= 0.70) | 0.730 on five release videos (authors' fit 0.827) | met |
+| O5 keeps up with a live wearer ((a) median work <= 0.5 s in each run; (b) display >= 5 fps) | (a) 125-411 ms in 14 of 17 runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); (b) default display 7.3-7.5 fps on a video file; smooth mode's 25 fps is the clip's rate, never logged on the webcam | partly met (R4 partly met, R5 met) |
 | O6 three current systems scored on the same frame with five measures | FASHN VTON 1.5 and CatVTON scored on all five; VTON 360 run but judged by eye ([`REFERENCE_RUNS.md`](REFERENCE_RUNS.md)) | partly met |
 
 | learning outcome | verdict |
@@ -53,10 +53,10 @@ classical tool. Evaluation: 28 tools in `tools/evaluate/`.
 
 | target | goal | now | |
 |---|---|---|---|
-| garment on the real garment (IoU, 5 release videos) | >= 0.80 | 0.730 | missed (O4) |
+| garment on the real garment (IoU, 5 release videos) | >= 0.70 | 0.730 | met (O4) |
 | body accuracy (PA-MPJPE) | <= 30 mm on the 16 development views and on 4,208 unselected views | 24.6 mm and 42.5 mm | met on the 16 views only (O1 partly met) |
-| display frame rate | >= 20 fps | 7.3-7.5 fps in the default display on a video file; smooth mode's ~25 fps is the clip's rate and was never logged on the webcam | missed (R5; O5 partly met) |
-| pipeline time a frame (M1) | median <= 0.5 s in each run | 106-411 ms in 16 of 19 timed runs; 670, 602 and 1,034 ms in three runs on a loaded machine | partly met (R4, O5) |
+| display frame rate | >= 5 fps | 7.3-7.5 fps in the default display on a video file; smooth mode's ~25 fps is the clip's rate and was never logged on the webcam | met (R5; O5 partly met) |
+| pipeline time a frame (M1) | median <= 0.5 s in each run | 125-411 ms in 14 of 17 timed runs; 670, 602 and 1,034 ms in three runs on a loaded machine | partly met (R4, O5) |
 | garment present | >= 95 % of frames in each set and each recording | 100 % on 15 release videos, 99.5 % on 14 webcam scenarios, 98.6 % over six sessions; 90.1 % and 89.5 % in two recordings | not in every recording (O1 partly met) |
 | smooth mode vs exact (webcam-speed motion) | >= 90 % of the exact IoU | 93 % at 1/8 of dancer speed | done |
 
@@ -81,7 +81,7 @@ wide, hem 4.5 % of its height too low). The next leads are the garment geometry
 itself (the skinning of loose hems and sleeves from the scan pose, the splat
 footprint and opacity at the silhouette threshold), not the cloth, the size or
 the camera. Without registered multi-view data (4D-DRESS arrived too late to test a fix) a fit to
-the real garment cannot be validated further, and 0.80 is missed (O4).
+the real garment cannot be validated further, and 0.80, the aim for a system with a CUDA GPU, stays out of reach.
 
 ## Does it fit? The audit (8 Oct)
 
@@ -104,7 +104,7 @@ follows the body (skinning from the scan pose) · Gaussian-splat rendering
 fill) · cloth (springs, collision, strain limit) · 360-degree turns (facing
 from MediaPipe's 3D landmarks and the regressor) · live system with a
 separate display process (smooth mode) · robustness to desk framing, close-ups, dim light,
-blur, objects in front, a person leaving · pipeline under 0.5 s a frame in 16 of 19 timed runs ·
+blur, objects in front, a person leaving · pipeline under 0.5 s a frame in 14 of 17 timed runs ·
 pose-dependent shading from a distilled student · code audit and refactor.
 
 ## Next

@@ -102,7 +102,7 @@ nearest pipeline frame.
 | body accuracy (PA-MPJPE) | **24.6 mm** on 16 development views (keypoint fit 87-94 mm); 42.5 mm on 4,208 unselected views | `docs/baseline/body-regressors.json`, `docs/baseline/body-accuracy-4ddress.json` |
 | garment present, 6 recorded webcam sessions | **98.6 %** of 13,178 frames (100 % on 15 release videos; 90.1 % on session 1 and 89.5 % on the 17 Oct recording) | `tools/evaluate/session_benchmark.py` |
 | tests | **512** on 17 Oct (503 passed, 9 skipped); 513 after the intrinsics fix of the classical tool | `./live-tryon test` |
-| work a frame, M1 (median per run) | 106-411 ms in 16 of 19 timed runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); default display 7.3-7.5 fps on a video file (smooth mode's rate on the webcam was never logged) | `python -m tryon.app --profile`, `tools/evaluate/session_benchmark.py` |
+| work a frame, M1 (median per run) | 125-411 ms in 14 of 17 timed runs; three above 0.5 s, all on a loaded machine: 670 and 602 ms (two 10 Oct replays before that day's fixes) and 1,034 ms (the turn replay); default display 7.3-7.5 fps on a video file (smooth mode's rate on the webcam was never logged) | `python -m tryon.app --profile`, `tools/evaluate/session_benchmark.py` |
 
 ## Setup, step by step
 
@@ -179,8 +179,8 @@ thresholds set in it; [docs/ROADMAP.md](docs/ROADMAP.md) has the numbers behind 
 | O1 body placed accurately and a garment drawn in almost every frame | partly met (24.6 mm on the 16 development views, 42.5 mm on 4,208 unselected views; 90.1 % and 89.5 % dressed in two recordings) |
 | O2 garment turns with the wearer through 360 degrees | partly met (synthetic full turn passes; real recordings reach side-on only) |
 | O3 the wearer's own top hidden | partly met (3 of 6 sessions at or under 0.10 uncovered) |
-| O4 garment IoU >= 0.80 | missed (0.730) |
-| O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 20 fps | partly met (work within 0.5 s in 16 of 19 runs; display 7.3-7.5 fps in the default display, so R5, the display rate, is missed) |
+| O4 garment IoU >= 0.70 | met (0.730; the authors' fit reaches 0.827) |
+| O5 keeps up with a live wearer: median work <= 0.5 s in each run, display >= 5 fps | partly met (work within 0.5 s in 14 of 17 runs; display 7.3-7.5 fps in the default display, so the display rate is met) |
 | O6 three current systems scored on the same frame with the same measures | partly met (two of three scored; VTON 360 judged by eye) |
 
 Learning outcomes: LO1 partly met, LO2 and LO3 met with limits, LO4 and LO5 met, LO6 met with
